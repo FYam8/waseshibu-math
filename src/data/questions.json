@@ -1,0 +1,1610 @@
+{
+  "meta": {
+    "title": "WaseShibu Math Trainer - Past Paper Analysis",
+    "school": "早稲田渋谷シンガポール校",
+    "years": [
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025,
+      2026
+    ],
+    "schema_version": "0.1.0",
+    "purpose": "過去問の本文を再配布せず、出題構造・技能・得点戦略・類題生成テンプレートを保持するための分析データ",
+    "difficulty_note": "A/B/Cは公式難易度ではなく、合格点を安定させるための学習用分類。",
+    "source_note": "2019〜2026年度の問題冊子・解答用紙を基に分析。問題本文の転載ではなく要約メタデータ中心。"
+  },
+  "scoring_models": {
+    "2019": {
+      "q1": 45,
+      "q2": 10,
+      "q3": 15,
+      "q4": 15,
+      "q5": 15,
+      "total": 100
+    },
+    "2020-2026": {
+      "q1": 40,
+      "q2": 15,
+      "q3": 15,
+      "q4": 15,
+      "q5": 15,
+      "total": 100
+    }
+  },
+  "questions": [
+    {
+      "id": "2019-Q1",
+      "year": 2019,
+      "major": 1,
+      "title": "小問集合（9問）",
+      "domain": "mixed",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "数式計算",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "連立方程式",
+          "grade": "A"
+        },
+        {
+          "no": "3",
+          "topic": "二次方程式",
+          "grade": "A"
+        },
+        {
+          "no": "4",
+          "topic": "角度",
+          "grade": "A"
+        },
+        {
+          "no": "5",
+          "topic": "二次関数の変域",
+          "grade": "A"
+        },
+        {
+          "no": "6",
+          "topic": "2直線の交点と定数",
+          "grade": "A"
+        },
+        {
+          "no": "7",
+          "topic": "整数・約数条件",
+          "grade": "B"
+        },
+        {
+          "no": "8",
+          "topic": "正四角すいの体積",
+          "grade": "B"
+        },
+        {
+          "no": "9",
+          "topic": "二次方程式の2解の関係",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "標準処理を短時間で確実に行う",
+        "答えを最簡形に整える"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "9問の分野混合セット。計算4〜5問＋関数/整数/図形を混ぜ、時間制限を付ける。",
+      "notes": []
+    },
+    {
+      "id": "2019-Q2",
+      "year": 2019,
+      "major": 2,
+      "title": "円に接する2つの正三角形と面積比",
+      "domain": "geometry",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "正三角形・相似・面積比",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "円・正三角形・六角形の面積",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "対称性",
+        "相似比→面積比",
+        "図形を部分に分ける"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "同一円に関係する合同/相似な正多角形を配置し、(1)面積比→(2)中央図形の面積へ誘導する。",
+      "notes": []
+    },
+    {
+      "id": "2019-Q3",
+      "year": 2019,
+      "major": 3,
+      "title": "三角形上の移動ルールと場合の数",
+      "domain": "combinatorics",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "X/Y移動の並べ方",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "経由点条件つき並べ方",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "時間制限つき場合分け",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "順序の数え上げ",
+        "必ず通る点で分割",
+        "時間条件から可能な回数を絞る"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "1歩/2歩移動など2種類の操作を設定し、単純配列→経由条件→時間制限へ段階化する。",
+      "notes": []
+    },
+    {
+      "id": "2019-Q4",
+      "year": 2019,
+      "major": 4,
+      "title": "ダムの貯水量グラフ",
+      "domain": "word_problem",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "グラフ読み取り",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "一定変化率と時刻",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "周期・回数条件から設定値を逆算",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "傾きを変化率として読む",
+        "区間ごとの状態を分ける",
+        "1周期を作る"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "貯水・充電・在庫など一定増減する量を用い、読み取り→停止後→周期回数の逆算へ発展させる。",
+      "notes": []
+    },
+    {
+      "id": "2019-Q5",
+      "year": 2019,
+      "major": 5,
+      "title": "放物線上の4点・直線の傾き・面積比",
+      "domain": "function",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "放物線上2点を結ぶ直線の傾き",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "座標関係を文字式化",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "交点・面積比",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "y=x^2上の2点間の傾き",
+        "座標をaで統一",
+        "面積比を底辺/高さで整理"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "放物線上に複数点を置き、傾き条件→座標関係→交点を含む面積比へ誘導する。",
+      "notes": []
+    },
+    {
+      "id": "2020-Q1",
+      "year": 2020,
+      "major": 1,
+      "title": "小問集合（8問）",
+      "domain": "mixed",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "根号を含む計算",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "連立方程式",
+          "grade": "A"
+        },
+        {
+          "no": "3",
+          "topic": "二次方程式",
+          "grade": "A"
+        },
+        {
+          "no": "4",
+          "topic": "二次関数の変化の割合",
+          "grade": "A"
+        },
+        {
+          "no": "5",
+          "topic": "円すいの展開図",
+          "grade": "A"
+        },
+        {
+          "no": "6",
+          "topic": "正方形・おうぎ形・半円の面積",
+          "grade": "B"
+        },
+        {
+          "no": "7",
+          "topic": "整数条件",
+          "grade": "B"
+        },
+        {
+          "no": "8",
+          "topic": "平行四辺形・中点・面積",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "標準計算",
+        "図形公式",
+        "整数条件の整理"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "8問40点の分野混合ミニ模試。",
+      "notes": []
+    },
+    {
+      "id": "2020-Q2",
+      "year": 2020,
+      "major": 2,
+      "title": "サイコロと積・和の確率",
+      "domain": "probability",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "2回・和条件",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "3回・積の条件",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "4回・積と和の複合条件",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "全事象6^n",
+        "条件を満たす組の規則的列挙",
+        "積の候補を先に絞る"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "サイコロ複数回で、和→積→積同士の複合条件へ進む。",
+      "notes": []
+    },
+    {
+      "id": "2020-Q3",
+      "year": 2020,
+      "major": 3,
+      "title": "放物線と直線の交点・三角形面積比",
+      "domain": "function",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "交点条件から定数決定",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "2交点と面積比",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "面積比から定数を逆算",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "放物線と直線を連立",
+        "交点のx座標",
+        "共通高さ/底辺を使う面積比"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "y=x^2とy=x+k型を使い、交点→面積比→逆算にする。",
+      "notes": []
+    },
+    {
+      "id": "2020-Q4",
+      "year": 2020,
+      "major": 4,
+      "title": "時計の時針・分針",
+      "domain": "word_problem",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "分針の角速度",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "時針と分針の重なり",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "針の角度とおうぎ形面積",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "分針6°/分",
+        "時針0.5°/分",
+        "相対角度",
+        "おうぎ形面積"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "時計の基準時刻を変え、回転角→一致→面積条件へ誘導する。",
+      "notes": []
+    },
+    {
+      "id": "2020-Q5",
+      "year": 2020,
+      "major": 5,
+      "title": "立方体から正多面体・立方八面体",
+      "domain": "solid_geometry",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "頂点・面の構成",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "立体Yの体積",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "切断後の立体Zの体積",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "面中心を結ぶ立体",
+        "元立体から角すいを引く",
+        "切断による体積差"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "立方体等から新しい立体を定義し、構成判定→体積→切断後体積へ進める。",
+      "notes": []
+    },
+    {
+      "id": "2021-Q1",
+      "year": 2021,
+      "major": 1,
+      "title": "小問集合（8問）",
+      "domain": "mixed",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "数式計算",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "連立方程式",
+          "grade": "A"
+        },
+        {
+          "no": "3",
+          "topic": "二次方程式",
+          "grade": "A"
+        },
+        {
+          "no": "4",
+          "topic": "二次関数の変域",
+          "grade": "A"
+        },
+        {
+          "no": "5",
+          "topic": "平方数になる整数条件",
+          "grade": "B"
+        },
+        {
+          "no": "6",
+          "topic": "円周角・直径",
+          "grade": "A"
+        },
+        {
+          "no": "7",
+          "topic": "中央値",
+          "grade": "A"
+        },
+        {
+          "no": "8",
+          "topic": "三角形の決定条件",
+          "grade": "A"
+        }
+      ],
+      "core_ideas": [
+        "標準処理",
+        "条件の意味を正確に読む"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "8問混合。整数/データ/図形を必ず含める。",
+      "notes": []
+    },
+    {
+      "id": "2021-Q2",
+      "year": 2021,
+      "major": 2,
+      "title": "円柱の水と沈めた円すい",
+      "domain": "solid_geometry",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "円柱内の水の体積",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "水位上昇＝物体体積",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "体積比",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "円柱体積",
+        "排水量=沈んだ物体の体積",
+        "比の簡約"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "容器＋沈める立体。水量→物体寸法→体積比へ誘導する。",
+      "notes": []
+    },
+    {
+      "id": "2021-Q3",
+      "year": 2021,
+      "major": 3,
+      "title": "天使・悪魔ゲームと2個のサイコロ",
+      "domain": "combinatorics",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "ルール適用",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "2回目の出目の数え上げ",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "2回全体の出目の数え上げ",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "状態遷移",
+        "順序つき36通り",
+        "条件別に場合分け"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "人数状態が操作で変化するゲームを設定し、具体例→1手列挙→2手全列挙へ進む。",
+      "notes": []
+    },
+    {
+      "id": "2021-Q4",
+      "year": 2021,
+      "major": 4,
+      "title": "貴金属店の売買と収支",
+      "domain": "word_problem",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "単価比較",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "売買量と収支の方程式",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "手数料・奇偶条件つき最小値",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "売上-仕入=収支",
+        "数量をxで置く",
+        "整数/奇偶条件"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "価格表を用いた売買設定。単純比較→一次方程式→人数条件つき整数問題。",
+      "notes": []
+    },
+    {
+      "id": "2021-Q5",
+      "year": 2021,
+      "major": 5,
+      "title": "反比例の曲線と動く直角二等辺三角形",
+      "domain": "function",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "頂点が曲線上にある座標",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "交点から直線の式",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "相似条件から点座標",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "y=24/x",
+        "三角形の座標化",
+        "直線式",
+        "相似"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "反比例グラフと移動図形を組み合わせ、座標→直線→相似条件へ進める。",
+      "notes": []
+    },
+    {
+      "id": "2022-Q1",
+      "year": 2022,
+      "major": 1,
+      "title": "小問集合（8問）",
+      "domain": "mixed",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "数式計算",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "二次方程式",
+          "grade": "A"
+        },
+        {
+          "no": "3",
+          "topic": "連立方程式",
+          "grade": "A"
+        },
+        {
+          "no": "4",
+          "topic": "二次関数の変域",
+          "grade": "A"
+        },
+        {
+          "no": "5",
+          "topic": "コイン確率",
+          "grade": "A"
+        },
+        {
+          "no": "6",
+          "topic": "四捨五入と範囲",
+          "grade": "A"
+        },
+        {
+          "no": "7",
+          "topic": "割合",
+          "grade": "A"
+        },
+        {
+          "no": "8",
+          "topic": "相似による長さ",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "標準処理",
+        "範囲の端点",
+        "相似"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "8問混合。データ/割合/確率を含む。",
+      "notes": []
+    },
+    {
+      "id": "2022-Q2",
+      "year": 2022,
+      "major": 2,
+      "title": "放物線と反比例・長方形状の領域",
+      "domain": "function",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "反比例上の点の座標",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "面積条件から放物線上の点Qを文字で表す",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "交点Pと立方体体積",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "放物線y=x^2/4",
+        "反比例y=12/x",
+        "座標をtで表す",
+        "面積式"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "放物線＋反比例。点をtで置き、面積条件→別図形量へつなぐ。",
+      "notes": []
+    },
+    {
+      "id": "2022-Q3",
+      "year": 2022,
+      "major": 3,
+      "title": "歩行距離と飲水量",
+      "domain": "word_problem",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "比例関係",
+          "grade": "A"
+        },
+        {
+          "no": "2-i",
+          "topic": "1kmあたりの量を逆算",
+          "grade": "A"
+        },
+        {
+          "no": "2-ii",
+          "topic": "途中から量が変わる文章題",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "1kmあたり一定",
+        "比1:1.5",
+        "区間を分ける"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "2者の消費量が一定比。基本比例→単位量→途中変更へ進む。",
+      "notes": []
+    },
+    {
+      "id": "2022-Q4",
+      "year": 2022,
+      "major": 4,
+      "title": "ホテルのスイッチと電灯",
+      "domain": "combinatorics",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "オン/オフ状態の追跡",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "2人が異なるスイッチを選ぶ場合の数",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "3人が異なるスイッチを選ぶ場合の数",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "トグル操作",
+        "状態を集合で管理",
+        "順序を区別",
+        "規則的列挙"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "スイッチで複数対象が反転する設定。具体操作→2手→3手。",
+      "notes": []
+    },
+    {
+      "id": "2022-Q5",
+      "year": 2022,
+      "major": 5,
+      "title": "立方体の中点・体積・対角線",
+      "domain": "solid_geometry",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "三角すい体積",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "対角線と平面の交点比",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "四角すい体積",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "中点",
+        "底面積×高さ/3",
+        "立体内の比"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "立方体の辺中点を複数置き、小立体体積→交点比→別の角すい体積。",
+      "notes": []
+    },
+    {
+      "id": "2023-Q1",
+      "year": 2023,
+      "major": 1,
+      "title": "小問集合（8問）",
+      "domain": "mixed",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "文字式の計算",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "連立方程式",
+          "grade": "A"
+        },
+        {
+          "no": "3",
+          "topic": "文字を含む式/方程式",
+          "grade": "A"
+        },
+        {
+          "no": "4",
+          "topic": "数・分数の処理",
+          "grade": "A"
+        },
+        {
+          "no": "5",
+          "topic": "複合図形の角度",
+          "grade": "B"
+        },
+        {
+          "no": "6",
+          "topic": "平方根の小数部分を利用した式",
+          "grade": "B"
+        },
+        {
+          "no": "7",
+          "topic": "中央値",
+          "grade": "A"
+        },
+        {
+          "no": "8",
+          "topic": "平行四辺形の性質を選択",
+          "grade": "A"
+        }
+      ],
+      "core_ideas": [
+        "標準処理",
+        "図形条件の真偽",
+        "データ処理"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "8問混合。代数・データ・図形条件を横断。",
+      "notes": [
+        "2023年度はスキャンPDFのため、本文の数式認識が一部不鮮明。トピック分類は図・解答・読取可能部分から整理。"
+      ]
+    },
+    {
+      "id": "2023-Q2",
+      "year": 2023,
+      "major": 2,
+      "title": "放物線・直線・座標・面積比",
+      "domain": "function",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "放物線の係数決定",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "直線/座標条件から定数決定",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "面積比",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "点を文字で表す",
+        "直線との交点",
+        "相似/面積比"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "複数の関数グラフと点を置き、係数→座標/定数→面積比へ誘導する。",
+      "notes": [
+        "問題本文の細部はスキャン認識が不鮮明なため、GitHub公開版では元問題本文を持たずパターン情報のみ保持。"
+      ]
+    },
+    {
+      "id": "2023-Q3",
+      "year": 2023,
+      "major": 3,
+      "title": "表を読む初見文章題・数量関係",
+      "domain": "word_problem",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "単一条件から未知数を決定",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "2変数の数量関係",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "3変数の数量関係",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "表の単位確認",
+        "未知数を置く",
+        "複数条件を連立する"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "料金・数量・配分など表形式の設定で、1変数→2変数→3変数へ段階化する。",
+      "notes": [
+        "スキャン認識が不鮮明なため、具体設定名ではなく構造レベルで保持。"
+      ]
+    },
+    {
+      "id": "2023-Q4",
+      "year": 2023,
+      "major": 4,
+      "title": "四角形の条件・図形関係",
+      "domain": "geometry",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "条件選択",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "根号を含む長さ/比",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "辺の関係を文字式化",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "平行四辺形/四角形の性質",
+        "対角線・辺の関係",
+        "必要十分な条件を整理"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "四角形の辺・対角線・角条件を複数提示し、選択→数値→文字式へ進める。",
+      "notes": []
+    },
+    {
+      "id": "2023-Q5",
+      "year": 2023,
+      "major": 5,
+      "title": "確率・場合の数の段階問題",
+      "domain": "probability",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "基本確率",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "条件つき確率/場合分け",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "複合条件の確率",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "全体の場合の数",
+        "場合分け",
+        "重複除去"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "基本確率→条件追加→複合条件へ3段階化。",
+      "notes": [
+        "スキャン認識が不鮮明なため、公開データでは確率構造を主として保持。"
+      ]
+    },
+    {
+      "id": "2024-Q1",
+      "year": 2024,
+      "major": 1,
+      "title": "小問集合（8問）",
+      "domain": "mixed",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "数式計算",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "三角柱の表面積",
+          "grade": "A"
+        },
+        {
+          "no": "3",
+          "topic": "反比例",
+          "grade": "A"
+        },
+        {
+          "no": "4",
+          "topic": "中央値",
+          "grade": "A"
+        },
+        {
+          "no": "5",
+          "topic": "正方形と正三角形の角度",
+          "grade": "B"
+        },
+        {
+          "no": "6",
+          "topic": "連立方程式",
+          "grade": "A"
+        },
+        {
+          "no": "7",
+          "topic": "面積から正方形の辺",
+          "grade": "A"
+        },
+        {
+          "no": "8",
+          "topic": "円の交わる弦",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "標準処理",
+        "図形公式",
+        "円の積の関係"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "本番型8問セット。",
+      "notes": []
+    },
+    {
+      "id": "2024-Q2",
+      "year": 2024,
+      "major": 2,
+      "title": "2つの放物線・直線・面積条件",
+      "domain": "function",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "放物線の係数",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "放物線と直線の交点",
+          "grade": "A"
+        },
+        {
+          "no": "3",
+          "topic": "等面積条件と座標",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "点代入",
+        "連立",
+        "三角形の面積を座標で表す",
+        "条件に合う解を選ぶ"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "放物線2本＋直線。係数→交点→面積条件。",
+      "notes": []
+    },
+    {
+      "id": "2024-Q3",
+      "year": 2024,
+      "major": 3,
+      "title": "1〜5のカードを戻さず引く確率",
+      "domain": "probability",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "条件つき基本確率",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "順序比較",
+          "grade": "A"
+        },
+        {
+          "no": "3",
+          "topic": "AまたはBの複合条件",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "順序つき抽出",
+        "対称性",
+        "和事象",
+        "重複を確認"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "戻さないカード抽出で、条件付き→大小比較→複合事象。",
+      "notes": []
+    },
+    {
+      "id": "2024-Q4",
+      "year": 2024,
+      "major": 4,
+      "title": "長方形周上の2点の動点",
+      "domain": "motion",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "追いつき",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "線分の平行条件",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "動点と三角形面積・複数解",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "周長と相対速度",
+        "区間ごとの座標化",
+        "平行条件",
+        "面積を時間の式にする"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "長方形周上の2点を異速で動かし、追いつき→平行→面積条件。",
+      "notes": []
+    },
+    {
+      "id": "2024-Q5",
+      "year": 2024,
+      "major": 5,
+      "title": "正方形・角度・交点の面積比",
+      "domain": "geometry",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "角度追跡",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "角度追跡/相似",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "交点を含む面積比",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "正方形の90°",
+        "等しい長さ",
+        "角の関係",
+        "相似/面積比"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "正方形に外部点・内部点を加え、角度→角度→面積比へ進める。",
+      "notes": []
+    },
+    {
+      "id": "2025-Q1",
+      "year": 2025,
+      "major": 1,
+      "title": "小問集合（8問）",
+      "domain": "mixed",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "数式計算",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "因数分解",
+          "grade": "A"
+        },
+        {
+          "no": "3",
+          "topic": "連立方程式",
+          "grade": "A"
+        },
+        {
+          "no": "4",
+          "topic": "二次方程式",
+          "grade": "A"
+        },
+        {
+          "no": "5",
+          "topic": "中央値と追加データ",
+          "grade": "A"
+        },
+        {
+          "no": "6",
+          "topic": "相似",
+          "grade": "A"
+        },
+        {
+          "no": "7",
+          "topic": "カード確率",
+          "grade": "A"
+        },
+        {
+          "no": "8",
+          "topic": "整数・因数分解",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "標準処理",
+        "中央値の位置",
+        "約数ペア"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "8問混合。",
+      "notes": []
+    },
+    {
+      "id": "2025-Q2",
+      "year": 2025,
+      "major": 2,
+      "title": "放物線・直線・四角形の面積二等分",
+      "domain": "function",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "放物線係数",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "直線とy軸の交点",
+          "grade": "A"
+        },
+        {
+          "no": "3",
+          "topic": "四角形の面積を2等分する直線",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "放物線上の点",
+        "2交点",
+        "高さの和条件",
+        "面積二等分"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "放物線と割線から図形を作り、係数→切片→面積二等分線。",
+      "notes": []
+    },
+    {
+      "id": "2025-Q3",
+      "year": 2025,
+      "major": 3,
+      "title": "表面を塗った立方体の分割と確率",
+      "domain": "probability",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "小立方体の個数",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "2面塗られた小立方体の確率",
+          "grade": "A"
+        },
+        {
+          "no": "3",
+          "topic": "2個取り出し・塗られた面数の和",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "角・辺・面・内部の分類",
+        "戻さない抽出",
+        "組合せ"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "塗装立方体をn^3分割し、個数→1個抽出→2個抽出。",
+      "notes": []
+    },
+    {
+      "id": "2025-Q4",
+      "year": 2025,
+      "major": 4,
+      "title": "食塩水の置換操作",
+      "domain": "word_problem",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "混合濃度",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "同量を捨て水で戻す操作を2回",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "2回目だけ別濃度を加える",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "食塩の量を追跡",
+        "1回ごとの残存率",
+        "同じ操作を繰り返す"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "濃度混合→反復希釈→途中操作変更。",
+      "notes": []
+    },
+    {
+      "id": "2025-Q5",
+      "year": 2025,
+      "major": 5,
+      "title": "円に内接する台形・相似・面積二等分",
+      "domain": "geometry",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "台形の面積",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "交点と三角形面積",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "平行線・中点・面積二等分から長さ",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "円の中心を通る辺",
+        "高さ",
+        "相似",
+        "面積比",
+        "中点"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "円内の台形を設定し、全体面積→交点部分面積→面積二等分点。",
+      "notes": []
+    },
+    {
+      "id": "2026-Q1",
+      "year": 2026,
+      "major": 1,
+      "title": "小問集合（8問）",
+      "domain": "mixed",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "一次方程式",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "比例関係から一次式",
+          "grade": "A"
+        },
+        {
+          "no": "3",
+          "topic": "座標の対称移動",
+          "grade": "A"
+        },
+        {
+          "no": "4",
+          "topic": "文字式の変形",
+          "grade": "A"
+        },
+        {
+          "no": "5",
+          "topic": "絶対値と整数",
+          "grade": "A"
+        },
+        {
+          "no": "6",
+          "topic": "因数分解",
+          "grade": "A"
+        },
+        {
+          "no": "7",
+          "topic": "正六角形の規則性",
+          "grade": "A"
+        },
+        {
+          "no": "8",
+          "topic": "食塩水の移し替え",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "短時間の標準処理",
+        "規則性",
+        "量の保存"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "8問混合。",
+      "notes": []
+    },
+    {
+      "id": "2026-Q2",
+      "year": 2026,
+      "major": 2,
+      "title": "同じ余りになる整数",
+      "domain": "integer",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "2つの法で同じ余り・2桁列挙",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "和と積からx,yを決め余りを求める",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "比・積・余り条件から整数組",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "M-zはx,yの公倍数",
+        "和と積",
+        "整数条件で候補を絞る"
+      ],
+      "strategy_grade": "A",
+      "similar_question_template": "同余条件を中心に、具体列挙→和積条件→比条件へ進める。",
+      "notes": []
+    },
+    {
+      "id": "2026-Q3",
+      "year": 2026,
+      "major": 3,
+      "title": "1〜8のカードと倍数関係",
+      "domain": "probability",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "3の倍数",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "BがAの倍数",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "CがAとB双方の倍数",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "順序つき抽出",
+        "倍数関係を表で整理",
+        "条件を満たす組を列挙"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "戻さないカード抽出で、単純事象→2者関係→3者複合関係。",
+      "notes": []
+    },
+    {
+      "id": "2026-Q4",
+      "year": 2026,
+      "major": 4,
+      "title": "放物線・直線・動点・円",
+      "domain": "function",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "2交点の距離比から放物線係数",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "動点Pと三角形面積をtで表す",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "直径の円との交点条件",
+          "grade": "C"
+        }
+      ],
+      "core_ideas": [
+        "交点のx座標比",
+        "点P=(t,at^2)",
+        "三角形面積",
+        "円周角/垂直条件"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "放物線と直線の2交点→動点面積→直径の円との交点。",
+      "notes": []
+    },
+    {
+      "id": "2026-Q5",
+      "year": 2026,
+      "major": 5,
+      "title": "円・平行線・相似",
+      "domain": "geometry",
+      "subquestions": [
+        {
+          "no": "1",
+          "topic": "円周角と平行線を使う角度",
+          "grade": "A"
+        },
+        {
+          "no": "2",
+          "topic": "長さ比・相似",
+          "grade": "B"
+        },
+        {
+          "no": "3",
+          "topic": "平行線を追加した長さ",
+          "grade": "B"
+        }
+      ],
+      "core_ideas": [
+        "円周角",
+        "平行線の錯角/同位角",
+        "相似",
+        "辺の比"
+      ],
+      "strategy_grade": "B",
+      "similar_question_template": "円と平行線を組み合わせ、角度→長さ→補助平行線の長さへ誘導。",
+      "notes": []
+    }
+  ],
+  "pattern_taxonomy": {
+    "function": [
+      "点を文字で置く",
+      "交点条件を式にする",
+      "面積を式にする",
+      "条件から方程式",
+      "解の選別"
+    ],
+    "probability": [
+      "全体の場合の数",
+      "順序",
+      "重複",
+      "場合分け",
+      "規則的列挙"
+    ],
+    "word_problem": [
+      "登場する量",
+      "一定量",
+      "変化量",
+      "ルール",
+      "未知数",
+      "求めるもの"
+    ],
+    "geometry": [
+      "既知角",
+      "既知長",
+      "等しいもの",
+      "平行",
+      "相似候補",
+      "面積比"
+    ],
+    "motion": [
+      "位置を時間で表す",
+      "区間分け",
+      "相対速度",
+      "条件式"
+    ],
+    "integer": [
+      "倍数/約数",
+      "余り",
+      "整数条件",
+      "候補列挙"
+    ],
+    "solid_geometry": [
+      "底面",
+      "高さ",
+      "相似比",
+      "切断前後の体積差"
+    ],
+    "combinatorics": [
+      "状態",
+      "順序",
+      "経由条件",
+      "列挙"
+    ]
+  },
+  "diagnostic_tags": [
+    "知識不足",
+    "解法未習得",
+    "読み落とし",
+    "計算ミス",
+    "符号ミス",
+    "場合分け不足",
+    "時間不足",
+    "答え方の不備"
+  ],
+  "target_plans": {
+    "60": "大問1で30〜35点＋大問2〜5で25〜30点",
+    "70": "大問1で35点前後＋大問2〜5で35点前後",
+    "75": "大問1の取りこぼしを極力減らし、大問2〜5の標準〜やや難まで取る"
+  }
+}
