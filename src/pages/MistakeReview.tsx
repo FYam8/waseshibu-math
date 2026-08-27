@@ -1,0 +1,22 @@
+import { Link } from 'react-router-dom'
+import { loadAttempts } from '../storage'
+
+export default function MistakeReview(){
+  const attempts=loadAttempts()
+  const latest=new Map<string,(typeof attempts)[number]>()
+  for(const a of attempts)if(!latest.has(a.questionId))latest.set(a.questionId,a)
+  const unresolved=[...latest.values()].filter(x=>x.status!=='correct')
+  const grouped=unresolved.reduce<Record<string,typeof unresolved>>((acc,x)=>{(acc[x.topic]??=[]).push(x);return acc},{})
+  const topics=Object.entries(grouped).sort((a,b)=>b[1].length-a[1].length)
+  const tagCount=unresolved.reduce<Record<string,number>>((acc,x)=>{const tag=x.mistakeTag||'未分類';acc[tag]=(acc[tag]||0)+1;return acc},{})
+  const tags=Object.entries(tagCount).sort((a,b)=>b[1]-a[1])
+  const trainingLink=(id:string)=>{const m=id.match(/(?:paper-|year-)(20\d{2})-Q([1-5])/);return m?`/year-training?year=${m[1]}&major=${m[2]}`:'/year-training'}
+  return <>
+    <div className="page-head"><div><span className="eyebrow">WRONG ANSWERS ONLY</span><h1>間違い直し</h1></div></div>
+    <section className="grid three"><article className="card stat"><b>{unresolved.length}</b><span>未解決の設問</span></article><article className="card stat"><b>{topics.length}</b><span>弱点テーマ</span></article><article className="card stat"><b>{tags[0]?.[0]||'--'}</b><span>最多の失点原因</span></article></section>
+    {unresolved.length===0?<section className="card"><h2>未解決の間違いはありません</h2><p className="muted">紙の過去問を採点するか、演習問題を解くとここに記録されます。</p><Link className="button primary" to="/past-papers">過去問を採点する</Link></section>:<>
+      <section className="card"><h2>直す順番</h2><div className="review-order"><div><b>1</b><span>計算・符号・読み落とし</span><small>次回取れる失点から直す</small></div><div><b>2</b><span>解法・知識不足</span><small>解法3手順から類題へ</small></div><div><b>3</b><span>場合分け・時間不足</span><small>後回し判断も改善</small></div></div></section>
+      <section className="review-topics">{topics.map(([topic,items])=><article className="card" key={topic}><div className="section-head"><div><span className="eyebrow">優先度 {items.length>=3?'A':items.length===2?'B':'C'}</span><h3>{topic}</h3></div><b>{items.length}問</b></div><div className="chips">{[...new Set(items.map(x=>x.mistakeTag||'未分類'))].map(x=><span key={x}>{x}</span>)}</div><p className="muted">最後の記録：{new Date(items[0].at).toLocaleDateString('ja-JP')}</p><Link className="button primary" to={trainingLink(items[0].questionId)}>対応する類題を解く</Link></article>)}</section>
+    </>}
+  </>
+}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { practiceQuestions } from '../data/practice'
 import { createRecordId, loadAttempts, loadDaily, saveAttempt, saveDaily } from '../storage'
 import { isAcceptedAnswer } from '../answer'
+import MathAnswerInput from '../components/MathAnswerInput'
 
 const mistakeTags = ['知識不足','解法未習得','読み落とし','計算ミス','符号ミス','場合分け不足','時間不足','答え方の不備']
 
@@ -262,15 +263,7 @@ export default function Practice() {
         <p className="problem">{q.prompt}</p>
 
         <label className="answer-label">答え <small className="muted">（分数は約分、式はできるだけ簡単な形）</small></label>
-        <input
-          className="answer-input"
-          value={answer}
-          onChange={e=>setAnswer(e.target.value)}
-          onKeyDown={e=>{ if(e.key==='Enter') submit() }}
-          placeholder="答えを入力"
-          autoFocus
-          disabled={result !== null}
-        />
+        <MathAnswerInput value={answer} onChange={setAnswer} onEnter={submit} placeholder="答えを入力" autoFocus disabled={result!==null}/>
 
         {result === null && (
           <div className="actions">

@@ -49,7 +49,7 @@ if (sync.includes('repo.private !== true')) ok('Private Repository検証')
 else fail('Private Repository検証なし')
 
 const app = read('src/App.tsx')
-for (const route of ['"/years"','"/year-training"','"/past-papers"','"/practice"','"/multi"','"/report"','"/sync"']) {
+for (const route of ['"/years"','"/year-training"','"/past-papers"','"/mistakes"','"/practice"','"/multi"','"/report"','"/sync"']) {
   if (!app.includes(route)) fail(`route missing ${route}`)
 }
 ok('主要route')
@@ -64,13 +64,12 @@ for (const year of [2019,2020,2021,2022,2023,2024,2025,2026]) {
 if (training.includes('pastPattern:') && training.includes('scorePlan:') && training.includes('steps:') && training.includes('explanation:')) ok('過去問型・得点戦略・解法手順・解説')
 else fail('年度別演習の学習要素不足')
 
-for (const year of [2019,2020,2021,2022,2023,2024,2025,2026]) {
-  for (const kind of ['問題','解答']) {
-    const p=`public/past-papers/${year}_数学_${kind}.pdf`
-    if (!fs.existsSync(path.join(root,p)) || fs.statSync(path.join(root,p)).size<50000) fail(`過去問PDF不足: ${p}`)
-  }
-}
-ok('2019-2026の問題・解答PDF 16ファイル')
+const paperPage=read('src/pages/PastPapers.tsx')
+if (paperPage.includes('QUESTION-BY-QUESTION') && paperPage.includes('saveAttempt(') && paperPage.includes('mistakeTag:')) ok('紙の過去問・小問別失点登録')
+else fail('紙の過去問の失点登録')
+const mathInput=read('src/components/MathAnswerInput.tsx')
+if (mathInput.includes("text:'√()'") && mathInput.includes("text:'/'") && mathInput.includes("text:'^2'")) ok('数式入力パッド')
+else fail('数式入力パッド不足')
 
 
 if (sync.includes('mergeAttempts(loadAttempts(), mergedAll, attemptsReset)')) ok('同期中の新規解答をlocal置換で消さない')

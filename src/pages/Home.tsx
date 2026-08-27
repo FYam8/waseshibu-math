@@ -27,7 +27,7 @@ export default function Home() {
     <>
       <section className="hero card">
         <div>
-          <span className="eyebrow">2019–2026 過去問・解答収録 / 非公式</span>
+          <span className="eyebrow">2019–2026 紙の過去問＋弱点対策 / 非公式</span>
           <h1>取れる5点を、落とさない。</h1>
           <p>大問1の取りこぼしを減らし、大問2〜5は（1）（2）を中心に回収。満点ではなく60〜75点の再現性を高める設計です。</p>
 
@@ -39,7 +39,8 @@ export default function Home() {
           </div>
 
           <div className="actions">
-            <Link className="button primary" to="/past-papers">実際の過去問を解く</Link>
+            <Link className="button primary" to="/past-papers">紙の過去問を採点する</Link>
+            <Link className="button" to="/mistakes">間違いだけ復習</Link>
             <Link className="button primary" to="/year-training">全年度40大問を学ぶ</Link>
             <Link className="button primary" to="/practice">今日の8問を始める</Link>
             <Link className="button" to="/multi">大問2〜5を練習</Link>

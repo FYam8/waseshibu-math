@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { multiSets } from '../data/multiPractice'
 import { createRecordId, saveAttempt } from '../storage'
 import { isAcceptedAnswer } from '../answer'
+import MathAnswerInput from '../components/MathAnswerInput'
 
 const tags=['知識不足','解法未習得','読み落とし','計算ミス','符号ミス','場合分け不足','時間不足','答え方の不備']
 
@@ -98,13 +99,7 @@ export default function MultiPractice(){
       <p className="problem">{part.prompt}</p>
 
       <label className="answer-label">答え</label>
-      <input
-        className="answer-input"
-        value={answer}
-        onChange={e=>setAnswer(e.target.value)}
-        onKeyDown={e=>e.key==='Enter'&&submit()}
-        disabled={result!==null}
-      />
+      <MathAnswerInput value={answer} onChange={setAnswer} onEnter={submit} disabled={result!==null}/>
 
       {result===null&&<div className="actions">
         <button className="button primary" onClick={submit} disabled={!answer.trim()}>採点</button>

@@ -5,6 +5,11 @@ export function normalizeAnswer(value:string) {
     .replace(/\s+/g,'')
     .replace(/[−–—]/g,'-')
     .replace(/×/g,'*')
+    .replace(/sqrt\(([^()]+)\)/gi,'√$1')
+    .replace(/sqrt/gi,'√')
+    .replace(/\*?√/g,'√')
+    .replace(/\^2/g,'²')
+    .replace(/[＝=]/g,'=')
     .replace(/^[A-Za-z]=/,'')
 }
 

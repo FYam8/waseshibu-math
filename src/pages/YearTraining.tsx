@@ -1,13 +1,17 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { yearTraining } from '../data/yearTraining'
 import { isAcceptedAnswer } from '../answer'
 import { createRecordId, saveAttempt } from '../storage'
+import MathAnswerInput from '../components/MathAnswerInput'
 
 const mistakeTags = ['知識不足','解法未習得','読み落とし','計算ミス','符号ミス','場合分け不足','時間不足','答え方の不備']
 
 export default function YearTraining() {
-  const [year,setYear]=useState(2026)
-  const [major,setMajor]=useState(1)
+  const [params]=useSearchParams()
+  const initialYear=Number(params.get('year')),initialMajor=Number(params.get('major'))
+  const [year,setYear]=useState(initialYear>=2019&&initialYear<=2026?initialYear:2026)
+  const [major,setMajor]=useState(initialMajor>=1&&initialMajor<=5?initialMajor:1)
   const [answer,setAnswer]=useState('')
   const [result,setResult]=useState<boolean|null>(null)
   const [showPlan,setShowPlan]=useState(false)
@@ -69,7 +73,7 @@ export default function YearTraining() {
       <div className="training-problem">
         <span className="eyebrow">過去問の構造を保った類題</span>
         <p className="problem">{lesson.prompt}</p>
-        <input className="answer-input" value={answer} onChange={e=>setAnswer(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()} disabled={result!==null} placeholder="答えを入力"/>
+        <MathAnswerInput value={answer} onChange={setAnswer} onEnter={submit} disabled={result!==null} placeholder="答えを入力"/>
         {result===null?<div className="actions"><button className="button primary" onClick={submit} disabled={!answer.trim()}>採点する</button></div>:
           <div className={`result ${result?'ok':'ng'}`}>
             <h3>{result?'正解':'不正解'}</h3>
