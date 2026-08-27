@@ -9,6 +9,7 @@ import SyncSettings from './pages/SyncSettings'
 import YearTraining from './pages/YearTraining'
 import PastPapers from './pages/PastPapers'
 import MistakeReview from './pages/MistakeReview'
+import Remediation from './pages/Remediation'
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/year-training" element={<YearTraining />} />
         <Route path="/past-papers" element={<PastPapers />} />
         <Route path="/mistakes" element={<MistakeReview />} />
+        <Route path="/remediate" element={<Remediation />} />
         <Route path="/practice" element={<Practice />} />
         <Route path="/report" element={<Report />} />
         <Route path="/multi" element={<MultiPractice />} />

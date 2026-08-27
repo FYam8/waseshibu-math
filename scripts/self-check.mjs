@@ -49,7 +49,7 @@ if (sync.includes('repo.private !== true')) ok('Private Repository検証')
 else fail('Private Repository検証なし')
 
 const app = read('src/App.tsx')
-for (const route of ['"/years"','"/year-training"','"/past-papers"','"/mistakes"','"/practice"','"/multi"','"/report"','"/sync"']) {
+for (const route of ['"/years"','"/year-training"','"/past-papers"','"/mistakes"','"/remediate"','"/practice"','"/multi"','"/report"','"/sync"']) {
   if (!app.includes(route)) fail(`route missing ${route}`)
 }
 ok('主要route')
@@ -70,6 +70,12 @@ else fail('紙の過去問の失点登録')
 const mathInput=read('src/components/MathAnswerInput.tsx')
 if (mathInput.includes("text:'√()'") && mathInput.includes("text:'/'") && mathInput.includes("text:'^2'")) ok('数式入力パッド')
 else fail('数式入力パッド不足')
+const remediation=read('src/pages/Remediation.tsx')
+if (remediation.includes('nextStreak>=3') && remediation.includes('mastery-') && remediation.includes('3問連続正解')) ok('類題3問連続正解で克服')
+else fail('類題克服ルール')
+const layout=read('src/components/Layout.tsx')
+if (/<NavLink to="\/past-papers">過去問採点<\/NavLink>\s*<NavLink to="\/sync">/.test(layout)) ok('過去問採点は端末間同期の直前')
+else fail('過去問採点タブ位置')
 
 
 if (sync.includes('mergeAttempts(loadAttempts(), mergedAll, attemptsReset)')) ok('同期中の新規解答をlocal置換で消さない')

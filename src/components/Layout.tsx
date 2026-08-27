@@ -15,12 +15,12 @@ export default function Layout({ children }: PropsWithChildren) {
       <nav className="nav" aria-label="メインナビゲーション">
         <NavLink to="/">ホーム</NavLink>
         <NavLink to="/years">年度分析</NavLink>
-        <NavLink to="/past-papers">過去問採点</NavLink>
         <NavLink to="/year-training">全年度演習</NavLink>
         <NavLink to="/mistakes">間違い直し</NavLink>
         <NavLink to="/practice">大問1練習</NavLink>
         <NavLink to="/multi">大問2〜5</NavLink>
         <NavLink to="/report">弱点・得点記録</NavLink>
+        <NavLink to="/past-papers">過去問採点</NavLink>
         <NavLink to="/sync">端末間同期</NavLink>
       </nav>
       <main className="container">{children}</main>
