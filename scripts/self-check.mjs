@@ -49,10 +49,28 @@ if (sync.includes('repo.private !== true')) ok('Private Repository検証')
 else fail('Private Repository検証なし')
 
 const app = read('src/App.tsx')
-for (const route of ['"/years"','"/practice"','"/multi"','"/report"','"/sync"']) {
+for (const route of ['"/years"','"/year-training"','"/past-papers"','"/practice"','"/multi"','"/report"','"/sync"']) {
   if (!app.includes(route)) fail(`route missing ${route}`)
 }
 ok('主要route')
+
+const training = read('src/data/yearTraining.ts')
+const trainingIds = [...training.matchAll(/id:'(20(?:19|2[0-6])-Q[1-5])'/g)].map(x=>x[1])
+if (trainingIds.length===40 && new Set(trainingIds).size===40) ok('全8年度・40大問の年度別演習')
+else fail(`年度別演習数 ${trainingIds.length} (expected 40 unique)`)
+for (const year of [2019,2020,2021,2022,2023,2024,2025,2026]) {
+  if (trainingIds.filter(id=>id.startsWith(String(year))).length!==5) fail(`${year}: 年度別演習が5大問ではない`)
+}
+if (training.includes('pastPattern:') && training.includes('scorePlan:') && training.includes('steps:') && training.includes('explanation:')) ok('過去問型・得点戦略・解法手順・解説')
+else fail('年度別演習の学習要素不足')
+
+for (const year of [2019,2020,2021,2022,2023,2024,2025,2026]) {
+  for (const kind of ['問題','解答']) {
+    const p=`public/past-papers/${year}_数学_${kind}.pdf`
+    if (!fs.existsSync(path.join(root,p)) || fs.statSync(path.join(root,p)).size<50000) fail(`過去問PDF不足: ${p}`)
+  }
+}
+ok('2019-2026の問題・解答PDF 16ファイル')
 
 
 if (sync.includes('mergeAttempts(loadAttempts(), mergedAll, attemptsReset)')) ok('同期中の新規解答をlocal置換で消さない')

@@ -15,6 +15,8 @@ export default function Layout({ children }: PropsWithChildren) {
       <nav className="nav" aria-label="メインナビゲーション">
         <NavLink to="/">ホーム</NavLink>
         <NavLink to="/years">年度分析</NavLink>
+        <NavLink to="/past-papers">過去問原本</NavLink>
+        <NavLink to="/year-training">全年度演習</NavLink>
         <NavLink to="/practice">大問1練習</NavLink>
         <NavLink to="/multi">大問2〜5</NavLink>
         <NavLink to="/report">弱点・得点記録</NavLink>
@@ -22,7 +24,7 @@ export default function Layout({ children }: PropsWithChildren) {
       </nav>
       <main className="container">{children}</main>
       <footer className="footer">
-        非公式の学習支援アプリです。学校公式の試験問題・解答は掲載しません。A/B/Cは学習上の優先度です。同期はGitHub Private Repositoryを利用します。
+        非公式の学習支援アプリです。過去問・解答は権利者から公開許可を得た資料として掲載しています。A/B/Cは学習上の優先度です。同期はGitHub Private Repositoryを利用します。
       </footer>
     </div>
   )

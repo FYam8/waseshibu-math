@@ -6,6 +6,8 @@ import Practice from './pages/Practice'
 import Report from './pages/Report'
 import MultiPractice from './pages/MultiPractice'
 import SyncSettings from './pages/SyncSettings'
+import YearTraining from './pages/YearTraining'
+import PastPapers from './pages/PastPapers'
 
 export default function App() {
   return (
@@ -13,6 +15,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/years" element={<Years />} />
+        <Route path="/year-training" element={<YearTraining />} />
+        <Route path="/past-papers" element={<PastPapers />} />
         <Route path="/practice" element={<Practice />} />
         <Route path="/report" element={<Report />} />
         <Route path="/multi" element={<MultiPractice />} />

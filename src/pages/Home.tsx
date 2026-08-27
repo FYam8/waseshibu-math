@@ -27,7 +27,7 @@ export default function Home() {
     <>
       <section className="hero card">
         <div>
-          <span className="eyebrow">2019–2026 過去問構造ベース / 非公式</span>
+          <span className="eyebrow">2019–2026 過去問・解答収録 / 非公式</span>
           <h1>取れる5点を、落とさない。</h1>
           <p>大問1の取りこぼしを減らし、大問2〜5は（1）（2）を中心に回収。満点ではなく60〜75点の再現性を高める設計です。</p>
 
@@ -39,6 +39,8 @@ export default function Home() {
           </div>
 
           <div className="actions">
+            <Link className="button primary" to="/past-papers">実際の過去問を解く</Link>
+            <Link className="button primary" to="/year-training">全年度40大問を学ぶ</Link>
             <Link className="button primary" to="/practice">今日の8問を始める</Link>
             <Link className="button" to="/multi">大問2〜5を練習</Link>
             <Link className="button" to="/report">過去問得点を記録</Link>
@@ -52,7 +54,7 @@ export default function Home() {
       </section>
 
       <section className="grid three">
-        <article className="card stat"><b>{majors}</b><span>分析済み大問</span></article>
+        <article className="card stat"><b>{majors}</b><span>年度別演習（全大問）</span></article>
         <article className="card stat"><b>{q1Rate === null ? '--' : `${q1Rate}%`}</b><span>直近の大問1練習正答率</span></article>
         <article className="card stat"><b>{gap ?? '--'}</b><span>記録得点から目標まで</span></article>
       </section>
@@ -63,9 +65,9 @@ export default function Home() {
           <h2>次にやること</h2>
         </div>
         <div className="next-grid">
-          <div><strong>1</strong><span>今日の8問</span><p>2020〜2026型の8問構成で、最近の失点テーマを最大4問優先します。</p></div>
-          <div><strong>2</strong><span>ミス分類</span><p>「難しくて取れない」と「本来取れた」を分けます。</p></div>
-          <div><strong>3</strong><span>過去問得点記録</span><p>実際に解いた年度の得点で現在段階を判断します。</p></div>
+          <div><strong>1</strong><span>全年度40大問</span><p>2019〜2026年度を大問ごとに、過去問型の類題と解法3手順で学びます。</p></div>
+          <div><strong>2</strong><span>60点→70点</span><p>大問1と優先問題を先に完成させ、次に大問2〜5の（1）（2）へ進みます。</p></div>
+          <div><strong>3</strong><span>失点だけ再演習</span><p>不正解を原因別に記録し、本来取れた5点から回収します。</p></div>
         </div>
       </section>
 
