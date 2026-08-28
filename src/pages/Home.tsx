@@ -10,7 +10,7 @@ export default function Home() {
   const [prefs, setPrefs] = useState(loadPreferences())
   const majors = (questions.questions as MajorQuestion[]).length
 
-  const scoredQ1 = attempts.filter(a=>a.mode==='q1' && a.status!=='deferred').slice(0,8)
+  const scoredQ1 = attempts.filter(a=>a.questionId.startsWith('field-') && a.status!=='deferred').slice(0,8)
   const q1Correct = scoredQ1.filter(a=>a.status==='correct').length
   const q1Rate = scoredQ1.length ? Math.round(q1Correct/scoredQ1.length*100) : null
 
@@ -27,9 +27,9 @@ export default function Home() {
     <>
       <section className="hero card">
         <div>
-          <span className="eyebrow">2019–2026 紙の過去問＋弱点対策 / 非公式</span>
+          <span className="eyebrow">2019–2026 過去問＋18分野の弱点対策 / 非公式</span>
           <h1>取れる5点を、落とさない。</h1>
-          <p>大問1の取りこぼしを減らし、大問2〜5は（1）（2）を中心に回収。満点ではなく60〜75点の再現性を高める設計です。</p>
+          <p>まず実際の過去問をアプリ上で解きます。間違えた小問を18分野へ分類し、その分野の類題4問で解き直す設計です。</p>
 
           <div className="target-row">
             <span>学習目標</span>
@@ -39,11 +39,10 @@ export default function Home() {
           </div>
 
           <div className="actions">
-            <Link className="button primary" to="/past-papers">紙の過去問を採点する</Link>
-            <Link className="button" to="/mistakes">間違いだけ復習</Link>
-            <Link className="button primary" to="/year-training">全年度40大問を学ぶ</Link>
-            <Link className="button primary" to="/practice">今日の8問を始める</Link>
-            <Link className="button" to="/multi">大問2〜5を練習</Link>
+            <Link className="button primary" to="/past-papers">実際の過去問を解く</Link>
+            <Link className="button" to="/mistakes">間違いの類題4問へ</Link>
+            <Link className="button" to="/fields">18分野・全72問を見る</Link>
+            <Link className="button" to="/practice">弱点復習8問</Link>
             <Link className="button" to="/report">過去問得点を記録</Link>
           </div>
         </div>
@@ -55,8 +54,8 @@ export default function Home() {
       </section>
 
       <section className="grid three">
-        <article className="card stat"><b>{majors}</b><span>年度別演習（全大問）</span></article>
-        <article className="card stat"><b>{q1Rate === null ? '--' : `${q1Rate}%`}</b><span>直近の大問1練習正答率</span></article>
+        <article className="card stat"><b>8年</b><span>実際の過去問（{majors}大問）</span></article>
+        <article className="card stat"><b>{q1Rate === null ? '--' : `${q1Rate}%`}</b><span>直近8問の復習正答率</span></article>
         <article className="card stat"><b>{gap ?? '--'}</b><span>記録得点から目標まで</span></article>
       </section>
 
@@ -66,9 +65,9 @@ export default function Home() {
           <h2>次にやること</h2>
         </div>
         <div className="next-grid">
-          <div><strong>1</strong><span>全年度40大問</span><p>2019〜2026年度を大問ごとに、過去問型の類題と解法3手順で学びます。</p></div>
-          <div><strong>2</strong><span>60点→70点</span><p>大問1と優先問題を先に完成させ、次に大問2〜5の（1）（2）へ進みます。</p></div>
-          <div><strong>3</strong><span>失点だけ再演習</span><p>不正解を原因別に記録し、本来取れた5点から回収します。</p></div>
+          <div><strong>1</strong><span>実際の過去問</span><p>2019〜2026年度から1年を選び、問題冊子を画面で見ながら解答します。</p></div>
+          <div><strong>2</strong><span>小問別に採点</span><p>公式解答と比べて、○・×・後回しと失点原因を記録します。</p></div>
+          <div><strong>3</strong><span>類題4問</span><p>間違いを18分野に整理し、同じ分野を4問連続正解するまで解き直します。</p></div>
         </div>
       </section>
 

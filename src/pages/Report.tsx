@@ -18,9 +18,9 @@ export default function Report() {
   const deferred=attempts.filter(a=>a.status==='deferred').length
   const rate=scored.length?Math.round(correct/scored.length*100):0
 
-  const q1Recent=attempts.filter(a=>a.mode==='q1' && a.status!=='deferred').slice(0,8)
+  const q1Recent=attempts.filter(a=>a.questionId.startsWith('field-') && a.status!=='deferred').slice(0,8)
   const q1Correct=q1Recent.filter(a=>a.status==='correct').length
-  const q1Equivalent=q1Recent.length===8?q1Correct*5:null
+  const reviewResult=q1Recent.length===8?`${q1Correct}/8`:null
 
   const tagCounts=attempts
     .filter(a=>a.status==='wrong' && a.mistakeTag)
@@ -101,7 +101,7 @@ export default function Report() {
       <section className="grid four">
         <article className="card stat"><b>{latestScore ?? '--'}</b><span>最新の過去問得点</span></article>
         <article className="card stat"><b className="stage-text">{stage}</b><span>現在の段階</span></article>
-        <article className="card stat"><b>{q1Equivalent===null?'--':`${q1Equivalent}/40`}</b><span>直近8問の大問1換算</span></article>
+        <article className="card stat"><b>{reviewResult??'--'}</b><span>直近の弱点復習8問</span></article>
         <article className="card stat"><b>{deferred}</b><span>見送り記録</span></article>
       </section>
 

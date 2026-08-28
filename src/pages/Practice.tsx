@@ -1,11 +1,24 @@
 import { useEffect, useMemo, useState } from 'react'
-import { practiceQuestions } from '../data/practice'
+import type { PracticeQuestion } from '../data/practice'
+import { classifyRemediationField, remediationFields } from '../data/remediation'
 import { createRecordId, loadAttempts, loadDaily, saveAttempt, saveDaily } from '../storage'
 import { isAcceptedAnswer } from '../answer'
 import MathAnswerInput from '../components/MathAnswerInput'
 
 const mistakeTags = ['知識不足','解法未習得','読み落とし','計算ミス','符号ミス','場合分け不足','時間不足','答え方の不備']
 
+const practiceQuestions:PracticeQuestion[]=remediationFields.flatMap(field=>field.questions.map((q,index)=>({
+  id:`field-${field.id}-${index+1}`,
+  prompt:q.prompt,
+  answer:q.answer,
+  acceptedAnswers:q.acceptedAnswers,
+  topic:field.title,
+  grade:index<2?'A':'B',
+  sourcePattern:'18分野・全72問の類題バンク',
+  hint1:'過去問で使った公式・条件整理を思い出しましょう。',
+  hint2:q.explanation,
+  explanation:q.explanation
+})))
 
 function todayKey() {
   const d = new Date()
@@ -32,13 +45,14 @@ function buildDailyIds() {
   const prior = loadDaily()
   if (prior?.date === date && prior.questionIds?.length === 8) return prior.questionIds
 
-  // 最近の大問1練習で間違えたテーマを最大4問まで優先し、残りを日替わりで埋める。
+  // 過去問と類題で間違えた18分野を最大4問まで優先し、残りを72問から日替わりで埋める。
   const attempts = loadAttempts()
   const wrongTopicCounts = attempts
-    .filter(a => a.mode === 'q1' && a.status === 'wrong' && a.topic !== '旧データ')
+    .filter(a => a.status === 'wrong' && a.topic !== '旧データ')
     .slice(0, 60)
     .reduce<Record<string,number>>((acc,a)=>{
-      acc[a.topic] = (acc[a.topic] || 0) + 1
+      const field=classifyRemediationField(a.topic).title
+      acc[field] = (acc[field] || 0) + 1
       return acc
     }, {})
 
@@ -214,16 +228,16 @@ export default function Practice() {
     return (
       <>
         <div className="page-head">
-          <div><span className="eyebrow">2020〜2026型 / TODAY'S 8</span><h1>今日の8問・結果</h1></div>
+          <div><span className="eyebrow">72-QUESTION BANK / REVIEW 8</span><h1>弱点復習8問・結果</h1></div>
         </div>
         <section className="card session-summary">
-          <div className="summary-score"><strong>{correctCount*5}</strong><span>/ 40点換算</span></div>
+          <div className="summary-score"><strong>{correctCount}</strong><span>/ 8問正解</span></div>
           <div className="grid three">
             <article className="stat"><b>{correctCount}</b><span>正解</span></article>
             <article className="stat"><b>{wrongCount}</b><span>不正解</span></article>
             <article className="stat"><b>{deferredCount}</b><span>見送り</span></article>
           </div>
-          <p className="muted">「40点換算」はこの自作8問を各5点として数えた学習用指標で、過去問の実得点ではありません。</p>
+          <p className="muted">実際の過去問得点とは別の、18分野の復習結果です。</p>
           <div className="actions">
             <button className="button primary" onClick={restart}>同じ8問を再挑戦</button>
             <a className="button" href="#/report">弱点・得点記録へ</a>
@@ -238,7 +252,7 @@ export default function Practice() {
   return (
     <>
       <div className="page-head">
-        <div><span className="eyebrow">2020〜2026型 / TODAY'S 8</span><h1>今日の8問（大問1）</h1></div>
+        <div><span className="eyebrow">18 FIELDS / 72-QUESTION BANK</span><h1>弱点復習8問</h1><p className="muted">全72問から、記録済みの弱点を優先して8問出題します。</p></div>
         <div className="practice-meta">
           <span>{settled} / 8 完了</span>
           <span>問題 {fmt(questionElapsed)}</span>

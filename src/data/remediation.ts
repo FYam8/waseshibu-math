@@ -1,110 +1,186 @@
-export type RemedyQuestion={prompt:string;answer:string;acceptedAnswers?:string[];explanation:string}
-const banks:Record<string,RemedyQuestion[]>={
-  equation:[
-    {prompt:'方程式 4x-7=13 を解きなさい。',answer:'5',explanation:'4x=20よりx=5。'},
-    {prompt:'連立方程式 x+y=11, x-y=3 のxを求めなさい。',answer:'7',explanation:'2式を足すと2x=14。'},
-    {prompt:'方程式 x²-5x+6=0 の大きい方の解を答えなさい。',answer:'3',explanation:'(x-2)(x-3)=0より2,3。'}
-  ],
-  calculation:[
-    {prompt:'3√12-√27 を簡単にしなさい。',answer:'3√3',acceptedAnswers:['3*√3','3sqrt(3)'],explanation:'3√12=6√3、√27=3√3。差は3√3。'},
-    {prompt:'x²-7x+10を因数分解しなさい。',answer:'(x-2)(x-5)',acceptedAnswers:['(x-5)(x-2)'],explanation:'積10、和-7の2数は-2,-5。'},
-    {prompt:'2a-3(a-4)を簡単にしなさい。',answer:'-a+12',acceptedAnswers:['12-a'],explanation:'2a-3a+12=-a+12。'}
-  ],
-  function:[
-    {prompt:'反比例y=24/xでx=6のときyを求めなさい。',answer:'4',explanation:'24÷6=4。'},
-    {prompt:'放物線y=ax²が点(3,18)を通るときaを求めなさい。',answer:'2',explanation:'18=9aよりa=2。'},
-    {prompt:'点(1,3)と(5,11)を通る直線の傾きを求めなさい。',answer:'2',explanation:'(11-3)÷(5-1)=2。'}
-  ],
-  probability:[
-    {prompt:'2個のサイコロの和が6になる確率を求めなさい。',answer:'5/36',explanation:'(1,5)〜(5,1)の5通り。'},
-    {prompt:'1〜5のカードから2枚を同時に選ぶ方法は何通りですか。',answer:'10',explanation:'5C2=10。'},
-    {prompt:'1〜4のカードを2枚順に引くとき、2枚目が1枚目より大きい確率を求めなさい。',answer:'1/2',explanation:'同じ数は出ず、大小は対称。'}
-  ],
-  integer:[
-    {prompt:'Mを6で割っても9で割っても2余ります。2桁で最小のMを求めなさい。',answer:'20',explanation:'M-2は6と9の公倍数。最小公倍数18より20。'},
-    {prompt:'84の正の約数の個数を求めなさい。',answer:'12',explanation:'84=2²×3×7より(2+1)(1+1)(1+1)=12。'},
-    {prompt:'絶対値が√30より小さい整数は何個ありますか。',answer:'11',explanation:'√30は5と6の間。-5〜5の11個。'}
-  ],
-  geometry:[
-    {prompt:'相似な三角形の辺の比が3:5です。面積比を答えなさい。',answer:'9:25',explanation:'面積比は辺の比の2乗。'},
-    {prompt:'直径を見込む円周角は何度ですか。',answer:'90',explanation:'半円に対する円周角は90度。'},
-    {prompt:'上底4cm、下底10cm、高さ6cmの台形の面積を求めなさい。',answer:'42',explanation:'(4+10)×6÷2=42。'}
-  ],
-  solid:[
-    {prompt:'底面積24cm²、高さ9cmの三角すいの体積を求めなさい。',answer:'72',explanation:'24×9÷3=72。'},
-    {prompt:'1辺5cmの立方体の体積を求めなさい。',answer:'125',explanation:'5³=125。'},
-    {prompt:'底面積18cm²、高さ7cmの柱体の体積を求めなさい。',answer:'126',explanation:'18×7=126。'}
-  ],
-  word:[
-    {prompt:'12%の食塩水250gに含まれる食塩は何gですか。',answer:'30',explanation:'250×0.12=30。'},
-    {prompt:'毎分15Lずつ水を入れます。8分で何L入りますか。',answer:'120',explanation:'15×8=120。'},
-    {prompt:'800円で仕入れた品を1000円で12個売りました。利益はいくらですか。',answer:'2400',explanation:'(1000-800)×12=2400。'}
-  ],
-  statistics:[
-    {prompt:'データ 2,7,4,9,5 の中央値を求めなさい。',answer:'5',explanation:'2,4,5,7,9の中央は5。'},
-    {prompt:'データ 3,5,8,10 の中央値を求めなさい。',answer:'6.5',acceptedAnswers:['13/2'],explanation:'中央2数5,8の平均は6.5。'},
-    {prompt:'5人の平均点が68点です。合計点を求めなさい。',answer:'340',explanation:'68×5=340。'}
-  ]
+export type RemedyQuestion = {
+  prompt: string
+  answer: string
+  acceptedAnswers?: string[]
+  explanation: string
 }
 
-export function getRemediation(topic:string){
-  const key=
-    /方程式|連立/.test(topic)?'equation':
-    /確率|場合|カード|サイコロ|移動|スイッチ/.test(topic)?'probability':
-    /放物線|反比例|関数|直線|座標|変域|変化の割合/.test(topic)?'function':
-    /整数|余り|約数|倍数|平方数|四捨五入/.test(topic)?'integer':
-    /円柱|円すい|立方体|角すい|立体|体積|表面積/.test(topic)?'solid':
-    /中央値|平均|データ/.test(topic)?'statistics':
-    /食塩|貯水|売買|歩行|割合|濃度|文章|数量|グラフ/.test(topic)?'word':
-    /図形|角度|円|相似|平行|三角|四角|台形|面積|長さ|弦/.test(topic)?'geometry':'calculation'
-  const gcd=(a:number,b:number):number=>b?gcd(b,a%b):a
-  const fraction=(a:number,b:number)=>{const g=gcd(a,b);return `${a/g}/${b/g}`}
-  const generated:Record<string,()=>RemedyQuestion[]>={
-    equation:()=>[
-      ...Array.from({length:4},(_,i)=>{const a=i+2,n=i+3,b=i+1,c=a*n+b;return {prompt:`方程式 ${a}x+${b}=${c} を解きなさい。`,answer:String(n),explanation:`${a}x=${c-b}よりx=${n}。`}}),
-      ...Array.from({length:4},(_,i)=>{const x=i+4,y=i+1,s=x+y,d=x-y;return {prompt:`連立方程式 x+y=${s}, x-y=${d} のxを求めなさい。`,answer:String(x),explanation:`2式を足すと2x=${2*x}。`}}),
-      ...Array.from({length:4},(_,i)=>{const r1=i+1,r2=i+4;return {prompt:`方程式 x²-${r1+r2}x+${r1*r2}=0 の大きい方の解を答えなさい。`,answer:String(r2),explanation:`(x-${r1})(x-${r2})=0。`}})
-    ],
-    calculation:()=>[
-      ...Array.from({length:4},(_,i)=>{const a=i+2,b=i+5;return {prompt:`x²-${a+b}x+${a*b}を因数分解しなさい。`,answer:`(x-${a})(x-${b})`,acceptedAnswers:[`(x-${b})(x-${a})`],explanation:`積${a*b}、和-${a+b}の2数は-${a},-${b}。`}}),
-      ...Array.from({length:4},(_,i)=>{const k=i+2,b=i+3,n=(k+1)*b;return {prompt:`${k}x-${k+1}(x-${b})を簡単にしなさい。`,answer:`-x+${n}`,acceptedAnswers:[`${n}-x`],explanation:`${k}x-${k+1}x+${n}=-x+${n}。`}}),
-      ...Array.from({length:4},(_,i)=>{const m=i+3;return {prompt:`√${m*m*2}-√2 を簡単にしなさい。`,answer:`${m-1}√2`,acceptedAnswers:[`${m-1}*√2`,`${m-1}sqrt(2)`],explanation:`√${m*m*2}=${m}√2。`}})
-    ],
-    function:()=>[
-      ...Array.from({length:4},(_,i)=>{const x=i+2,y=i+3;return {prompt:`反比例y=${x*y}/xでx=${x}のときyを求めなさい。`,answer:String(y),explanation:`${x*y}÷${x}=${y}。`}}),
-      ...Array.from({length:4},(_,i)=>{const a=i+1,x=i+2,y=a*x*x;return {prompt:`放物線y=ax²が点(${x},${y})を通るときaを求めなさい。`,answer:String(a),explanation:`${y}=${x*x}aよりa=${a}。`}}),
-      ...Array.from({length:4},(_,i)=>{const m=i+1,y2=2+3*m;return {prompt:`点(1,2)と(4,${y2})を通る直線の傾きを求めなさい。`,answer:String(m),explanation:`(${y2}-2)÷3=${m}。`}})
-    ],
-    probability:()=>[
-      ...[4,5,6,7].map(sum=>({prompt:`2個のサイコロの和が${sum}になる確率を求めなさい。`,answer:fraction(sum-1,36),explanation:`条件に合うのは${sum-1}通り。全36通り。`})),
-      ...[4,5,6,7].map(n=>({prompt:`1〜${n}のカードから2枚を同時に選ぶ方法は何通りですか。`,answer:String(n*(n-1)/2),explanation:`${n}C2=${n*(n-1)/2}。`})),
-      ...[5,6,7,8].map(n=>({prompt:`1〜${n}から1つ選ぶとき偶数である確率を求めなさい。`,answer:fraction(Math.floor(n/2),n),explanation:`偶数は${Math.floor(n/2)}個、全体は${n}個。`}))
-    ],
-    integer:()=>[
-      ...[[6,8,3],[4,10,1],[6,9,2],[8,12,5]].map(([a,b,r])=>{const l=a*b/gcd(a,b);return {prompt:`Mを${a}で割っても${b}で割っても${r}余ります。最小の2桁のMを求めなさい。`,answer:String(l+r),explanation:`M-${r}は最小公倍数${l}の倍数。`}}),
-      ...[12,18,20,28].map(n=>{let count=0;for(let i=1;i<=n;i++)if(n%i===0)count++;return {prompt:`${n}の正の約数の個数を求めなさい。`,answer:String(count),explanation:`約数を積の組で漏れなく数えると${count}個。`}}),
-      ...[3,4,5,6].map(k=>({prompt:`絶対値が√${k*k+2}より小さい整数は何個ありますか。`,answer:String(2*k+1),explanation:`√${k*k+2}は${k}と${k+1}の間。-${k}〜${k}の${2*k+1}個。`}))
-    ],
-    geometry:()=>[
-      ...[[2,3],[3,4],[3,5],[4,5]].map(([a,b])=>({prompt:`相似な三角形の辺の比が${a}:${b}です。面積比を答えなさい。`,answer:`${a*a}:${b*b}`,explanation:'面積比は辺の比の2乗。'})),
-      ...[[3,7,4],[4,8,5],[5,9,6],[6,10,7]].map(([a,b,h])=>({prompt:`上底${a}cm、下底${b}cm、高さ${h}cmの台形の面積を求めなさい。`,answer:String((a+b)*h/2),explanation:`(${a}+${b})×${h}÷2。`})),
-      ...[6,8,10,12].map(d=>({prompt:`直径${d}cmの円で、直径を見込む円周角は何度ですか。`,answer:'90',explanation:'直径を見込む円周角は常に90度。'}))
-    ],
-    solid:()=>[
-      ...[[18,8],[24,9],[30,7],[36,10]].map(([base,h])=>({prompt:`底面積${base}cm²、高さ${h}cmの角すいの体積を求めなさい。`,answer:String(base*h/3),explanation:`${base}×${h}÷3。`})),
-      ...[3,4,5,6].map(a=>({prompt:`1辺${a}cmの立方体の体積を求めなさい。`,answer:String(a**3),explanation:`${a}³=${a**3}。`})),
-      ...[[12,5],[15,6],[18,7],[21,8]].map(([base,h])=>({prompt:`底面積${base}cm²、高さ${h}cmの柱体の体積を求めなさい。`,answer:String(base*h),explanation:`${base}×${h}。`}))
-    ],
-    word:()=>[
-      ...[[10,240],[12,250],[15,200],[20,180]].map(([p,g])=>({prompt:`${p}%の食塩水${g}gに含まれる食塩は何gですか。`,answer:String(p*g/100),explanation:`${g}×${p/100}。`})),
-      ...[[12,8],[15,9],[18,7],[20,6]].map(([rate,t])=>({prompt:`毎分${rate}Lずつ水を入れます。${t}分で何L入りますか。`,answer:String(rate*t),explanation:`${rate}×${t}。`})),
-      ...[[700,900,10],[800,1050,8],[900,1200,12],[650,850,15]].map(([buy,sell,n])=>({prompt:`${buy}円で仕入れた品を${sell}円で${n}個売りました。利益はいくらですか。`,answer:String((sell-buy)*n),explanation:`(${sell}-${buy})×${n}。`}))
-    ],
-    statistics:()=>[
-      ...[[2,4,5,8,9],[1,3,6,7,10],[4,5,8,11,13],[3,7,9,12,15]].map(xs=>({prompt:`データ ${xs.join(',')} の中央値を求めなさい。`,answer:String(xs[2]),explanation:`並べた中央の値は${xs[2]}。`})),
-      ...[[3,5,8,10],[2,6,9,11],[4,8,10,14],[5,7,12,16]].map(xs=>({prompt:`データ ${xs.join(',')} の中央値を求めなさい。`,answer:String((xs[1]+xs[2])/2),explanation:`中央2数の平均。`})),
-      ...[[5,68],[6,72],[8,65],[10,74]].map(([n,avg])=>({prompt:`${n}人の平均点が${avg}点です。合計点を求めなさい。`,answer:String(n*avg),explanation:`${avg}×${n}。`}))
+export type RemediationField = {
+  id: string
+  title: string
+  keywords: RegExp
+  questions: RemedyQuestion[]
+}
+
+export const remediationFields: RemediationField[] = [
+  {
+    id: 'expressions', title: '式の計算・文字式', keywords: /数式計算|文字式|式の計算|式の変形|数・分数の処理/,
+    questions: [
+      {prompt:'3a-2(a-4)を簡単にしなさい。',answer:'a+8',acceptedAnswers:['8+a'],explanation:'3a-2a+8=a+8。'},
+      {prompt:'2x+3y-(x-2y)を簡単にしなさい。',answer:'x+5y',acceptedAnswers:['5y+x'],explanation:'かっこを外すと2x+3y-x+2y=x+5y。'},
+      {prompt:'4(2x-3)-5xを簡単にしなさい。',answer:'3x-12',acceptedAnswers:['-12+3x'],explanation:'8x-12-5x=3x-12。'},
+      {prompt:'5(x-2)-3(x+1)を簡単にしなさい。',answer:'2x-13',acceptedAnswers:['-13+2x'],explanation:'5x-10-3x-3=2x-13。'}
+    ]
+  },
+  {
+    id: 'factoring', title: '因数分解', keywords: /因数分解/,
+    questions: [
+      {prompt:'x²-7x+12を因数分解しなさい。',answer:'(x-3)(x-4)',acceptedAnswers:['(x-4)(x-3)'],explanation:'積が12、和が-7になる-3と-4を使います。'},
+      {prompt:'x²+x-12を因数分解しなさい。',answer:'(x+4)(x-3)',acceptedAnswers:['(x-3)(x+4)'],explanation:'積が-12、和が1になる4と-3を使います。'},
+      {prompt:'2x²-8xを因数分解しなさい。',answer:'2x(x-4)',acceptedAnswers:['2(x-4)x'],explanation:'共通因数2xでくくります。'},
+      {prompt:'x²-25を因数分解しなさい。',answer:'(x-5)(x+5)',acceptedAnswers:['(x+5)(x-5)'],explanation:'平方の差 x²-5² を使います。'}
+    ]
+  },
+  {
+    id: 'linear-equations', title: '一次方程式・式変形', keywords: /一次方程式|文字を含む式\/方程式|比例関係から一次式/,
+    questions: [
+      {prompt:'方程式 3x+5=20 を解きなさい。',answer:'5',explanation:'3x=15よりx=5。'},
+      {prompt:'方程式 4(x-2)=2x+6 を解きなさい。',answer:'7',explanation:'4x-8=2x+6より2x=14。'},
+      {prompt:'方程式 x/3+2=5 を解きなさい。',answer:'9',explanation:'x/3=3よりx=9。'},
+      {prompt:'方程式 0.4x-1=3 を解きなさい。',answer:'10',explanation:'0.4x=4よりx=10。'}
+    ]
+  },
+  {
+    id: 'simultaneous-equations', title: '連立方程式', keywords: /連立方程式|2変数の数量関係|3変数の数量関係/,
+    questions: [
+      {prompt:'連立方程式 x+y=11, x-y=3 を解き、xを答えなさい。',answer:'7',explanation:'2式を足すと2x=14。'},
+      {prompt:'連立方程式 2x+y=11, x-y=1 を解き、xを答えなさい。',answer:'4',explanation:'2式を足すと3x=12。'},
+      {prompt:'連立方程式 x+2y=8, 3x-y=3 を解き、(x,y)で答えなさい。',answer:'(2,3)',explanation:'第2式からy=3x-3。第1式へ代入してx=2,y=3。'},
+      {prompt:'連立方程式 3x+2y=16, x-y=2 を解き、(x,y)で答えなさい。',answer:'(4,2)',explanation:'x=y+2を第1式へ代入して5y=10。'}
+    ]
+  },
+  {
+    id: 'quadratic-equations', title: '二次方程式', keywords: /二次方程式|2解/,
+    questions: [
+      {prompt:'方程式 x²-5x+6=0 の大きい方の解を答えなさい。',answer:'3',explanation:'(x-2)(x-3)=0より解は2,3。'},
+      {prompt:'方程式 x²-9=0 の正の解を答えなさい。',answer:'3',explanation:'(x-3)(x+3)=0。'},
+      {prompt:'方程式 x²+2x-8=0 の小さい方の解を答えなさい。',answer:'-4',explanation:'(x+4)(x-2)=0より解は-4,2。'},
+      {prompt:'方程式 2x²-7x+3=0 の大きい方の解を答えなさい。',answer:'3',explanation:'(2x-1)(x-3)=0より解は1/2,3。'}
+    ]
+  },
+  {
+    id: 'radicals', title: '平方根・近似値', keywords: /平方根|根号|近似|小数部分/,
+    questions: [
+      {prompt:'√50を簡単にしなさい。',answer:'5√2',acceptedAnswers:['5*√2','5sqrt(2)'],explanation:'√50=√(25×2)=5√2。'},
+      {prompt:'3√8-√18を簡単にしなさい。',answer:'3√2',acceptedAnswers:['3*√2','3sqrt(2)'],explanation:'3√8=6√2、√18=3√2。'},
+      {prompt:'4/√2 の分母を有理化しなさい。',answer:'2√2',acceptedAnswers:['2*√2','2sqrt(2)'],explanation:'4√2/2=2√2。'},
+      {prompt:'(√3+1)(√3-1)を計算しなさい。',answer:'2',explanation:'平方の差より3-1=2。'}
+    ]
+  },
+  {
+    id: 'integers', title: '整数・約数・余り', keywords: /整数|余り|約数|因数|倍数|平方数|四捨五入/,
+    questions: [
+      {prompt:'84の正の約数の個数を求めなさい。',answer:'12',explanation:'84=2²×3×7より(2+1)(1+1)(1+1)=12。'},
+      {prompt:'84と126の最大公約数を求めなさい。',answer:'42',explanation:'84=2×42、126=3×42。'},
+      {prompt:'12と18の最小公倍数を求めなさい。',answer:'36',explanation:'12=2²×3、18=2×3²なので2²×3²=36。'},
+      {prompt:'Mを6で割っても9で割っても2余ります。2桁で最小のMを求めなさい。',answer:'20',explanation:'M-2は6と9の公倍数。最小公倍数18よりM=20。'}
+    ]
+  },
+  {
+    id: 'proportion', title: '比例・反比例', keywords: /比例|反比例|1kmあたり/,
+    questions: [
+      {prompt:'y=3xでx=4のとき、yを求めなさい。',answer:'12',explanation:'y=3×4=12。'},
+      {prompt:'反比例y=20/xでx=5のとき、yを求めなさい。',answer:'4',explanation:'20÷5=4。'},
+      {prompt:'yはxに比例し、x=4のときy=10です。x=6のときのyを求めなさい。',answer:'15',explanation:'比例定数は10/4=5/2。6×5/2=15。'},
+      {prompt:'y=12/xでy=3のとき、xを求めなさい。',answer:'4',explanation:'3=12/xより3x=12。'}
+    ]
+  },
+  {
+    id: 'quadratic-functions', title: '二次関数・放物線', keywords: /二次関数|放物線|曲線上/,
+    questions: [
+      {prompt:'放物線y=ax²が点(3,18)を通るとき、aを求めなさい。',answer:'2',explanation:'18=9aよりa=2。'},
+      {prompt:'y=2x²でx=-3のとき、yを求めなさい。',answer:'18',explanation:'2×(-3)²=18。'},
+      {prompt:'y=x²でxが1から3まで増えるときの変化の割合を求めなさい。',answer:'4',explanation:'(9-1)/(3-1)=4。'},
+      {prompt:'y=x²で-2≦x≦3のとき、yの最大値を求めなさい。',answer:'9',explanation:'|x|が最大のx=3でy=9。'}
+    ]
+  },
+  {
+    id: 'coordinates', title: '座標・直線・面積', keywords: /座標|直線|交点|傾き|y軸|対称移動|座標関係/,
+    questions: [
+      {prompt:'点(4,-3)をx軸について対称移動した点を(x,y)で答えなさい。',answer:'(4,3)',explanation:'x座標は同じで、y座標の符号が変わります。'},
+      {prompt:'点(1,3)と(5,11)を通る直線の傾きを求めなさい。',answer:'2',explanation:'(11-3)/(5-1)=2。'},
+      {prompt:'直線y=2x-1とy軸の交点のy座標を求めなさい。',answer:'-1',explanation:'y軸上ではx=0。'},
+      {prompt:'3点(0,0),(4,0),(0,3)を頂点とする三角形の面積を求めなさい。',answer:'6',explanation:'底辺4、高さ3なので4×3÷2=6。'}
+    ]
+  },
+  {
+    id: 'probability', title: '確率', keywords: /確率|コイン|サイコロ|カード|和条件|積の条件|複合条件|順序比較|AまたはB|取り出し/,
+    questions: [
+      {prompt:'2個のサイコロの和が7になる確率を求めなさい。',answer:'1/6',acceptedAnswers:['6/36'],explanation:'該当6通り、全36通りなので1/6。'},
+      {prompt:'硬貨を2回投げるとき、2回とも表になる確率を求めなさい。',answer:'1/4',explanation:'表表は、表裏・裏表・裏裏と合わせた4通り中1通り。'},
+      {prompt:'1〜5のカードから1枚選ぶとき、偶数である確率を求めなさい。',answer:'2/5',explanation:'偶数は2,4の2枚、全体は5枚。'},
+      {prompt:'赤玉3個、白玉2個から戻さず2個取るとき、2個とも赤玉である確率を求めなさい。',answer:'3/10',explanation:'3/5×2/4=3/10。'}
+    ]
+  },
+  {
+    id: 'counting', title: '場合の数・規則性', keywords: /場合|並べ|数え上げ|規則|スイッチ|ルール|選ぶ方法|条件選択|状態の追跡/,
+    questions: [
+      {prompt:'1〜5のカードから2枚を同時に選ぶ方法は何通りですか。',answer:'10',explanation:'5C2=10。'},
+      {prompt:'1,2,3を1回ずつ使って3桁の整数を作るとき、何個できますか。',answer:'6',explanation:'3×2×1=6。'},
+      {prompt:'AからBへ3通り、BからCへ4通りの道があります。AからBを経てCへ行く方法は何通りですか。',answer:'12',explanation:'3×4=12。'},
+      {prompt:'4個のスイッチをそれぞれオンかオフにするとき、状態は全部で何通りですか。',answer:'16',explanation:'各スイッチ2通りなので2⁴=16。'}
+    ]
+  },
+  {
+    id: 'statistics', title: 'データ・中央値', keywords: /中央値|平均|データ/,
+    questions: [
+      {prompt:'データ2,7,4,9,5の中央値を求めなさい。',answer:'5',explanation:'2,4,5,7,9の中央は5。'},
+      {prompt:'データ3,5,8,10の中央値を求めなさい。',answer:'6.5',acceptedAnswers:['13/2'],explanation:'中央2数5,8の平均は6.5。'},
+      {prompt:'5人の平均点が68点です。合計点を求めなさい。',answer:'340',explanation:'68×5=340。'},
+      {prompt:'4人の平均点が70点です。3人の得点が65,72,68点のとき、残り1人の得点を求めなさい。',answer:'75',explanation:'合計280点から65+72+68=205点を引きます。'}
+    ]
+  },
+  {
+    id: 'angles-circles', title: '角度・円', keywords: /角度|円周角|直径|円(?!すい|柱)|おうぎ形|弦|針|六角形/,
+    questions: [
+      {prompt:'三角形の2つの内角が48°と67°です。残りの角を求めなさい。',answer:'65',explanation:'180-48-67=65。'},
+      {prompt:'直径を見込む円周角は何度ですか。',answer:'90',explanation:'半円に対する円周角は90°。'},
+      {prompt:'同じ弧に対する中心角が100°のとき、円周角を求めなさい。',answer:'50',explanation:'円周角は中心角の半分。'},
+      {prompt:'半径3cmの円周の長さをπを使って答えなさい。',answer:'6π',acceptedAnswers:['6*pi','6pi'],explanation:'2πr=2π×3=6π。'}
+    ]
+  },
+  {
+    id: 'similarity', title: '相似・面積比', keywords: /相似|面積比|辺の比|辺の関係|平行四辺形|平行条件|平行線|台形|平面図形|正方形|三角形の決定条件/,
+    questions: [
+      {prompt:'相似な三角形の辺の比が2:3です。面積比を答えなさい。',answer:'4:9',explanation:'面積比は辺の比の2乗。'},
+      {prompt:'相似な図形で、短い図形の対応する辺6cm、長い図形では9cmです。短い図形の別の辺10cmに対応する長さを求めなさい。',answer:'15',explanation:'拡大率は9/6=3/2。10×3/2=15。'},
+      {prompt:'相似な図形の面積比が25:49です。対応する辺の比を答えなさい。',answer:'5:7',explanation:'面積比の平方根を取ります。'},
+      {prompt:'相似比が3:2です。小さい図形の周の長さが20cmのとき、大きい図形の周の長さを求めなさい。',answer:'30',explanation:'20×3/2=30。'}
+    ]
+  },
+  {
+    id: 'solids', title: '立体・体積・切断', keywords: /円柱|円すい|立方体|角すい|三角すい|四角すい|立体|体積|表面積|切断|三角柱|柱体|頂点・面/,
+    questions: [
+      {prompt:'1辺5cmの立方体の体積を求めなさい。',answer:'125',explanation:'5³=125。'},
+      {prompt:'底面積18cm²、高さ7cmの柱体の体積を求めなさい。',answer:'126',explanation:'18×7=126。'},
+      {prompt:'底面積24cm²、高さ9cmの角すいの体積を求めなさい。',answer:'72',explanation:'24×9÷3=72。'},
+      {prompt:'1辺4cmの立方体の表面積を求めなさい。',answer:'96',explanation:'1面16cm²が6面なので16×6=96。'}
+    ]
+  },
+  {
+    id: 'motion', title: '動点・速さ・グラフ', keywords: /動点|速さ|追いつき|歩行|グラフ|時刻|周期|一定変化率|移動/,
+    questions: [
+      {prompt:'時速60kmで1.5時間進むと、何km進みますか。',answer:'90',explanation:'60×1.5=90。'},
+      {prompt:'12kmの道のりを時速4kmで進むと、何時間かかりますか。',answer:'3',explanation:'12÷4=3。'},
+      {prompt:'先に進む人との距離が40kmあります。時速80kmで時速60kmの人を追うと、何時間で追いつきますか。',answer:'2',explanation:'速さの差20km/hで40kmを縮めるので2時間。'},
+      {prompt:'毎分5m進む点が、出発して8分後までに進む距離を求めなさい。',answer:'40',explanation:'5×8=40。'}
+    ]
+  },
+  {
+    id: 'word-problems', title: '割合・食塩水・数量文章題', keywords: /割合|食塩|濃度|売買|収支|単価|貯水|手数料|数量|文章題|水位|量が変わる|未知数を決定|捨て水/,
+    questions: [
+      {prompt:'12%の食塩水250gに含まれる食塩は何gですか。',answer:'30',explanation:'250×0.12=30。'},
+      {prompt:'定価2000円の商品を15%引きで買います。代金はいくらですか。',answer:'1700',explanation:'2000×0.85=1700。'},
+      {prompt:'800円で仕入れた品を1000円で12個売りました。利益はいくらですか。',answer:'2400',explanation:'(1000-800)×12=2400。'},
+      {prompt:'10%の食塩水200gと20%の食塩水100gを混ぜます。食塩は全部で何gですか。',answer:'40',explanation:'200×0.10+100×0.20=40。'}
     ]
   }
-  return generated[key]?.()||banks[key]
+]
+
+export function classifyRemediationField(topic: string): RemediationField {
+  return remediationFields.find(field => field.keywords.test(topic)) ?? remediationFields[0]
+}
+
+export function getRemediation(topic: string) {
+  return classifyRemediationField(topic).questions
 }
