@@ -109,4 +109,8 @@ const storage = read('src/storage.ts')
 if (storage.includes('Math.max(current + 1, Date.now())')) ok('stale端末のリセット世代を時刻ベースで前進')
 else fail('resetVersion stale端末対策なし')
 
+const styles=read('src/styles.css')
+if(styles.includes('.workflow-strip{display:grid;grid-template-columns:repeat(4,1fr)')&&styles.includes('.container{padding:10px 7px 40px}')&&styles.includes('.exam-images{padding:2px'))ok('スマホ過去問画面の上部圧縮・問題領域拡大')
+else fail('スマホ過去問画面のコンパクト表示')
+
 if (!process.exitCode) console.log('SELF-CHECK PASSED')
