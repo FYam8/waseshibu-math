@@ -15,6 +15,9 @@ export default function Home() {
   const q1Rate = scoredQ1.length ? Math.round(q1Correct/scoredQ1.length*100) : null
 
   const latestExam = examScores[0] ?? null
+  const done = (year:number) => examScores.some(s=>s.year===year && s.completed!==false)
+  const nextYear = !done(2024) ? 2024 : !done(2025) ? 2025 : !done(2026) ? 2026 : 2024
+  const nextLabel = nextYear===2024 ? '2024年度で診断する' : nextYear===2025 ? '2025年度で改善確認' : '2026年度で仕上げ確認'
   const gap = latestExam ? Math.max(0, prefs.target-latestExam.score) : null
 
   const setTarget = (target: 60|70|75) => {
@@ -39,7 +42,7 @@ export default function Home() {
           </div>
 
           <div className="actions">
-            <Link className="button primary" to="/past-papers">実際の過去問を解く</Link>
+            <Link className="button primary" to={`/past-papers?year=${nextYear}`}>{nextLabel}</Link>
             <Link className="button" to="/mistakes">間違いの類題4問へ</Link>
             <Link className="button" to="/fields">18分野・全72問を見る</Link>
             <Link className="button" to="/practice">弱点復習8問</Link>
@@ -54,7 +57,7 @@ export default function Home() {
       </section>
 
       <section className="grid three">
-        <article className="card stat"><b>8年</b><span>実際の過去問（{majors}大問）</span></article>
+        <article className="card stat"><b>160問</b><span>全8年・{majors}大問をアプリ内収録</span></article>
         <article className="card stat"><b>{q1Rate === null ? '--' : `${q1Rate}%`}</b><span>直近8問の復習正答率</span></article>
         <article className="card stat"><b>{gap ?? '--'}</b><span>記録得点から目標まで</span></article>
       </section>
@@ -65,9 +68,9 @@ export default function Home() {
           <h2>次にやること</h2>
         </div>
         <div className="next-grid">
-          <div><strong>1</strong><span>実際の過去問</span><p>2019〜2026年度から1年を選び、問題冊子を画面で見ながら解答します。</p></div>
-          <div><strong>2</strong><span>小問別に採点</span><p>公式解答と比べて、○・×・後回しと失点原因を記録します。</p></div>
-          <div><strong>3</strong><span>類題4問</span><p>間違いを18分野に整理し、同じ分野を4問連続正解するまで解き直します。</p></div>
+          <div><strong>1</strong><span>2024で診断</span><p>20小問を初見で解き、方針・実得点・再現可能得点を記録します。</p></div>
+          <div><strong>2</strong><span>弱点3分野だけ補強</span><p>本来取れた失点を優先し、類題を4問連続正解するまで解き直します。</p></div>
+          <div><strong>3</strong><span>2025→2026で確認</span><p>改善確認と仕上げ確認を分け、60〜75点を安定して再現できるか測ります。</p></div>
         </div>
       </section>
 

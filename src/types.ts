@@ -1,5 +1,7 @@
 export type Grade = 'A' | 'B' | 'C'
 export type AttemptStatus = 'correct' | 'wrong' | 'deferred'
+export type Approach = 'immediate' | 'thought' | 'none'
+export type Diagnosis = 'correct' | 'recoverable' | 'difficult' | 'time'
 export type PracticeMode = 'q1' | 'multi'
 
 export type Subquestion = {
@@ -30,6 +32,10 @@ export type Attempt = {
   topic: string
   status: AttemptStatus
   mistakeTag?: string
+  approach?: Approach
+  diagnosis?: Diagnosis
+  answer?: string
+  flagged?: boolean
   seconds?: number
   at: string
 }
@@ -40,5 +46,10 @@ export type ExamScore = {
   resetVersion: number
   year: number
   score: number
+  reproducibleScore?: number
+  recoverableScore?: number
+  timeCandidateScore?: number
+  completed?: boolean
+  attemptKind?: 'first' | 'retake'
   at: string
 }

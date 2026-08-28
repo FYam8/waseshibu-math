@@ -114,6 +114,10 @@ function migrateAttempt(raw: any): Attempt | null {
       ? raw.status
       : raw.correct === true ? 'correct' : 'wrong',
     mistakeTag: raw.mistakeTag,
+    approach: raw.approach === 'immediate' || raw.approach === 'thought' || raw.approach === 'none' ? raw.approach : undefined,
+    diagnosis: raw.diagnosis === 'correct' || raw.diagnosis === 'recoverable' || raw.diagnosis === 'difficult' || raw.diagnosis === 'time' ? raw.diagnosis : undefined,
+    answer: typeof raw.answer === 'string' ? raw.answer : undefined,
+    flagged: typeof raw.flagged === 'boolean' ? raw.flagged : undefined,
     seconds: typeof raw.seconds === 'number' ? raw.seconds : undefined,
     at: String(raw.at)
   }

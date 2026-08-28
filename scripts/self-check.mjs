@@ -50,12 +50,24 @@ for (const route of ['"/years"','"/fields"','"/past-papers"','"/mistakes"','"/re
 ok('主要route')
 
 const paperPage=read('src/pages/PastPapers.tsx')
-if (paperPage.includes('ORIGINAL QUESTION BOOKLET') && paperPage.includes('OFFICIAL ANSWER SHEET') && paperPage.includes('<iframe') && paperPage.includes('saveAttempt(') && paperPage.includes('mistakeTag:')) ok('アプリ内の実過去問・解答入力・小問別採点')
+if (paperPage.includes('exam-images') && paperPage.includes('OFFICIAL ANSWERS') && !paperPage.includes('<iframe') && paperPage.includes('saveAttempt(') && paperPage.includes('diagnosis:')) ok('PDFビューアなしの過去問・解答入力・小問診断')
 else fail('アプリ内過去問演習')
 for(const year of [2019,2020,2021,2022,2023,2024,2025,2026])for(const kind of ['問題','解答']){
   if(!fs.existsSync(path.join(root,`public/past-papers/${year}_数学_${kind}.pdf`)))fail(`${year} ${kind}PDF missing`)
 }
 ok('2019-2026問題・解答PDFを収録')
+let examImageCount=0, answerImageCount=0
+for(const year of [2019,2020,2021,2022,2023,2024,2025,2026]){
+  const examDir=path.join(root,`public/exam-pages/${year}`),answerDir=path.join(root,`public/exam-answers/${year}`)
+  if(fs.existsSync(examDir)) examImageCount+=fs.readdirSync(examDir).filter(x=>x.endsWith('.jpg')).length
+  if(fs.existsSync(answerDir)) answerImageCount+=fs.readdirSync(answerDir).filter(x=>x.endsWith('.jpg')).length
+}
+if(examImageCount===47&&answerImageCount===10)ok('全問題47ページ・公式解答10ページを画面用画像化')
+else fail(`画面用画像 ${examImageCount}/${answerImageCount}`)
+if(majors.reduce((n,q)=>n+q.subquestions.length,0)===160)ok('全8年160小問')
+else fail('全小問数')
+if(paperPage.includes("'recoverable'")&&paperPage.includes("'difficult'")&&paperPage.includes("'time'")&&paperPage.includes('reproducibleScore'))ok('4分類・3得点・時間別枠')
+else fail('診断指標')
 const mathInput=read('src/components/MathAnswerInput.tsx')
 if (mathInput.includes("text:'√()'") && mathInput.includes("text:'/'") && mathInput.includes("text:'^2'")) ok('数式入力パッド')
 else fail('数式入力パッド不足')
