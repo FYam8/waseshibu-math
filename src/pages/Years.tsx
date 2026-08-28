@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import questions from '../data/questions.json'
 import type { MajorQuestion } from '../types'
 import { Link } from 'react-router-dom'
+import { loadLearningRoute } from '../learningRoute'
 
 const domainLabel: Record<string,string> = {
   mixed:'小問集合', function:'関数・座標', probability:'確率', geometry:'図形',
@@ -14,24 +15,29 @@ export default function Years() {
   const years=[...new Set(data.map(q=>q.year))].sort()
   const [year,setYear]=useState(2026)
   const selected=useMemo(()=>data.filter(q=>q.year===year),[data,year])
+  const routeState=loadLearningRoute()
+  const selectedIds=selected.flatMap(q=>q.subquestions.map(s=>`${q.id}-${s.no}`))
+  const used=selectedIds.filter(id=>routeState.usedOldQuestionIds.includes(id)).length
 
   return (
     <>
       <div className="page-head">
-        <div><span className="eyebrow">Past Paper Map</span><h1>年度別分析</h1></div>
+        <div><span className="eyebrow">PRACTICE LIBRARY</span><h1>演習ライブラリ</h1></div>
         <select value={year} onChange={e=>setYear(Number(e.target.value))}>
           {years.map(y=><option key={y} value={y}>{y}年度</option>)}
         </select>
       </div>
 
       <div className="notice-box">
-        A/B/Cは学校公式の難易度・採点基準ではなく、このアプリの学習優先度です。問題は「過去問演習」で大問ごとに表示できます。
+        診断用の2024〜2026年度と、補強・年度演習用の2019〜2023年度をすべて収録しています。A/B/Cは学校公式ではなく学習上の優先度です。
       </div>
 
       <div className="year-summary card">
         <strong>{year}年度</strong>
-        <span>{year===2019?'大問1=45点 / 大問2=10点 / 大問3〜5=各15点':'大問1=40点 / 大問2〜5=各15点'}</span>
+        <span>{year>=2019&&year<=2023?`弱点補強で使用 ${used}/${selectedIds.length}小問・残り ${selectedIds.length-used}小問`:year===2019?'大問1=45点 / 大問2=10点 / 大問3〜5=各15点':'大問1=40点 / 大問2〜5=各15点'}</span>
       </div>
+
+      <div className="actions library-actions"><Link className="button primary" to={`/past-papers?year=${year}`}>{year}年度を1年分解く</Link><Link className="button" to="/fields">18分野の類題を見る</Link></div>
 
       <div className="legend card">
         <span><b className="legend-a">A</b> 60点狙いでも優先</span>

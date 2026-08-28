@@ -156,7 +156,7 @@ export default function Report() {
         <div className="section-head"><h2>練習履歴の管理</h2>
           <button className="button danger" onClick={()=>{clearAttempts();setVersion(v=>v+1)}}>練習履歴を削除</button>
         </div>
-        <p className="muted">端末内へ即時保存します。GitHub同期を設定した場合は、手動同期時にあなた専用のPrivate Repositoryへマージ保存されます。</p>
+        <p className="muted">端末内へ即時保存します。機種変更やバックアップには「データ管理」からJSONファイルを書き出してください。</p>
       </section>
     </>
   )

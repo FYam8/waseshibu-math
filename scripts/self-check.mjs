@@ -1,116 +1,47 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const root = process.cwd()
-const read = p => fs.readFileSync(path.join(root,p),'utf8')
-const fail = msg => { console.error(`FAIL: ${msg}`); process.exitCode = 1 }
-const ok = msg => console.log(`OK: ${msg}`)
+const root=process.cwd(),read=p=>fs.readFileSync(path.join(root,p),'utf8')
+const fail=msg=>{console.error(`FAIL: ${msg}`);process.exitCode=1},ok=msg=>console.log(`OK: ${msg}`)
+const q=JSON.parse(read('src/data/questions.json')),majors=q.questions||[]
 
-const q = JSON.parse(read('src/data/questions.json'))
-const majors = q.questions || []
-if (majors.length === 40) ok('2019-2026の全40大問')
-else fail(`大問数 ${majors.length} (expected 40)`)
+if(majors.length===40)ok('2019〜2026年度の全40大問');else fail(`大問数 ${majors.length}`)
+for(const year of [2019,2020,2021,2022,2023,2024,2025,2026])if(majors.filter(x=>x.year===year).length!==5)fail(`${year}年度が5大問ではない`)
+if(majors.reduce((n,x)=>n+x.subquestions.length,0)===160)ok('全8年160小問');else fail('全小問数')
+if(majors.find(x=>x.year===2019&&x.major===1)?.subquestions.length===9&&[2020,2021,2022,2023,2024,2025,2026].every(y=>majors.find(x=>x.year===y&&x.major===1)?.subquestions.length===8))ok('大問1の小問数');else fail('大問1の小問数')
 
-for (const year of [2019,2020,2021,2022,2023,2024,2025,2026]) {
-  const ys = majors.filter(x=>x.year===year)
-  if (ys.length!==5) fail(`${year}: 大問数 ${ys.length}`)
-}
-ok('各年度5大問')
-
-const q1_2019 = majors.find(x=>x.year===2019 && x.major===1)
-if (q1_2019?.subquestions?.length===9) ok('2019大問1=9小問')
-else fail('2019大問1の小問数')
-
-for (const year of [2020,2021,2022,2023,2024,2025,2026]) {
-  const x=majors.find(q=>q.year===year && q.major===1)
-  if (x?.subquestions?.length!==8) fail(`${year}大問1の小問数`)
-}
-ok('2020-2026大問1=各8小問')
-
-const sync = read('src/githubSync.ts')
-if (!sync.includes("'X-GitHub-Api-Version'")) ok('ブラウザCORS非対応version headerを送信していない')
-else fail('X-GitHub-Api-Versionが残っている')
-
-if (!sync.includes("localStorage.setItem(LEGACY_TOKEN_LOCAL_KEY")) ok('PATをlocalStorageへ保存しない')
-else fail('PAT localStorage保存が残っている')
-
-if (sync.includes('clearSyncDirtyIfUnchanged(dirtyRevisionAtStart)')) ok('同期中変更のdirty revision保護')
-else fail('dirty revision保護なし')
-
-if (sync.includes('res.status === 409') && sync.includes('i<attempts')) ok('409 retry実装')
-else fail('409 retry')
-
-if (sync.includes('repo.private !== true')) ok('Private Repository検証')
-else fail('Private Repository検証なし')
-
-const app = read('src/App.tsx')
-for (const route of ['"/years"','"/fields"','"/past-papers"','"/mistakes"','"/remediate"','"/practice"','"/report"','"/sync"']) {
-  if (!app.includes(route)) fail(`route missing ${route}`)
-}
-ok('主要route')
-
-const paperPage=read('src/pages/PastPapers.tsx')
-if (paperPage.includes('exam-images') && paperPage.includes('OFFICIAL ANSWERS') && !paperPage.includes('<iframe') && paperPage.includes('saveAttempt(') && paperPage.includes('diagnosis:')) ok('PDFビューアなしの過去問・解答入力・小問診断')
-else fail('アプリ内過去問演習')
-for(const year of [2019,2020,2021,2022,2023,2024,2025,2026])for(const kind of ['問題','解答']){
-  if(!fs.existsSync(path.join(root,`public/past-papers/${year}_数学_${kind}.pdf`)))fail(`${year} ${kind}PDF missing`)
-}
-ok('2019-2026問題・解答PDFを収録')
-let examImageCount=0, answerImageCount=0
+let examImages=0,answerImages=0
 for(const year of [2019,2020,2021,2022,2023,2024,2025,2026]){
   const examDir=path.join(root,`public/exam-pages/${year}`),answerDir=path.join(root,`public/exam-answers/${year}`)
-  if(fs.existsSync(examDir)) examImageCount+=fs.readdirSync(examDir).filter(x=>x.endsWith('.jpg')).length
-  if(fs.existsSync(answerDir)) answerImageCount+=fs.readdirSync(answerDir).filter(x=>x.endsWith('.jpg')).length
+  examImages+=fs.readdirSync(examDir).filter(x=>x.endsWith('.jpg')).length
+  answerImages+=fs.readdirSync(answerDir).filter(x=>x.endsWith('.jpg')).length
+  for(const kind of ['問題','解答'])if(!fs.existsSync(path.join(root,`public/past-papers/${year}_数学_${kind}.pdf`)))fail(`${year} ${kind}PDF missing`)
 }
-if(examImageCount===47&&answerImageCount===10)ok('全問題47ページ・公式解答10ページを画面用画像化')
-else fail(`画面用画像 ${examImageCount}/${answerImageCount}`)
-if(majors.reduce((n,q)=>n+q.subquestions.length,0)===160)ok('全8年160小問')
-else fail('全小問数')
-if(paperPage.includes("'recoverable'")&&paperPage.includes("'difficult'")&&paperPage.includes("'time'")&&paperPage.includes('reproducibleScore'))ok('4分類・3得点・時間別枠')
-else fail('診断指標')
-if(paperPage.includes('weakFields:weak.map')&&read('src/pages/Home.tsx').includes("to:'/mistakes?year=2024'")&&read('src/pages/MistakeReview.tsx').includes('.slice(0,3)')&&read('src/pages/MistakeReview.tsx').includes("!a.questionId.startsWith('exposure-')"))ok('診断→弱点3分野→次年度の順序制御')
-else fail('弱点補強の順序制御')
-const mathInput=read('src/components/MathAnswerInput.tsx')
-if (mathInput.includes("text:'√()'") && mathInput.includes("text:'/'") && mathInput.includes("text:'^2'")) ok('数式入力パッド')
-else fail('数式入力パッド不足')
-const remediation=read('src/pages/Remediation.tsx')
-if (remediation.includes('nextStreak>=4') && remediation.includes('mastery-') && remediation.includes('類題は4問')) ok('4問連続正解で克服')
-else fail('4問の類題克服ルール')
-const remediationData=read('src/data/remediation.ts')
-const fieldCount=[...remediationData.matchAll(/^\s{4}id: '[^']+'/gm)].length
-const remedyQuestionCount=[...remediationData.matchAll(/\{prompt:/g)].length
-if (fieldCount===18 && remedyQuestionCount===72) ok('18分野×4問=72問')
-else fail(`類題バンク: ${fieldCount}分野・${remedyQuestionCount}問`)
-const layout=read('src/components/Layout.tsx')
-if (/<NavLink to="\/past-papers">過去問演習<\/NavLink>\s*<NavLink to="\/sync">/.test(layout)) ok('過去問演習は端末間同期の直前')
-else fail('過去問演習タブ位置')
-if (!layout.includes('/year-training') && !layout.includes('/multi')) ok('目的が重複する旧演習タブを撤去')
-else fail('旧演習タブが残っている')
+if(examImages===47&&answerImages===10)ok('全問題47ページ・公式解答10ページ');else fail(`画像数 ${examImages}/${answerImages}`)
 
+const app=read('src/App.tsx'),layout=read('src/components/Layout.tsx'),home=read('src/pages/Home.tsx')
+for(const route of ['"/years"','"/past-papers"','"/reinforce"','"/remediate"','"/report"','"/data"'])if(!app.includes(route))fail(`route missing ${route}`)
+if(['ホーム','学習する','演習ライブラリ','学習記録','データ管理'].every(x=>layout.includes(x))&&!layout.includes('端末間同期</NavLink>'))ok('5タブの学習導線');else fail('ナビゲーション')
+if(Array.from({length:8},(_,i)=>`n:${i+1}`).every(x=>home.includes(x))&&home.includes('2019〜2023該当問題＋類題4問'))ok('ホームに8段階ルート');else fail('8段階ルート')
 
-if (sync.includes('mergeAttempts(loadAttempts(), mergedAll, attemptsReset)')) ok('同期中の新規解答をlocal置換で消さない')
-else fail('同期中の新規解答保護なし')
+const route=read('src/learningRoute.ts')
+if(route.includes('usedOldQuestionIds')&&route.includes('ensureReinforcementPlan')&&route.includes('reinforcementComplete')&&route.includes('actualDone&&mastered'))ok('未使用過去問の予約と補強完了条件');else fail('補強状態機械')
 
-if (sync.includes('mergeScores(loadExamScores(), mergedExam.scores, examReset)')) ok('同期中の新規過去問得点を消さない')
-else fail('同期中の新規過去問得点保護なし')
+const paper=read('src/pages/PastPapers.tsx'),styles=read('src/styles.css')
+if(paper.includes('className={`exam-workspace')&&paper.includes('problem-pane card')&&paper.includes('answer-dock card')&&paper.includes('OFFICIAL ANSWERS'))ok('問題・入力・公式解答の同画面化');else fail('統合ワークスペース')
+if(paper.includes("['recoverable','本来取れた']")&&paper.includes("['difficult','今は難しい']")&&paper.includes("['time','時間があれば']")&&paper.includes('reproducibleScore'))ok('4分類と3種類の得点');else fail('診断指標')
+if(paper.includes('answers,approaches,flags,diagnoses')&&paper.includes('seconds,majorIndex,phase'))ok('途中解答・迷い・タイマーの自動保存');else fail('途中状態保存')
+if(paper.includes("['分数','/']")&&paper.includes("['√','√()']")&&paper.includes("['x²','^2']"))ok('数式入力パッド');else fail('数式入力パッド')
+if(styles.includes('grid-template-columns:minmax(0,1.65fr)')&&styles.includes('.answer-dock{position:sticky')&&styles.includes('.answer-dock{position:fixed')&&styles.includes('.floating-timer{position:fixed'))ok('デスクトップ2ペイン・スマホ解答ドック・小型タイマー');else fail('レスポンシブ試験UI')
 
-if (sync.includes('const currentPrefs = loadPreferences()') && sync.includes('const currentMeta = loadSyncMeta()')) ok('Profile最終マージで同期中の設定/リセットを再読込')
-else fail('Profile最終再読込なし')
+const reinforcement=read('src/pages/Reinforcement.tsx'),remediation=read('src/pages/Remediation.tsx')
+if(reinforcement.includes('oldQuestionBank()')&&reinforcement.includes('markOldQuestionCompleted')&&reinforcement.includes('examPages[item.year]')&&reinforcement.includes('/remediate?topic='))ok('該当過去問から類題への補強画面');else fail('補強画面')
+if(remediation.includes('nextStreak>=4')&&remediation.includes('mastery-')&&remediation.includes('/reinforce?source='))ok('類題4問連続正解とルート復帰');else fail('類題克服ルール')
+const remedyData=read('src/data/remediation.ts'),fieldCount=[...remedyData.matchAll(/^\s{4}id: '[^']+'/gm)].length,questionCount=[...remedyData.matchAll(/\{prompt:/g)].length
+if(fieldCount===18&&questionCount===72)ok('18分野×4問=72問');else fail(`${fieldCount}分野・${questionCount}問`)
 
-const practicePage = read('src/pages/Practice.tsx')
-const submitBlock = practicePage.slice(practicePage.indexOf('const submit ='), practicePage.indexOf('const next ='))
-if (!submitBlock.includes('saveAttempt(')) ok('復習8問は採点表示時点でattemptを確定しない')
-else fail('復習8問 submitでattemptが早期保存される')
+const data=read('src/pages/DataManager.tsx')
+if(data.includes("'waseshibu-math-exam-drafts-v2'")&&data.includes("'waseshibu-math-learning-route-v1'")&&data.includes('download(collect())')&&data.includes("mode==='replace'")&&data.includes("mode==='merge'"))ok('全学習状態のローカル書き出し・入れ替え・統合');else fail('データ管理')
+if(!layout.includes('SyncBadge')&&!layout.includes('GitHub Private Repository'))ok('学習データは端末保存へ統一');else fail('旧同期表示が残っている')
 
-if (practicePage.includes("status:result ? 'correct' : 'wrong'")) ok('復習8問 attemptはNextで確定')
-else fail('復習8問 Next確定なし')
-
-const storage = read('src/storage.ts')
-if (storage.includes('Math.max(current + 1, Date.now())')) ok('stale端末のリセット世代を時刻ベースで前進')
-else fail('resetVersion stale端末対策なし')
-
-const styles=read('src/styles.css')
-if(styles.includes('.workflow-strip{display:grid;grid-template-columns:repeat(4,1fr)')&&styles.includes('.container{padding:10px 7px 40px}')&&styles.includes('.exam-images{padding:2px')&&styles.includes('.floating-timer{position:fixed')&&paperPage.includes('className="floating-timer"'))ok('スマホ上部圧縮・フローティングタイマー')
-else fail('スマホ過去問画面のコンパクト表示')
-
-if (!process.exitCode) console.log('SELF-CHECK PASSED')
+if(!process.exitCode)console.log('SELF-CHECK PASSED')

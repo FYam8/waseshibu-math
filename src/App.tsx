@@ -4,11 +4,12 @@ import Home from './pages/Home'
 import Years from './pages/Years'
 import Practice from './pages/Practice'
 import Report from './pages/Report'
-import SyncSettings from './pages/SyncSettings'
 import PastPapers from './pages/PastPapers'
 import MistakeReview from './pages/MistakeReview'
 import Remediation from './pages/Remediation'
 import Fields from './pages/Fields'
+import Reinforcement from './pages/Reinforcement'
+import DataManager from './pages/DataManager'
 
 export default function App() {
   return (
@@ -20,9 +21,11 @@ export default function App() {
         <Route path="/fields" element={<Fields />} />
         <Route path="/mistakes" element={<MistakeReview />} />
         <Route path="/remediate" element={<Remediation />} />
+        <Route path="/reinforce" element={<Reinforcement />} />
         <Route path="/practice" element={<Practice />} />
         <Route path="/report" element={<Report />} />
-        <Route path="/sync" element={<SyncSettings />} />
+        <Route path="/data" element={<DataManager />} />
+        <Route path="/sync" element={<DataManager />} />
       </Routes>
     </Layout>
   )
