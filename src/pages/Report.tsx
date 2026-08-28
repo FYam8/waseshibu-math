@@ -41,9 +41,8 @@ export default function Report() {
     .sort((a,b)=>b[1]-a[1])
     .slice(0,3)
 
-  const todoTopics:[string,number][]=topicRanking.length?topicRanking:[['大問1標準問題',1],['確率・場合の数',1],['関数・座標',1]]
-
   const latest=examScores[0]??null
+  const todoTopics:[string,number][]=latest?.weakFields?.length?latest.weakFields.map(x=>[x,1]):topicRanking.length?topicRanking:[['2024年度の診断',1]]
   const latestScore=latest?.score ?? null
   const stage =
     latestScore===null ? '未判定' :
@@ -100,6 +99,12 @@ export default function Report() {
 
       <section className="grid four">
         <article className="card stat"><b>{latestScore ?? '--'}</b><span>最新の過去問得点</span></article>
+        <article className="card stat"><b>{latest?.reproducibleScore ?? '--'}</b><span>再現可能得点</span></article>
+        <article className="card stat"><b>{latest?.recoverableScore===undefined?'--':`+${latest.recoverableScore}`}</b><span>回収可能得点</span></article>
+        <article className="card stat"><b>{latest?.timeCandidateScore ?? '--'}</b><span>時間候補（別枠）</span></article>
+      </section>
+
+      <section className="grid three">
         <article className="card stat"><b className="stage-text">{stage}</b><span>現在の段階</span></article>
         <article className="card stat"><b>{reviewResult??'--'}</b><span>直近の弱点復習8問</span></article>
         <article className="card stat"><b>{deferred}</b><span>見送り記録</span></article>
@@ -142,7 +147,7 @@ export default function Report() {
         </div>
         {examScores.length===0?<p className="muted">まだ記録がありません。</p>:(
           <div className="history-list">
-            {examScores.slice(0,10).map(x=><div key={x.id}><span>{x.year}年度</span><b>{x.score}/100</b></div>)}
+            {examScores.slice(0,10).map(x=><div key={x.id}><span>{x.year}年度　{x.attemptKind==='retake'?'再受験':'初回・記録'}</span><b>{x.score}/100{x.reproducibleScore!==undefined?`　再現 ${x.reproducibleScore}`:''}</b></div>)}
           </div>
         )}
       </section>

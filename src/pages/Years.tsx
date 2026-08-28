@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import questions from '../data/questions.json'
 import type { MajorQuestion } from '../types'
+import { Link } from 'react-router-dom'
 
 const domainLabel: Record<string,string> = {
   mixed:'小問集合', function:'関数・座標', probability:'確率', geometry:'図形',
@@ -24,7 +25,7 @@ export default function Years() {
       </div>
 
       <div className="notice-box">
-        A/B/Cは学校公式の難易度・採点基準ではなく、このアプリの学習優先度です。過去問本文は掲載せず、出題構造を要約しています。
+        A/B/Cは学校公式の難易度・採点基準ではなく、このアプリの学習優先度です。問題は「過去問演習」で大問ごとに表示できます。
       </div>
 
       <div className="year-summary card">
@@ -76,6 +77,7 @@ export default function Years() {
               <summary>同じ思考プロセスの類題テンプレート</summary>
               <p>{q.similar_question_template}</p>
             </details>
+            <Link className="button" to={`/past-papers?year=${year}&major=${q.major}`}>この大問を開く</Link>
           </article>
         ))}
       </div>

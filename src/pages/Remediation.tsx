@@ -6,7 +6,7 @@ import { isAcceptedAnswer } from '../answer'
 import { createRecordId, saveAttempt } from '../storage'
 
 export default function Remediation(){
-  const [params]=useSearchParams(),topic=params.get('topic')||'式の計算・文字式',field=classifyRemediationField(topic),questions=field.questions
+  const [params]=useSearchParams(),topic=params.get('topic')||'式の計算・文字式',year=params.get('year'),field=classifyRemediationField(topic),questions=field.questions
   const [index,setIndex]=useState(0),[answer,setAnswer]=useState(''),[result,setResult]=useState<boolean|null>(null)
   const [streak,setStreak]=useState(0),[total,setTotal]=useState(0),[finished,setFinished]=useState(false)
   const q=questions[index]
@@ -22,7 +22,7 @@ export default function Remediation(){
     }
     setStreak(nextStreak);setIndex(v=>(v+1)%questions.length);setAnswer('');setResult(null)
   }
-  if(finished)return <section className="card mastery-card"><span className="eyebrow">MASTERED</span><h1>4問連続正解</h1><p><b>{field.title}</b>を克服済みにしました。次回このテーマで間違えた場合は、再び復習対象になります。</p><div className="actions"><Link className="button primary" to="/mistakes">次の弱点へ</Link><Link className="button" to="/past-papers">次の過去問へ</Link></div></section>
+  if(finished)return <section className="card mastery-card"><span className="eyebrow">MASTERED</span><h1>4問連続正解</h1><p><b>{field.title}</b>を克服済みにしました。次回このテーマで間違えた場合は、再び復習対象になります。</p><div className="actions"><Link className="button primary" to={year?`/mistakes?year=${year}`:'/mistakes'}>次の弱点へ</Link><Link className="button" to="/">ホームで次の行動を見る</Link></div></section>
   return <>
     <div className="page-head"><div><span className="eyebrow">4-QUESTION REMEDIATION</span><h1>{field.title}</h1>{topic!==field.title&&<p className="muted">過去問の失点：{topic}</p>}</div><div className="streak-badge">連続 {streak}/4</div></div>
     <div className="progress-track"><i style={{width:`${streak/4*100}%`}}/></div>

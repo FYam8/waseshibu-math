@@ -51,5 +51,6 @@ export type ExamScore = {
   timeCandidateScore?: number
   completed?: boolean
   attemptKind?: 'first' | 'retake'
+  weakFields?: string[]
   at: string
 }

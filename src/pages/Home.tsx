@@ -2,6 +2,7 @@ import questions from '../data/questions.json'
 import { Link } from 'react-router-dom'
 import { loadAttempts, loadExamScores, loadPreferences, savePreferences } from '../storage'
 import type { MajorQuestion } from '../types'
+import { classifyRemediationField } from '../data/remediation'
 import { useState } from 'react'
 
 export default function Home() {
@@ -15,9 +16,10 @@ export default function Home() {
   const q1Rate = scoredQ1.length ? Math.round(q1Correct/scoredQ1.length*100) : null
 
   const latestExam = examScores[0] ?? null
-  const done = (year:number) => examScores.some(s=>s.year===year && s.completed!==false)
-  const nextYear = !done(2024) ? 2024 : !done(2025) ? 2025 : !done(2026) ? 2026 : 2024
-  const nextLabel = nextYear===2024 ? '2024年度で診断する' : nextYear===2025 ? '2025年度で改善確認' : '2026年度で仕上げ確認'
+  const exam = (year:number) => examScores.find(s=>s.year===year && s.completed!==false)
+  const pending = (year:number) => {const result=exam(year);return result?.weakFields?.filter(field=>!attempts.some(a=>a.questionId.startsWith('mastery-')&&a.status==='correct'&&a.at>result.at&&classifyRemediationField(a.topic).title===field))||[]}
+  const pending2024=pending(2024),pending2025=pending(2025)
+  const nextAction = !exam(2024)?{to:'/past-papers?year=2024',label:'2024年度で診断する'}:pending2024.length?{to:'/mistakes?year=2024',label:`弱点${pending2024.length}分野を補強する`}:!exam(2025)?{to:'/past-papers?year=2025',label:'2025年度で改善確認'}:pending2025.length?{to:'/mistakes?year=2025',label:`残った弱点${pending2025.length}分野を補強`}:!exam(2026)?{to:'/past-papers?year=2026',label:'2026年度で仕上げ確認'}:{to:'/report',label:'結果と安定度を確認する'}
   const gap = latestExam ? Math.max(0, prefs.target-latestExam.score) : null
 
   const setTarget = (target: 60|70|75) => {
@@ -42,7 +44,7 @@ export default function Home() {
           </div>
 
           <div className="actions">
-            <Link className="button primary" to={`/past-papers?year=${nextYear}`}>{nextLabel}</Link>
+            <Link className="button primary" to={nextAction.to}>{nextAction.label}</Link>
             <Link className="button" to="/mistakes">間違いの類題4問へ</Link>
             <Link className="button" to="/fields">18分野・全72問を見る</Link>
             <Link className="button" to="/practice">弱点復習8問</Link>
