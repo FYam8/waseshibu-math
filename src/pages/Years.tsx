@@ -34,7 +34,7 @@ export default function Years() {
 
       <div className="year-summary card">
         <strong>{year}年度</strong>
-        <span>{year>=2019&&year<=2023?`弱点補強で使用 ${used}/${selectedIds.length}小問・残り ${selectedIds.length-used}小問`:year===2019?'大問1=45点 / 大問2=10点 / 大問3〜5=各15点':'大問1=40点 / 大問2〜5=各15点'}</span>
+        <span>{year>=2019&&year<=2023?`弱点補強に割当 ${used}/${selectedIds.length}小問・未割当 ${selectedIds.length-used}小問`:'大問1=40点 / 大問2〜5=各15点'}</span>
       </div>
 
       <div className="actions library-actions"><Link className="button primary" to={`/past-papers?year=${year}`}>{year}年度を1年分解く</Link><Link className="button" to="/fields">18分野の類題を見る</Link></div>

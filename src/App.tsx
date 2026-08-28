@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import Years from './pages/Years'
@@ -11,13 +11,18 @@ import Fields from './pages/Fields'
 import Reinforcement from './pages/Reinforcement'
 import DataManager from './pages/DataManager'
 
+function PastPaperRoute(){
+  const location=useLocation()
+  return <PastPapers key={location.search} />
+}
+
 export default function App() {
   return (
     <Layout>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/years" element={<Years />} />
-        <Route path="/past-papers" element={<PastPapers />} />
+        <Route path="/past-papers" element={<PastPaperRoute />} />
         <Route path="/fields" element={<Fields />} />
         <Route path="/mistakes" element={<MistakeReview />} />
         <Route path="/remediate" element={<Remediation />} />

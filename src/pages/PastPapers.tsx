@@ -54,6 +54,8 @@ export default function PastPapers(){
   const allSubs=majors.flatMap(m=>m.subquestions.map(s=>({major:m,sub:s,key:keyFor(m,s.no)})))
   const entered=allSubs.filter(x=>(answers[x.key]||'').trim()).length
   const diagnosed=allSubs.filter(x=>diagnoses[x.key]).length
+  const missingCauses=allSubs.filter(x=>diagnoses[x.key]&&diagnoses[x.key]!=='correct'&&!causeMap[x.key]).length
+  const readyToSave=diagnosed===allSubs.length&&missingCauses===0
   const step=currentLearningStep()
   const needsWarning=(year===2025&&step<5)||(year===2026&&step<7)
 
@@ -70,7 +72,7 @@ export default function PastPapers(){
   const changeMajor=(next:number)=>{setMajorIndex(Math.max(0,Math.min(majors.length-1,next)));window.scrollTo({top:0,behavior:'smooth'})}
   const beginMarking=()=>{setRunning(false);markYearSolved(year);setPhase('mark');setMajorIndex(0);setAnswerOpen(window.innerWidth>700);window.scrollTo({top:0,behavior:'smooth'})}
   const finish=()=>{
-    if(diagnosed<allSubs.length)return
+    if(!readyToSave)return
     const total=(kind:'score'|'repro'|'recover'|'time')=>Math.round(allSubs.reduce((sum,x)=>{
       const d=diagnoses[x.key],p=pointsFor(year,x.major.major,x.major.subquestions.length)
       if(kind==='score')return sum+(d==='correct'?p:0)
@@ -102,7 +104,7 @@ export default function PastPapers(){
         {phase==='mark'&&<div className="official-answer"><span className="eyebrow">OFFICIAL ANSWERS</span>{Array.from({length:answerPages[year]||1},(_,i)=><img key={i} src={answerImage(year,i+1)} alt={`${year}年度 公式解答 ${i+1}`} />)}</div>}
         <div className="dock-scroll">{q.subquestions.map(s=>{const key=keyFor(q,s.no),d=diagnoses[key];return <div className="dock-question" key={key}><div className="dock-qhead"><b>({s.no})</b><span>{s.topic}</span><button className={flags[key]?'flagged':''} onClick={()=>setFlags(v=>({...v,[key]:!v[key]}))}>△ 迷い</button></div>{phase==='solve'?<><input ref={el=>{inputs.current[key]=el}} value={answers[key]||''} onFocus={()=>setFocused(key)} onChange={e=>setAnswers(v=>({...v,[key]:e.target.value}))} placeholder="答えを入力" /><div className="approach-buttons">{approachOptions.map(([value,label])=><button key={value} className={approaches[key]===value?'selected':''} onClick={()=>setApproaches(v=>({...v,[key]:value}))}>{label}</button>)}</div></>:<><div className="answer-compare"><span>自分の答え</span><b>{answers[key]||'未入力'}</b></div><div className="diagnosis-buttons">{diagnosisOptions.map(([value,label])=><button key={value} className={d===value?'selected':''} onClick={()=>setDiagnoses(v=>({...v,[key]:value}))}>{label}</button>)}</div>{d&&d!=='correct'&&<select value={causeMap[key]||''} onChange={e=>setCauseMap(v=>({...v,[key]:e.target.value}))}><option value="">原因を選ぶ（任意）</option>{causes.map(x=><option key={x}>{x}</option>)}</select>}</>}</div>})}</div>
         {phase==='solve'&&<div className="shared-keypad" aria-label="数式入力補助">{[['分数','/'],['√','√()'],['x²','^2'],['( )','()'],['−','-'],['±','±'],['π','π'],['比',':'],[',',',']].map(([label,text])=><button key={label} onClick={()=>insert(text)}>{label}</button>)}</div>}
-        <div className="major-nav"><button className="button" disabled={majorIndex===0} onClick={()=>changeMajor(majorIndex-1)}>← 前</button>{majorIndex<majors.length-1?<button className="button primary" onClick={()=>changeMajor(majorIndex+1)}>次の大問 →</button>:phase==='solve'?<button className="button primary" onClick={beginMarking}>解答を終了して採点</button>:<button className="button primary" disabled={diagnosed<allSubs.length} onClick={finish}>診断を保存する</button>}</div>{phase==='mark'&&diagnosed<allSubs.length&&<p className="dock-note">全{allSubs.length}小問を分類すると保存できます（残り{allSubs.length-diagnosed}問）。</p>}
+        <div className="major-nav"><button className="button" disabled={majorIndex===0} onClick={()=>changeMajor(majorIndex-1)}>← 前</button>{majorIndex<majors.length-1?<button className="button primary" onClick={()=>changeMajor(majorIndex+1)}>次の大問 →</button>:phase==='solve'?<button className="button primary" onClick={beginMarking}>解答を終了して採点</button>:<button className="button primary" disabled={!readyToSave} onClick={finish}>診断を保存する</button>}</div>{phase==='mark'&&!readyToSave&&<p className="dock-note">未分類 {allSubs.length-diagnosed}問・原因未選択 {missingCauses}問。すべて入力すると保存できます。</p>}
       </>}</aside>
     </div>
     {phase==='solve'&&<div className="floating-timer" aria-label="試験タイマー"><b>{formatTime(seconds)}</b><button onClick={()=>setRunning(v=>!v)}>{running?'停止':'再開'}</button></div>}
