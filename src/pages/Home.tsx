@@ -5,7 +5,7 @@ import { loadExamScores, loadPreferences, savePreferences } from '../storage'
 
 const route=[
   {n:1,title:'2024年度を本番形式で実施',short:'2024 本番',to:'/past-papers?year=2024'},
-  {n:2,title:'全20小問を診断',short:'20問診断',to:'/past-papers?year=2024&review=1'},
+  {n:2,title:'全20小問を自動採点',short:'20問自動採点',to:'/past-papers?year=2024&review=1'},
   {n:3,title:'優先弱点3分野を抽出',short:'弱点3分野',to:'/report'},
   {n:4,title:'2019〜2023該当問題＋類題4問',short:'第1補強',to:'/reinforce?source=2024'},
   {n:5,title:'2025年度で改善確認',short:'2025 確認',to:'/past-papers?year=2025'},

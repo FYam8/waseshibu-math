@@ -99,9 +99,9 @@ export default function Report() {
 
       <section className="grid four">
         <article className="card stat"><b>{latestScore ?? '--'}</b><span>最新の過去問得点</span></article>
-        <article className="card stat"><b>{latest?.reproducibleScore ?? '--'}</b><span>再現可能得点</span></article>
-        <article className="card stat"><b>{latest?.recoverableScore===undefined?'--':`+${latest.recoverableScore}`}</b><span>回収可能得点</span></article>
-        <article className="card stat"><b>{latest?.timeCandidateScore ?? '--'}</b><span>時間候補（別枠）</span></article>
+        <article className="card stat"><b>{latest?.correctCount ?? '--'}</b><span>自動採点の正解数</span></article>
+        <article className="card stat"><b>{latest?.wrongCount ?? '--'}</b><span>不正解数</span></article>
+        <article className="card stat"><b>{latest?.unansweredCount ?? '--'}</b><span>未回答数</span></article>
       </section>
 
       <section className="grid three">
@@ -147,7 +147,7 @@ export default function Report() {
         </div>
         {examScores.length===0?<p className="muted">まだ記録がありません。</p>:(
           <div className="history-list">
-            {examScores.slice(0,10).map(x=><div key={x.id}><span>{x.year}年度　{x.attemptKind==='retake'?'再受験':'初回・記録'}</span><b>{x.score}/100{x.reproducibleScore!==undefined?`　再現 ${x.reproducibleScore}`:''}</b></div>)}
+            {examScores.slice(0,10).map(x=><div key={x.id}><span>{x.year}年度　{x.attemptKind==='retake'?'再受験':'初回・記録'}</span><b>{x.score}/100{x.correctCount!==undefined?`　正解 ${x.correctCount}問`:''}</b></div>)}
           </div>
         )}
       </section>

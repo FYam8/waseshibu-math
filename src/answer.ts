@@ -15,5 +15,16 @@ export function normalizeAnswer(value:string) {
 
 export function isAcceptedAnswer(input:string, answer:string, acceptedAnswers:string[] = []) {
   const normalized = normalizeAnswer(input)
-  return [answer, ...acceptedAnswers].some(candidate => normalizeAnswer(candidate) === normalized)
+  return [answer, ...acceptedAnswers].some(candidate => {
+    const expected=normalizeAnswer(candidate)
+    if(expected===normalized)return true
+    const numeric=(value:string)=>{
+      if(/^[-+]?\d+(?:\.\d+)?$/.test(value))return Number(value)
+      const fraction=value.match(/^([-+]?\d+(?:\.\d+)?)\/([-+]?\d+(?:\.\d+)?)$/)
+      if(fraction&&Number(fraction[2])!==0)return Number(fraction[1])/Number(fraction[2])
+      return null
+    }
+    const a=numeric(normalized),b=numeric(expected)
+    return a!==null&&b!==null&&Math.abs(a-b)<1e-10
+  })
 }

@@ -49,6 +49,9 @@ export type ExamScore = {
   reproducibleScore?: number
   recoverableScore?: number
   timeCandidateScore?: number
+  correctCount?: number
+  wrongCount?: number
+  unansweredCount?: number
   completed?: boolean
   attemptKind?: 'first' | 'retake'
   weakFields?: string[]

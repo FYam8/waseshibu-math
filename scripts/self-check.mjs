@@ -29,13 +29,15 @@ if(route.includes('usedOldQuestionIds')&&route.includes('ensureReinforcementPlan
 
 const paper=read('src/pages/PastPapers.tsx'),styles=read('src/styles.css')
 if(paper.includes('className={`exam-workspace')&&paper.includes('problem-pane card')&&paper.includes('answer-dock card')&&paper.includes('OFFICIAL ANSWERS'))ok('問題・入力・公式解答の同画面化');else fail('統合ワークスペース')
-if(paper.includes("['recoverable','本来取れた']")&&paper.includes("['difficult','今は難しい']")&&paper.includes("['time','時間があれば']")&&paper.includes('reproducibleScore'))ok('4分類と3種類の得点');else fail('診断指標')
-if(paper.includes('answers,approaches,flags,diagnoses')&&paper.includes('seconds,majorIndex,phase'))ok('途中解答・迷い・タイマーの自動保存');else fail('途中状態保存')
+const answerData=read('src/data/examAnswers.ts'),answerIds=[...answerData.matchAll(/'(\d{4}-Q[^']+)':E/g)].map(x=>x[1]),questionIds=majors.flatMap(m=>m.subquestions.map(s=>`${m.id}-${s.no}`))
+if(answerIds.length===160&&questionIds.every(id=>answerIds.includes(id))&&new Set(answerIds).size===160)ok('全160小問の自動採点正答');else fail(`正答データ ${answerIds.length}/160`)
+if(paper.includes('isExamAnswerCorrect')&&paper.includes("'correct'|'wrong'|'unanswered'")&&paper.includes('正解に修正')&&!paper.includes('すぐ立った')&&!paper.includes('考えて立った'))ok('自動採点・未回答判定・誤判定修正');else fail('過去問自動採点')
+if(paper.includes('answers,flags')&&paper.includes('overrides,seconds,majorIndex,phase'))ok('途中解答・迷い・採点修正・タイマーの自動保存');else fail('途中状態保存')
 if(paper.includes("['分数','/']")&&paper.includes("['√','√()']")&&paper.includes("['x²','^2']"))ok('数式入力パッド');else fail('数式入力パッド')
 if(styles.includes('grid-template-columns:minmax(0,1.65fr)')&&styles.includes('.answer-dock{position:sticky')&&styles.includes('.answer-dock{position:fixed')&&styles.includes('.floating-timer{position:fixed'))ok('デスクトップ2ペイン・スマホ解答ドック・小型タイマー');else fail('レスポンシブ試験UI')
 
 const reinforcement=read('src/pages/Reinforcement.tsx'),remediation=read('src/pages/Remediation.tsx')
-if(reinforcement.includes('oldQuestionBank()')&&reinforcement.includes('markOldQuestionCompleted')&&reinforcement.includes('examPages[item.year]')&&reinforcement.includes('/remediate?topic='))ok('該当過去問から類題への補強画面');else fail('補強画面')
+if(reinforcement.includes('oldQuestionBank()')&&reinforcement.includes('markOldQuestionCompleted')&&reinforcement.includes('isExamAnswerCorrect')&&reinforcement.includes('/remediate?topic='))ok('該当過去問の自動採点から類題への補強画面');else fail('補強画面')
 if(remediation.includes('nextStreak>=4')&&remediation.includes('mastery-')&&remediation.includes('/reinforce?source='))ok('類題4問連続正解とルート復帰');else fail('類題克服ルール')
 const remedyData=read('src/data/remediation.ts'),fieldCount=[...remedyData.matchAll(/^\s{4}id: '[^']+'/gm)].length,questionCount=[...remedyData.matchAll(/\{prompt:/g)].length
 if(fieldCount===18&&questionCount===72)ok('18分野×4問=72問');else fail(`${fieldCount}分野・${questionCount}問`)
