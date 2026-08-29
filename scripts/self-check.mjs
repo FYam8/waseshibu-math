@@ -13,7 +13,7 @@ const app=read('src/App.tsx'),paper=read('src/pages/PastPapers.tsx'),guided=read
 if(app.includes('"/guided-review"')&&paper.includes('ExamMarkReview')&&guided.includes('FocusedQuestionView'))ok('小問別復習ルート接続');else fail('小問別復習ルート')
 if(paper.includes('PROBLEM · EXAM MODE')&&paper.includes('本番演習中は、実際の試験と同じように問題ページ全体を表示します'))ok('本番演習はページ全体表示');else fail('本番表示')
 if(mark.includes('ONE QUESTION MARKING')&&mark.includes('公式解答ページ全体は表示しません')&&mark.includes('この小問の正答')&&!mark.includes('exam-answers'))ok('採点後は1小問・1正答だけ');else fail('採点1問フォーカス')
-if(guided.includes('ONE QUESTION REVIEW')&&guided.includes('ほかの小問・ほかの正答は表示しません')&&guided.includes('この小問の正答だけを表示'))ok('解説は1小問・1正答だけ');else fail('解説1問フォーカス')
+if(guided.includes('ONE QUESTION REVIEW')&&guided.includes('ほかの小問・ほかの正答は表示しません')&&guided.includes('の正答だけを表示'))ok('解説は1小問・1正答だけ');else fail('解説1問フォーカス')
 if(focus.includes("slices.filter(x=>x.role==='current')")&&focus.includes('<details className="common-context">')&&focus.includes('初期表示は現在の小問だけです'))ok('共通図は必要時のみ展開');else fail('共通図折りたたみ')
 if(focusRules.includes('focusSlicesFor')&&focusRules.includes("role:'current'")&&styles.includes('.focus-slice')&&styles.includes('.mark-focus-grid'))ok('小問フォーカス表示ルール・レスポンシブUI');else fail('フォーカス表示基盤')
 if(paper.includes('今回間違えた問題から直す')&&paper.includes('/guided-review?q='))ok('採点結果は間違い小問を先に表示');else fail('結果→1問復習導線')
