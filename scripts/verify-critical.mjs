@@ -21,6 +21,7 @@ const migration=await loadModule('src/dataMigration.ts')
 const safetyStorage=await loadModule('src/safetyStorage.ts')
 const safetyBootstrap=await loadModule('src/safetyBootstrap.ts')
 const version=await loadModule('src/version.ts')
+const diagnostics=await loadModule('src/diagnostics.ts')
 const sample={
   'waseshibu-math-attempts':[{id:'a1',questionId:'2024-Q1-1',answer:'６',status:'correct',at:'2026-01-01T00:00:00.000Z'}],
   'waseshibu-math-preferences':{target:70,name:'受験生',updatedAt:'2026-01-01T00:00:00.000Z'},
@@ -124,5 +125,12 @@ assert.equal(newerResult.temporary,true)
 assert.equal(newerStore.getItem(version.ACTIVE_APP_VERSION_KEY),'99.0.0')
 assert.equal(version.canWriteLearningData(newerStore),false)
 
+const diagnosticStore=new MemoryStorage(safetySeed),report=await diagnostics.createDiagnosticReport(diagnosticStore),reportText=JSON.stringify(report)
+assert.equal(report.version.app,version.APP_VERSION)
+assert.equal(report.version.data,migration.CURRENT_DATA_VERSION)
+assert.deepEqual([report.learning.attempts,report.learning.scores,report.learning.drafts],[1,1,1])
+for(const secret of ['受験生','－１６','2025-Q1-1','prep-1'])assert.equal(reportText.includes(secret),false,`diagnostic excludes learning content: ${secret}`)
+assert.equal(report.grading.ok,true)
+
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`backup keys: ${backup.BACKUP_KEYS.length}, round-trip: OK, merge: OK, rollback: OK, safety upgrade/interruption/quota/newer-tab: OK, integrity: 160/160 + 2024 20, prep: 5, input variants: ${accepted.length}+160 full-width answers`)
+console.log(`backup keys: ${backup.BACKUP_KEYS.length}, round-trip: OK, merge: OK, rollback: OK, safety upgrade/interruption/quota/newer-tab: OK, privacy-safe diagnostics: OK, integrity: 160/160 + 2024 20, prep: 5, input variants: ${accepted.length}+160 full-width answers`)

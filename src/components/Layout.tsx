@@ -3,10 +3,18 @@ import { useEffect, useState, type PropsWithChildren } from 'react'
 import { currentLearningStep } from '../learningRoute'
 import { loadPrepState } from '../preflight'
 import { ACTIVE_APP_VERSION_KEY, APP_VERSION, SAFE_MODE_KEY } from '../version'
+import { UPDATE_NOTICE_KEY } from '../safetyBootstrap'
+
+const UPDATE_NOTICE_SEEN_KEY='waseshibu-math-update-notice-seen-v1'
+type UpdateNotice={from:string;to:string;at:string}
+function initialUpdateNotice():UpdateNotice|null{
+  try{const value=JSON.parse(localStorage.getItem(UPDATE_NOTICE_KEY)||'null');return value?.from&&value.to===APP_VERSION&&localStorage.getItem(UPDATE_NOTICE_SEEN_KEY)!==APP_VERSION?value:null}catch{return null}
+}
 
 export default function Layout({ children }: PropsWithChildren) {
   const [routeVersion,setRouteVersion]=useState(0)
   const [updateBlocked,setUpdateBlocked]=useState(false)
+  const [updateNotice,setUpdateNotice]=useState<UpdateNotice|null>(initialUpdateNotice)
   useEffect(()=>{
     const refresh=()=>setRouteVersion(v=>v+1)
     const blocked=()=>setUpdateBlocked(true)
@@ -21,12 +29,13 @@ export default function Layout({ children }: PropsWithChildren) {
   return (
     <div className="app-shell">
       {updateBlocked&&<div className="update-blocked" role="alert"><span><b>新しいバージョンがあります。</b> このタブからの保存を止め、学習履歴を保護しています。</span><button onClick={()=>location.reload()}>再読み込みして続ける</button></div>}
+      {updateNotice&&<div className="update-complete" role="status"><span><b>v{APP_VERSION}へ安全に更新しました。</b> 保存済みの学習履歴を引き継ぎ、更新前の復元ポイントも残しています。</span><button onClick={()=>{try{localStorage.setItem(UPDATE_NOTICE_SEEN_KEY,APP_VERSION)}catch{/* the notice can still close */}setUpdateNotice(null)}}>閉じる</button></div>}
       <header className="topbar">
         <div>
           <div className="brand">WaseShibu Math 70 <span className="unofficial">非公式</span></div>
           <div className="subtitle">過去問の出題構造を参考にした学習用Webアプリ</div>
         </div>
-        <span className="local-badge"><i />この端末に保存</span>
+        <span className="local-badge"><i />学習履歴を保護中</span>
       </header>
       <nav className="nav" aria-label="メインナビゲーション">
         <NavLink to="/">ホーム</NavLink>

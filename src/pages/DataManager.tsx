@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { backupStats, collectBackup, parseBackup, restoreBackup, type BackupPackage } from '../dataBackup'
 import { createRestorePoint, downloadRestorePoint, listRestorePoints, restoreFromPoint, type RestorePoint } from '../safetyStorage'
+import { createDiagnosticReport, downloadDiagnosticReport, protectionSummary } from '../diagnostics'
 
 function download(pkg:BackupPackage){
   const blob=new Blob([JSON.stringify(pkg,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a')
@@ -11,6 +12,7 @@ export default function DataManager(){
   const input=useRef<HTMLInputElement>(null)
   const [incoming,setIncoming]=useState<BackupPackage|null>(null),[error,setError]=useState(''),[done,setDone]=useState('')
   const [points,setPoints]=useState<RestorePoint[]>([]),[persistent,setPersistent]=useState<boolean|null>(null)
+  const [diagnosing,setDiagnosing]=useState(false)
   const current=collectBackup()
   const refreshPoints=()=>void listRestorePoints().then(setPoints).catch(()=>setPoints([]))
   useEffect(()=>{refreshPoints();void navigator.storage?.persisted?.().then(setPersistent).catch(()=>setPersistent(null))},[])
@@ -26,8 +28,11 @@ export default function DataManager(){
   const makePoint=async()=>{setError('');try{await createRestorePoint('manual');setDone('現在の状態を復元ポイントとして保存しました。');refreshPoints()}catch(e){setError(e instanceof Error?e.message:'復元ポイントを作成できませんでした')}}
   const restorePoint=async(point:RestorePoint)=>{if(!window.confirm(`${new Date(point.createdAt).toLocaleString('ja-JP')} の状態へ戻しますか？\n現在の状態も復元ポイントへ残します。`))return;setError('');try{await restoreFromPoint(point.id);setDone('選んだ時点へ復元しました。現在の状態も復元ポイントに残しています。');refreshPoints();window.dispatchEvent(new CustomEvent('waseshibu-route-change'))}catch(e){setError(e instanceof Error?e.message:'復元できませんでした')}}
   const nowStats=backupStats(current),inStats=incoming?backupStats(incoming):null
+  const protection=protectionSummary(current,points),formatDate=(value:string|null)=>value?new Date(value).toLocaleString('ja-JP'):'まだありません'
+  const diagnostic=async()=>{setError('');setDiagnosing(true);try{downloadDiagnosticReport(await createDiagnosticReport());setDone('診断情報を保存しました。解答内容や氏名は含まれていません。')}catch(e){setError(e instanceof Error?e.message:'診断情報を作成できませんでした')}finally{setDiagnosing(false)}}
   return <>
     <div className="page-head"><div><span className="eyebrow">LOCAL DATA</span><h1>データ管理</h1><p className="muted">学習データはこの端末にだけ保存され、操作しない限り外部へ送信されません。</p></div></div>
+    <section className="card protection-card"><div className="protection-heading"><div><span className="protection-dot"/><div><span className="eyebrow">DATA PROTECTION</span><h2>学習履歴は保護されています</h2></div></div><button className="button" disabled={diagnosing} onClick={()=>void diagnostic()}>{diagnosing?'作成中…':'診断情報をJSON保存'}</button></div><div className="protection-grid"><span>アプリ版<b>v{protection.appVersion}</b></span><span>データ形式<b>v{protection.dataVersion}</b></span><span>最終学習保存<b>{formatDate(protection.lastSavedAt)}</b></span><span>最新復元ポイント<b>{formatDate(protection.latestRestorePointAt)}</b></span></div><p className="muted diagnostic-note">診断JSONには版番号、保存件数、採点データの検査結果だけを収録します。氏名・入力した答え・得点の内容は含みません。</p></section>
     <section className="card data-card"><div><span className="eyebrow">EXPORT</span><h2>学習データを書き出す</h2><p>端末の故障・機種変更に備えて、準備5問、解答、自動採点、タイマー、迷い印、得点、弱点、補強進捗、途中状態を1つのJSONファイルに保存します。</p><div className="data-stats"><span>準備5問 <b>{nowStats.prepDone?'済':'—'}</b></span><span>解答記録 <b>{nowStats.attempts}</b></span><span>年度診断 <b>{nowStats.scores}</b></span><span>途中年度 <b>{nowStats.drafts}</b></span></div></div><button className="button primary" onClick={()=>download(collectBackup())}>この端末のデータを書き出す</button></section>
     <section className="card data-card"><div><span className="eyebrow">IMPORT</span><h2>ファイルから復元する</h2><p>まず内容を確認し、その後「入れ替え」または「統合」を選びます。適用直前に現在データも自動でバックアップします。</p></div><input ref={input} type="file" accept="application/json,.json" hidden onChange={e=>{void loadFile(e.target.files?.[0]);e.currentTarget.value=''}}/><button className="button" onClick={()=>input.current?.click()}>JSONファイルを選ぶ</button>{error&&<p className="data-error">{error}</p>}{done&&<p className="data-success">{done} ホームへ戻ると進捗へ反映されます。</p>}
       {incoming&&inStats&&<div className="import-preview"><h3>読み込み前の確認</h3><p>書き出し日時：{new Date(incoming.exportedAt).toLocaleString('ja-JP')}　／　データ形式：v{incoming.dataVersion}</p><div className="data-stats"><span>準備5問 <b>{inStats.prepDone?'済':'—'}</b></span><span>解答記録 <b>{inStats.attempts}</b></span><span>年度診断 <b>{inStats.scores}</b></span><span>途中年度 <b>{inStats.drafts}</b></span></div><div className="import-choices"><button className="button primary" onClick={()=>void apply('replace')}>入れ替える（推奨）</button><button className="button" onClick={()=>void apply('merge')}>現在データと統合</button><button className="button" onClick={()=>setIncoming(null)}>キャンセル</button></div><p className="muted">古いバックアップは現在の形式へ自動変換します。入れ替え：このアプリの学習データだけを置換します。統合：解答・得点はIDで重複を除き、途中状態は読み込む側を優先します。</p></div>}

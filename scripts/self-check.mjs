@@ -58,5 +58,8 @@ const safety=read('src/safetyBootstrap.ts'),restore=read('src/safetyStorage.ts')
 if(safety.includes('snapshot_verified')&&safety.includes('migration_validated')&&safety.includes('validateNoLoss')&&safety.includes('navigator.locks')&&restore.includes('IndexedDB')&&restore.includes("'pre_upgrade'")&&data.includes('この端末の復元ポイント'))ok('更新前退避・移行ジャーナル・内容検証・復元ポイント');else fail('更新安全基盤')
 if(layout.includes('waseshibu-write-blocked')&&layout.includes('BroadcastChannel')&&version.includes('canWriteLearningData')&&paper.includes('canWriteLearningData'))ok('旧タブの保存停止と更新通知');else fail('複数タブ保護')
 if(main.includes('<SafetyMode')&&read('src/SafetyMode.tsx').includes('現在データをJSON保存'))ok('起動前検査失敗時の安全モード');else fail('安全モード')
+const diagnostics=read('src/diagnostics.ts')
+if(data.includes('学習履歴は保護されています')&&data.includes('診断情報をJSON保存')&&data.includes('最終学習保存')&&data.includes('最新復元ポイント')&&diagnostics.includes('createDiagnosticReport')&&!diagnostics.includes("data['waseshibu-math-attempts']"+'.map'))ok('版・保存日時・復元ポイント・匿名診断情報の可視化');else fail('保護状態表示')
+if(layout.includes('update-complete')&&layout.includes('UPDATE_NOTICE_SEEN_KEY')&&layout.includes('学習履歴を引き継ぎ'))ok('一度だけ表示する更新完了通知');else fail('更新完了通知')
 
 if(!process.exitCode)console.log('SELF-CHECK PASSED')
