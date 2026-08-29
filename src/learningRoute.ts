@@ -138,7 +138,8 @@ export function reinforcementComplete(year:number){
   if(!fields.length)return true
   const plan=loadLearningRoute().reinforcement[String(year)]
   if(!practicePlanComplete(exam,target,plan,attempts,fields))return false
-  if(plan?.requiresSourceReview===false)return true
+  // v0.13以前ですでに旧方式の補強を完了していた利用者は完了のまま維持します。
+  if(plan?.requiresSourceReview===false||plan?.requiresSourceReview===undefined)return true
   return sourceMistakeProgress(year,target).complete
 }
 
