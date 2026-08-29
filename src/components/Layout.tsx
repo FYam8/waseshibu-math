@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom'
 import { useEffect, useState, type PropsWithChildren } from 'react'
 import { currentLearningStep } from '../learningRoute'
+import { loadPrepState } from '../preflight'
 
 export default function Layout({ children }: PropsWithChildren) {
   const [routeVersion,setRouteVersion]=useState(0)
   useEffect(()=>{const refresh=()=>setRouteVersion(v=>v+1);window.addEventListener('waseshibu-route-change',refresh);window.addEventListener('storage',refresh);return()=>{window.removeEventListener('waseshibu-route-change',refresh);window.removeEventListener('storage',refresh)}},[])
-  const step=currentLearningStep(),learnTo=step===1?'/past-papers?year=2024':step===2?'/past-papers?year=2024&review=1':step===4?'/reinforce?source=2024':step===5?'/past-papers?year=2025':step===6?'/reinforce?source=2025':step===7?'/past-papers?year=2026':'/years'
+  const step=currentLearningStep(),prep=loadPrepState(),learnTo=!prep.completed&&!prep.skipped?'/setup-check':step===1?'/past-papers?year=2024':step===2?'/past-papers?year=2024&review=1':step===4?'/reinforce?source=2024':step===5?'/past-papers?year=2025':step===6?'/reinforce?source=2025':step===7?'/past-papers?year=2026':'/years'
   void routeVersion
   return (
     <div className="app-shell">

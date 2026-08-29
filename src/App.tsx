@@ -10,6 +10,7 @@ import Remediation from './pages/Remediation'
 import Fields from './pages/Fields'
 import Reinforcement from './pages/Reinforcement'
 import DataManager from './pages/DataManager'
+import PrepCheck from './pages/PrepCheck'
 
 function PastPaperRoute(){
   const location=useLocation()
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/years" element={<Years />} />
         <Route path="/past-papers" element={<PastPaperRoute />} />
+        <Route path="/setup-check" element={<PrepCheck />} />
         <Route path="/fields" element={<Fields />} />
         <Route path="/mistakes" element={<MistakeReview />} />
         <Route path="/remediate" element={<Remediation />} />

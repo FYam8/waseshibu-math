@@ -7,6 +7,7 @@ import { createRecordId, loadExamScores, saveAttempt, saveExamScore } from '../s
 import { currentLearningStep, markYearSolved } from '../learningRoute'
 import { getExamAnswer, isExamAnswerCorrect } from '../data/examAnswers'
 import { cleanAnswerInput } from '../answer'
+import { runExamIntegrityCheck } from '../preflight'
 import type { MajorQuestion } from '../types'
 
 const DRAFT_KEY='waseshibu-math-exam-drafts-v2'
@@ -32,6 +33,7 @@ const paperImage=(year:number,page:number)=>`${BASE}exam-pages/${year}/page-${pa
 const answerImage=(year:number,page:number)=>`${BASE}exam-answers/${year}/page-${page}.jpg`
 
 export default function PastPapers(){
+  const integrity=runExamIntegrityCheck()
   const [params]=useSearchParams()
   const requested=Number(params.get('year')||2024),year=requested>=2019&&requested<=2026?requested:2024
   const majors=useMemo(()=>(questions.questions as MajorQuestion[]).filter(q=>q.year===year).sort((a,b)=>a.major-b.major),[year])
@@ -87,6 +89,7 @@ export default function PastPapers(){
     setSavedResult(result);setPhase('result');window.scrollTo({top:0,behavior:'smooth'})
   }
 
+  if(!integrity.ok)return <section className="card integrity-failed"><span className="eyebrow">SAFETY CHECK FAILED</span><h1>採点データを確認できないため開始を停止しました</h1><p>誤採点を防ぐための安全機能です。</p><ul>{integrity.issues.slice(0,8).map(x=><li key={x}>{x}</li>)}</ul><Link className="button" to="/">ホームへ戻る</Link></section>
   if(needsWarning&&!warningAccepted&&phase==='solve')return <section className="card warning-card"><span className="eyebrow">推奨ルート外の年度</span><h1>{year}年度を先に開きますか？</h1><p>{year===2025?'先に2024年度の弱点補強を終えると、改善を正しく比較できます。':'2026年度は仕上がり確認用です。先に2024・2025年度の診断と補強を終えることを推奨します。'}</p><div className="actions"><Link className="button primary" to="/">推奨ルートへ戻る</Link><button className="button" onClick={()=>setWarningAccepted(true)}>理解して開始する</button></div></section>
 
   if(phase==='result'&&savedResult)return <><div className="page-head"><div><span className="eyebrow">AUTO SCORING COMPLETE</span><h1>{year}年度の自動採点結果</h1></div></div><section className="grid four result-scores"><article className="card stat"><b>{savedResult.score}</b><span>自動採点</span></article><article className="card stat"><b>{savedResult.correct}</b><span>正解</span></article><article className="card stat"><b>{savedResult.wrong}</b><span>不正解</span></article><article className="card stat"><b>{savedResult.unanswered}</b><span>未回答</span></article></section><section className="card"><span className="eyebrow">TOP 3 WEAKNESSES</span><h2>優先弱点3分野</h2>{savedResult.weak.length?<div className="weak-three">{savedResult.weak.map((x,i)=><article key={x}><strong>{i+1}</strong><div><b>{x}</b><p>過去問の該当問題を解いてから、類題4問で定着させます。</p></div></article>)}</div>:<p>失点分野はありませんでした。</p>}<div className="actions"><Link className="button primary" to={year===2024?'/reinforce?source=2024':year===2025?'/reinforce?source=2025':'/years'}>{year===2026?'残りの年度演習へ':'弱点補強を始める'}</Link><Link className="button" to="/">ホームへ</Link></div></section></>

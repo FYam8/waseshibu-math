@@ -16,6 +16,7 @@ class MemoryStorage{
 const backup=await loadModule('src/dataBackup.ts')
 const answer=await loadModule('src/answer.ts')
 const exam=await loadModule('src/data/examAnswers.ts')
+const preflight=await loadModule('src/preflight.ts')
 const sample={
   'waseshibu-math-attempts':[{id:'a1',questionId:'2024-Q1-1',answer:'６',status:'correct',at:'2026-01-01T00:00:00.000Z'}],
   'waseshibu-math-preferences':{target:70,name:'受験生',updatedAt:'2026-01-01T00:00:00.000Z'},
@@ -23,6 +24,7 @@ const sample={
   'waseshibu-math-exam-scores':[{id:'s1',year:2024,score:65,correctCount:13,at:'2026-01-01T00:00:00.000Z'}],
   'waseshibu-math-exam-drafts-v2':{'2025':{answers:{'2025-Q1-1':'－１６'},flags:{'2025-Q1-2':true},seconds:321,majorIndex:1,phase:'solve'}},
   'waseshibu-math-learning-route-v1':{solvedYears:[2024],usedOldQuestionIds:['2019-Q1-1'],reinforcement:{'2024':{examId:'s1',completedQuestionIds:['2019-Q1-1']}},updatedAt:'2026-01-01T00:00:00.000Z'}
+  ,'waseshibu-math-prep-check-v1':{version:1,index:2,answers:{'prep-1':'６','prep-2':'－３'},tries:{'prep-1':1,'prep-2':1},completed:false,skipped:false,updatedAt:'2026-01-01T00:00:00.000Z'}
 }
 const source=new MemoryStorage(Object.fromEntries(Object.entries(sample).map(([key,value])=>[key,JSON.stringify(value)])))
 const pkg=backup.collectBackup(source)
@@ -48,8 +50,13 @@ const accepted=[
 for(const [input,expected] of accepted)assert.equal(answer.isAcceptedAnswer(input,expected),true,`${input} => ${expected}`)
 const toFullWidth=value=>value.replace(/[!-~]/g,char=>String.fromCharCode(char.charCodeAt(0)+0xFEE0))
 for(const [id,expected] of Object.entries(exam.examAnswers))assert.equal(exam.isExamAnswerCorrect(id,toFullWidth(expected.answer)),true,`full-width canonical: ${id}`)
+const integrity=preflight.runExamIntegrityCheck()
+assert.equal(integrity.ok,true,integrity.issues.join('\n'))
+assert.deepEqual([integrity.questionCount,integrity.answerCount,integrity.year2024Count],[160,160,20])
+assert.equal(preflight.prepQuestions.length,5)
+for(const q of preflight.prepQuestions)assert.equal(answer.isAcceptedAnswer(toFullWidth(q.answer),q.answer,q.acceptedAnswers),true,`prep full-width: ${q.id}`)
 assert.equal(answer.isAcceptedAnswer('7','6'),false)
 assert.equal(answer.cleanAnswerInput('６\n＋\t１').includes('\n'),false)
 
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`backup keys: ${backup.BACKUP_KEYS.length}, round-trip: OK, merge: OK, rollback: OK, input variants: ${accepted.length}+160 full-width answers`)
+console.log(`backup keys: ${backup.BACKUP_KEYS.length}, round-trip: OK, merge: OK, rollback: OK, integrity: 160/160 + 2024 20, prep: 5, input variants: ${accepted.length}+160 full-width answers`)

@@ -20,9 +20,9 @@ for(const year of [2019,2020,2021,2022,2023,2024,2025,2026]){
 if(examImages===47&&answerImages===10)ok('全問題47ページ・公式解答10ページ');else fail(`画像数 ${examImages}/${answerImages}`)
 
 const app=read('src/App.tsx'),layout=read('src/components/Layout.tsx'),home=read('src/pages/Home.tsx')
-for(const route of ['"/years"','"/past-papers"','"/reinforce"','"/remediate"','"/report"','"/data"'])if(!app.includes(route))fail(`route missing ${route}`)
+for(const route of ['"/years"','"/past-papers"','"/setup-check"','"/reinforce"','"/remediate"','"/report"','"/data"'])if(!app.includes(route))fail(`route missing ${route}`)
 if(['ホーム','学習する','演習ライブラリ','学習記録','データ管理'].every(x=>layout.includes(x))&&!layout.includes('端末間同期</NavLink>'))ok('5タブの学習導線');else fail('ナビゲーション')
-if(Array.from({length:8},(_,i)=>`n:${i+1}`).every(x=>home.includes(x))&&home.includes('2019〜2023該当問題＋類題4問'))ok('ホームに8段階ルート');else fail('8段階ルート')
+if(Array.from({length:8},(_,i)=>`n:${i+1}`).every(x=>home.includes(x))&&home.includes('入力・自動採点チェック5問')&&home.includes('draftResume'))ok('準備5問・途中再開・8段階ルート');else fail('段階ルート')
 
 const route=read('src/learningRoute.ts')
 if(route.includes('usedOldQuestionIds')&&route.includes('ensureReinforcementPlan')&&route.includes('reinforcementComplete')&&route.includes('actualDone&&mastered'))ok('未使用過去問の予約と補強完了条件');else fail('補強状態機械')
@@ -32,6 +32,8 @@ if(paper.includes('className={`exam-workspace')&&paper.includes('problem-pane ca
 const answerData=read('src/data/examAnswers.ts'),answerIds=[...answerData.matchAll(/'(\d{4}-Q[^']+)':E/g)].map(x=>x[1]),questionIds=majors.flatMap(m=>m.subquestions.map(s=>`${m.id}-${s.no}`))
 if(answerIds.length===160&&questionIds.every(id=>answerIds.includes(id))&&new Set(answerIds).size===160)ok('全160小問の自動採点正答');else fail(`正答データ ${answerIds.length}/160`)
 if(paper.includes('isExamAnswerCorrect')&&paper.includes("'correct'|'wrong'|'unanswered'")&&paper.includes('正解に修正')&&!paper.includes('すぐ立った')&&!paper.includes('考えて立った'))ok('自動採点・未回答判定・誤判定修正');else fail('過去問自動採点')
+const preflight=read('src/preflight.ts'),prep=read('src/pages/PrepCheck.tsx')
+if(preflight.includes('expected2024')&&preflight.includes('year2024Count!==20')&&preflight.includes('answerIds.length!==160')&&paper.includes('runExamIntegrityCheck')&&prep.includes('prepQuestions.length'))ok('全160問・2024年度20問の実行時安全検査と準備5問');else fail('準備・安全検査')
 if(paper.includes('answers,flags')&&paper.includes('overrides,seconds,majorIndex,phase'))ok('途中解答・迷い・採点修正・タイマーの自動保存');else fail('途中状態保存')
 if(paper.includes("['分数','/']")&&paper.includes("['√','√()']")&&paper.includes("['x²','^2']"))ok('数式入力パッド');else fail('数式入力パッド')
 if(styles.includes('grid-template-columns:minmax(0,1.65fr)')&&styles.includes('.answer-dock{position:sticky')&&styles.includes('.answer-dock{position:fixed')&&styles.includes('.floating-timer{position:fixed'))ok('デスクトップ2ペイン・スマホ解答ドック・小型タイマー');else fail('レスポンシブ試験UI')
@@ -44,7 +46,7 @@ if(fieldCount===18&&questionCount===72)ok('18分野×4問=72問');else fail(`${f
 
 const data=read('src/pages/DataManager.tsx')
 const backup=read('src/dataBackup.ts')
-if(backup.includes("'waseshibu-math-exam-drafts-v2'")&&backup.includes("'waseshibu-math-learning-route-v1'")&&backup.includes('restoreBackup')&&backup.includes('best-effort rollback')&&data.includes('download(collectBackup())'))ok('全学習状態のバックアップ・検証・復元・ロールバック');else fail('データ管理')
+if(backup.includes("'waseshibu-math-exam-drafts-v2'")&&backup.includes("'waseshibu-math-learning-route-v1'")&&backup.includes("'waseshibu-math-prep-check-v1'")&&backup.includes('restoreBackup')&&backup.includes('best-effort rollback')&&data.includes('download(collectBackup())'))ok('準備を含む全学習状態のバックアップ・検証・復元・ロールバック');else fail('データ管理')
 const answer=read('src/answer.ts')
 if(answer.includes(".normalize('NFKC')")&&answer.includes('cleanAnswerInput')&&answer.includes(".replace(/[≤≦]/g,'<='")&&paper.includes('全角可'))ok('全角・半角・主要数式表記の揺れを吸収');else fail('入力表記揺れ')
 if(!layout.includes('SyncBadge')&&!layout.includes('GitHub Private Repository'))ok('学習データは端末保存へ統一');else fail('旧同期表示が残っている')

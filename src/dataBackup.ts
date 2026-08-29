@@ -1,6 +1,6 @@
 export const BACKUP_KEYS=[
   'waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily',
-  'waseshibu-math-exam-scores','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1'
+  'waseshibu-math-exam-scores','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1'
 ] as const
 
 export type BackupKey=typeof BACKUP_KEYS[number]
@@ -22,7 +22,7 @@ export function validateBackup(value:unknown):BackupPackage{
   for(const key of Object.keys(data))if(!BACKUP_KEYS.includes(key as BackupKey))throw new Error(`未対応のデータ項目が含まれています：${key}`)
   const arrays:BackupKey[]=['waseshibu-math-attempts','waseshibu-math-exam-scores']
   for(const key of arrays)if(key in data&&!Array.isArray(data[key]))throw new Error(`${key} の形式が壊れています`)
-  const objects:BackupKey[]=['waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1']
+  const objects:BackupKey[]=['waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1']
   for(const key of objects)if(key in data&&data[key]!==null&&!isObject(data[key]))throw new Error(`${key} の形式が壊れています`)
   return value as BackupPackage
 }
@@ -70,6 +70,6 @@ export function restoreBackup(storage:StorageLike,incoming:BackupPackage,mode:Re
 }
 
 export function backupStats(pkg:BackupPackage){
-  const attempts=pkg.data['waseshibu-math-attempts'],scores=pkg.data['waseshibu-math-exam-scores'],drafts=pkg.data['waseshibu-math-exam-drafts-v2']
-  return {attempts:Array.isArray(attempts)?attempts.length:0,scores:Array.isArray(scores)?scores.length:0,drafts:isObject(drafts)?Object.keys(drafts).length:0}
+  const attempts=pkg.data['waseshibu-math-attempts'],scores=pkg.data['waseshibu-math-exam-scores'],drafts=pkg.data['waseshibu-math-exam-drafts-v2'],prep=pkg.data['waseshibu-math-prep-check-v1']
+  return {attempts:Array.isArray(attempts)?attempts.length:0,scores:Array.isArray(scores)?scores.length:0,drafts:isObject(drafts)?Object.keys(drafts).length:0,prepDone:isObject(prep)&&prep.completed===true}
 }
