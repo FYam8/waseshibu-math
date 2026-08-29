@@ -9,12 +9,13 @@ const questionIds=majors.flatMap(m=>m.subquestions.map(s=>`${m.id}-${s.no}`))
 if(majors.length===40&&questionIds.length===160)ok('2019〜2026 全40大問・160小問');else fail(`問題数 ${majors.length}/${questionIds.length}`)
 for(const year of [2019,2020,2021,2022,2023,2024,2025,2026])if(majors.filter(x=>x.year===year).length!==5)fail(`${year}年度が5大問ではない`)
 
-const app=read('src/App.tsx'),paper=read('src/pages/PastPapers.tsx'),guided=read('src/pages/GuidedReview.tsx'),mark=read('src/components/ExamMarkReview.tsx'),reinforcement=read('src/pages/Reinforcement.tsx'),focus=read('src/components/FocusedQuestionView.tsx'),focusRules=read('src/data/questionFocus.ts'),manifest=read('src/data/questionFocusManifest.ts'),examConfig=read('src/data/examConfig.ts'),styles=read('src/guidedReview.css')
+const app=read('src/App.tsx'),home=read('src/pages/Home.tsx'),paper=read('src/pages/PastPapers.tsx'),guided=read('src/pages/GuidedReview.tsx'),mark=read('src/components/ExamMarkReview.tsx'),reinforcement=read('src/pages/Reinforcement.tsx'),focus=read('src/components/FocusedQuestionView.tsx'),focusRules=read('src/data/questionFocus.ts'),manifest=read('src/data/questionFocusManifest.ts'),examConfig=read('src/data/examConfig.ts'),styles=read('src/guidedReview.css')
 if(app.includes('"/guided-review"')&&paper.includes('ExamMarkReview')&&guided.includes('FocusedQuestionView')&&reinforcement.includes('FocusedQuestionView'))ok('採点・解説・弱点補強を同じ1問表示へ統一');else fail('1問表示ルート統一')
 if(paper.includes('PROBLEM · EXAM MODE')&&paper.includes('本番演習中は、実際の試験と同じように問題ページ全体を表示します'))ok('本番演習はページ全体表示');else fail('本番表示')
 if(mark.includes('ONE QUESTION MARKING')&&mark.includes('公式解答ページ全体は表示しません')&&mark.includes('この小問の正答')&&!mark.includes('exam-answers'))ok('採点後は1小問・1正答だけ');else fail('採点1問フォーカス')
 if(guided.includes('ONE QUESTION REVIEW')&&guided.includes('ほかの小問・ほかの正答は表示しません')&&guided.includes('の正答だけを表示'))ok('解説は1小問・1正答だけ');else fail('解説1問フォーカス')
 if(reinforcement.includes('この小問の正答だけ見る')&&reinforcement.includes('別小問や公式解答ページ全体は表示しません')&&!reinforcement.includes('answerPages')&&!reinforcement.includes('answerImage(')&&!reinforcement.includes('exam-images'))ok('弱点補強も1小問・1正答だけ');else fail('弱点補強に旧全体表示が残っている')
+if(home.includes("if(n===3&&done)return {to:'/reinforce?source=2024',label:'弱点問題を解く'}")&&home.includes('弱点分析を見る')&&styles.includes('.route-secondary-link'))ok('完了済み弱点抽出カードから問題演習へ直行');else fail('STEP3完了後の問題演習導線')
 
 const manifestIds=[...manifest.matchAll(/'(\d{4}-Q[^']+)':/g)].map(x=>x[1])
 if(manifestIds.length===160&&new Set(manifestIds).size===160&&questionIds.every(id=>manifestIds.includes(id)))ok('全160小問に固定表示マップ');else fail(`固定表示マップ ${manifestIds.length}/160`)
@@ -31,7 +32,7 @@ const answerData=read('src/data/examAnswers.ts'),answerIds=[...answerData.matchA
 if(answerIds.length===160&&questionIds.every(id=>answerIds.includes(id))&&new Set(answerIds).size===160)ok('全160小問の正答データ');else fail(`正答データ ${answerIds.length}/160`)
 
 const backup=read('src/dataBackup.ts'),migration=read('src/dataMigration.ts'),version=read('src/version.ts'),publicVersion=read('public/version.json')
-if(migration.includes('CURRENT_DATA_VERSION=3')&&backup.includes('GUIDED_REVIEW_STORAGE_KEY')&&version.includes("APP_VERSION='0.13.0'")&&publicVersion.includes('"appVersion": "0.13.0"')&&publicVersion.includes('"dataVersion": 3'))ok('v0.13.0・data v3・既存学習データ保護');else fail('版・データ形式整合')
+if(migration.includes('CURRENT_DATA_VERSION=3')&&backup.includes('GUIDED_REVIEW_STORAGE_KEY')&&version.includes("APP_VERSION='0.13.1'")&&publicVersion.includes('"appVersion": "0.13.1"')&&publicVersion.includes('"dataVersion": 3'))ok('v0.13.1・data v3・既存学習データ保護');else fail('版・データ形式整合')
 
 const html=read('index.html'),robots=read('public/robots.txt')
 if(html.includes('noindex, nofollow, noarchive, nosnippet')&&robots.includes('Disallow: /'))ok('検索エンジン非掲載設定');else fail('noindex/robots')
