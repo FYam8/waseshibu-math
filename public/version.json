@@ -1,6 +1,6 @@
 {
-  "appVersion": "0.13.1",
+  "appVersion": "0.13.2",
   "dataVersion": 3,
   "releasedAt": "2026-08-30",
-  "release": "weakness-card-practice-route"
+  "release": "target-filtered-mistake-review"
 }
