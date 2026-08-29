@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "self-check": "node scripts/self-check.mjs"
+    "self-check": "node scripts/self-check.mjs",
+    "verify-critical": "node scripts/verify-critical.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",

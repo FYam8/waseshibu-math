@@ -43,7 +43,10 @@ const remedyData=read('src/data/remediation.ts'),fieldCount=[...remedyData.match
 if(fieldCount===18&&questionCount===72)ok('18分野×4問=72問');else fail(`${fieldCount}分野・${questionCount}問`)
 
 const data=read('src/pages/DataManager.tsx')
-if(data.includes("'waseshibu-math-exam-drafts-v2'")&&data.includes("'waseshibu-math-learning-route-v1'")&&data.includes('download(collect())')&&data.includes("mode==='replace'")&&data.includes("mode==='merge'"))ok('全学習状態のローカル書き出し・入れ替え・統合');else fail('データ管理')
+const backup=read('src/dataBackup.ts')
+if(backup.includes("'waseshibu-math-exam-drafts-v2'")&&backup.includes("'waseshibu-math-learning-route-v1'")&&backup.includes('restoreBackup')&&backup.includes('best-effort rollback')&&data.includes('download(collectBackup())'))ok('全学習状態のバックアップ・検証・復元・ロールバック');else fail('データ管理')
+const answer=read('src/answer.ts')
+if(answer.includes(".normalize('NFKC')")&&answer.includes('cleanAnswerInput')&&answer.includes(".replace(/[≤≦]/g,'<='")&&paper.includes('全角可'))ok('全角・半角・主要数式表記の揺れを吸収');else fail('入力表記揺れ')
 if(!layout.includes('SyncBadge')&&!layout.includes('GitHub Private Repository'))ok('学習データは端末保存へ統一');else fail('旧同期表示が残っている')
 
 if(!process.exitCode)console.log('SELF-CHECK PASSED')
