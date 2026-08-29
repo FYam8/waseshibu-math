@@ -1,8 +1,9 @@
 export const DATA_VERSION_KEY='waseshibu-math-data-version'
-export const CURRENT_DATA_VERSION=2
+export const CURRENT_DATA_VERSION=3
 export const LEGACY_DRAFT_KEY='waseshibu-math-exam-drafts'
 export const CURRENT_DRAFT_KEY='waseshibu-math-exam-drafts-v2'
 export const PREP_STORAGE_KEY='waseshibu-math-prep-check-v1'
+export const GUIDED_REVIEW_STORAGE_KEY='waseshibu-math-guided-review-v1'
 
 export type MigrationStorage=Pick<Storage,'getItem'|'setItem'|'removeItem'>
 const isObject=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)
@@ -36,6 +37,10 @@ export function migrateDataRecord(input:Record<string,unknown>,fromVersion:numbe
     if(PREP_STORAGE_KEY in data)data[PREP_STORAGE_KEY]=normalizePrepRecord(data[PREP_STORAGE_KEY])
     version=2
   }
+  if(version<3){
+    if(!(GUIDED_REVIEW_STORAGE_KEY in data))data[GUIDED_REVIEW_STORAGE_KEY]={}
+    version=3
+  }
   data[DATA_VERSION_KEY]=CURRENT_DATA_VERSION
   return {data,version}
 }
@@ -44,7 +49,7 @@ export function runDataMigrations(storage:MigrationStorage=localStorage){
   const storedVersion=Number(storage.getItem(DATA_VERSION_KEY)||'0')
   if(storedVersion>CURRENT_DATA_VERSION)return {ok:false,fromVersion:storedVersion,toVersion:storedVersion,error:'新しいデータ形式です'}
   if(storedVersion===CURRENT_DATA_VERSION)return {ok:true,fromVersion:storedVersion,toVersion:CURRENT_DATA_VERSION}
-  const keys=['waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-scores',CURRENT_DRAFT_KEY,'waseshibu-math-learning-route-v1',PREP_STORAGE_KEY,LEGACY_DRAFT_KEY]
+  const keys=['waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-scores',CURRENT_DRAFT_KEY,'waseshibu-math-learning-route-v1',PREP_STORAGE_KEY,GUIDED_REVIEW_STORAGE_KEY,LEGACY_DRAFT_KEY]
   const source:Record<string,unknown>={}
   for(const key of keys){const raw=storage.getItem(key);if(raw===null)continue;try{source[key]=JSON.parse(raw)}catch{source[key]=raw}}
   const managedKeys=[...keys,DATA_VERSION_KEY],before=new Map(managedKeys.map(key=>[key,storage.getItem(key)]))
