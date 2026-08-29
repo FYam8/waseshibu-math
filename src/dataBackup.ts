@@ -1,8 +1,8 @@
-import { CURRENT_DATA_VERSION, DATA_VERSION_KEY, LEGACY_DRAFT_KEY, migrateDataRecord } from './dataMigration'
+import { CURRENT_DATA_VERSION, DATA_VERSION_KEY, GUIDED_REVIEW_STORAGE_KEY, LEGACY_DRAFT_KEY, migrateDataRecord } from './dataMigration'
 
 export const BACKUP_KEYS=[
   'waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily',
-  'waseshibu-math-exam-scores','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1','waseshibu-math-data-version'
+  'waseshibu-math-exam-scores','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1',GUIDED_REVIEW_STORAGE_KEY,'waseshibu-math-data-version'
 ] as const
 
 export type BackupKey=typeof BACKUP_KEYS[number]
@@ -32,7 +32,7 @@ export function validateBackup(value:unknown):BackupPackage{
   for(const key of Object.keys(data))if(!BACKUP_KEYS.includes(key as BackupKey)&&key!==LEGACY_DRAFT_KEY)throw new Error(`未対応のデータ項目が含まれています：${key}`)
   const arrays:BackupKey[]=['waseshibu-math-attempts','waseshibu-math-exam-scores']
   for(const key of arrays)if(key in data&&!Array.isArray(data[key]))throw new Error(`${key} の形式が壊れています`)
-  const objects:BackupKey[]=['waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1']
+  const objects:BackupKey[]=['waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1',GUIDED_REVIEW_STORAGE_KEY]
   for(const key of objects)if(key in data&&data[key]!==null&&!isObject(data[key]))throw new Error(`${key} の形式が壊れています`)
   const filtered:Partial<Record<BackupKey,unknown>>={}
   BACKUP_KEYS.forEach(key=>{if(key in data)filtered[key]=data[key]})
@@ -51,7 +51,7 @@ function uniqueById(local:unknown,incoming:unknown){
 
 export function mergeBackupValue(key:BackupKey,local:unknown,incoming:unknown){
   if(key.endsWith('attempts')||key.endsWith('exam-scores'))return uniqueById(local,incoming)
-  if(key.endsWith('exam-drafts-v2'))return {...(isObject(local)?local:{}),...(isObject(incoming)?incoming:{})}
+  if(key.endsWith('exam-drafts-v2')||key===GUIDED_REVIEW_STORAGE_KEY)return {...(isObject(local)?local:{}),...(isObject(incoming)?incoming:{})}
   if(key.endsWith('learning-route-v1')){
     const a:any=isObject(local)?local:{},b:any=isObject(incoming)?incoming:{},reinforcement={...(a.reinforcement||{})}
     for(const [planKey,incomingPlan] of Object.entries(b.reinforcement||{})){
@@ -82,6 +82,6 @@ export function restoreBackup(storage:StorageLike,incoming:BackupPackage,mode:Re
 }
 
 export function backupStats(pkg:BackupPackage){
-  const attempts=pkg.data['waseshibu-math-attempts'],scores=pkg.data['waseshibu-math-exam-scores'],drafts=pkg.data['waseshibu-math-exam-drafts-v2'],prep=pkg.data['waseshibu-math-prep-check-v1']
-  return {attempts:Array.isArray(attempts)?attempts.length:0,scores:Array.isArray(scores)?scores.length:0,drafts:isObject(drafts)?Object.keys(drafts).length:0,prepStarted:isObject(prep)&&Object.keys(prep).length>0,prepDone:isObject(prep)&&prep.completed===true}
+  const attempts=pkg.data['waseshibu-math-attempts'],scores=pkg.data['waseshibu-math-exam-scores'],drafts=pkg.data['waseshibu-math-exam-drafts-v2'],prep=pkg.data['waseshibu-math-prep-check-v1'],guided=pkg.data[GUIDED_REVIEW_STORAGE_KEY]
+  return {attempts:Array.isArray(attempts)?attempts.length:0,scores:Array.isArray(scores)?scores.length:0,drafts:isObject(drafts)?Object.keys(drafts).length:0,guided:isObject(guided)?Object.keys(guided).length:0,prepStarted:isObject(prep)&&Object.keys(prep).length>0,prepDone:isObject(prep)&&prep.completed===true}
 }
