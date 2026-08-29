@@ -61,5 +61,9 @@ if(main.includes('<SafetyMode')&&read('src/SafetyMode.tsx').includes('現在デ�
 const diagnostics=read('src/diagnostics.ts')
 if(data.includes('学習履歴は保護されています')&&data.includes('診断情報をJSON保存')&&data.includes('最終学習保存')&&data.includes('最新復元ポイント')&&diagnostics.includes('createDiagnosticReport')&&!diagnostics.includes("data['waseshibu-math-attempts']"+'.map'))ok('版・保存日時・復元ポイント・匿名診断情報の可視化');else fail('保護状態表示')
 if(layout.includes('update-complete')&&layout.includes('UPDATE_NOTICE_SEEN_KEY')&&layout.includes('学習履歴を引き継ぎ'))ok('一度だけ表示する更新完了通知');else fail('更新完了通知')
+const targetStrategy=read('src/targetStrategy.ts'),report=read('src/pages/Report.tsx'),years=read('src/pages/Years.tsx')
+if(targetStrategy.includes('buildTargetStrategy')&&targetStrategy.includes('rankWeakFields')&&targetStrategy.includes('gradeInTarget')&&targetStrategy.includes('timePlan')&&paper.includes('目標まであと')&&report.includes('回収目安')&&home.includes('target-impact')&&years.includes('gradeAdvice'))ok('60・70・75点の目標差・回収候補・弱点順位・問題優先度・時間配分');else fail('目標点連動')
+if(route.includes('plan.target!==target')&&route.includes('weakFieldsForStoredExam')&&reinforcement.includes('weakFieldsForStoredExam'))ok('目標変更後も補強計画と完了記録を整合');else fail('目標変更時の補強整合')
+if(read('src/dataMigration.ts').includes('CURRENT_DATA_VERSION=2')&&read('public/version.json').includes('"dataVersion": 2'))ok('v0.10でもデータ形式v2を維持');else fail('データ形式据え置き')
 
 if(!process.exitCode)console.log('SELF-CHECK PASSED')

@@ -3,6 +3,8 @@ import questions from '../data/questions.json'
 import type { MajorQuestion } from '../types'
 import { Link } from 'react-router-dom'
 import { loadLearningRoute } from '../learningRoute'
+import { loadPreferences } from '../storage'
+import { gradeAdvice, gradeInTarget, targetProfile } from '../targetStrategy'
 
 const domainLabel: Record<string,string> = {
   mixed:'小問集合', function:'関数・座標', probability:'確率', geometry:'図形',
@@ -16,6 +18,7 @@ export default function Years() {
   const [year,setYear]=useState(2026)
   const selected=useMemo(()=>data.filter(q=>q.year===year),[data,year])
   const routeState=loadLearningRoute()
+  const target=loadPreferences().target
   const selectedIds=selected.flatMap(q=>q.subquestions.map(s=>`${q.id}-${s.no}`))
   const used=selectedIds.filter(id=>routeState.usedOldQuestionIds.includes(id)).length
 
@@ -29,7 +32,7 @@ export default function Years() {
       </div>
 
       <div className="notice-box">
-        診断用の2024〜2026年度と、補強・年度演習用の2019〜2023年度をすべて収録しています。A/B/Cは学校公式ではなく学習上の優先度です。
+        診断用の2024〜2026年度と、補強・年度演習用の2019〜2023年度をすべて収録しています。現在は<b>{target}点方針</b>：{targetProfile(target).summary} A/B/Cは学校公式ではなく学習上の優先度です。
       </div>
 
       <div className="year-summary card">
@@ -60,12 +63,12 @@ export default function Years() {
 
             <div className="subqs">
               {q.subquestions.map(s=>(
-                <div className="subq" key={s.no}>
+                <div className={`subq ${gradeInTarget(target,s.grade)?'recommended':'deferred-plan'}`} key={s.no}>
                   <b>({s.no})</b>
                   <span>
                     {s.topic}
                     <small className="strategy-note">
-                      {s.grade==='A'?'60点狙いでも取りたい':s.grade==='B'?'70点なら追加したい':'現時点では後回し候補'}
+                      {gradeAdvice(target,s.grade)}
                     </small>
                   </span>
                   <em className={`mini grade-${s.grade}`}>{s.grade}</em>

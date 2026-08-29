@@ -3,13 +3,14 @@ import { Link, useSearchParams } from 'react-router-dom'
 import questions from '../data/questions.json'
 import { answerPages, examPages, examRole, pointsFor } from '../data/examConfig'
 import { classifyRemediationField } from '../data/remediation'
-import { createRecordId, loadExamScores, saveAttempt, saveExamScore } from '../storage'
+import { createRecordId, loadExamScores, loadPreferences, saveAttempt, saveExamScore } from '../storage'
 import { currentLearningStep, markYearSolved } from '../learningRoute'
 import { getExamAnswer, isExamAnswerCorrect } from '../data/examAnswers'
 import { cleanAnswerInput } from '../answer'
 import { runExamIntegrityCheck } from '../preflight'
 import { createRestorePoint } from '../safetyStorage'
 import { canWriteLearningData, notifyWriteBlocked } from '../version'
+import { buildTargetStrategy, rankWeakFields, type ExamTargetStrategy, type StrategyItem } from '../targetStrategy'
 import type { MajorQuestion } from '../types'
 
 const DRAFT_KEY='waseshibu-math-exam-drafts-v2'
@@ -18,6 +19,7 @@ const causes=['計算ミス','符号ミス','条件読み落とし','知識不�
 
 type AutoStatus='correct'|'wrong'|'unanswered'
 type Draft={answers:Record<string,string>;flags:Record<string,boolean>;causes:Record<string,string>;overrides:Record<string,'correct'|'wrong'>;seconds:number;majorIndex:number;phase:'solve'|'mark';updatedAt:string}
+type SavedResult={score:number;correct:number;wrong:number;unanswered:number;weak:string[];strategy:ExamTargetStrategy}
 
 function readDraft(year:number):Partial<Draft>{
   try{
@@ -53,7 +55,7 @@ export default function PastPapers(){
   const [focused,setFocused]=useState<string>('')
   const [answerOpen,setAnswerOpen]=useState(()=>window.innerWidth>700)
   const [warningAccepted,setWarningAccepted]=useState(false)
-  const [savedResult,setSavedResult]=useState<{score:number;correct:number;wrong:number;unanswered:number;weak:string[]}|null>(null)
+  const [savedResult,setSavedResult]=useState<SavedResult|null>(null)
   const inputs=useRef<Record<string,HTMLInputElement|null>>({})
   const q=majors[majorIndex]
   const allSubs=majors.flatMap(m=>m.subquestions.map(s=>({major:m,sub:s,key:keyFor(m,s.no)})))
@@ -82,10 +84,9 @@ export default function PastPapers(){
     if(!canWriteLearningData()){notifyWriteBlocked();return}
     const graded=allSubs.map(x=>({...x,status:statusFor(x.key)}))
     const score=Math.round(graded.reduce((sum,x)=>sum+(x.status==='correct'?pointsFor(year,x.major.major,x.major.subquestions.length):0),0))
-    const weights:Record<string,number>={}
-    graded.forEach(x=>{if(x.status==='correct')return;const f=classifyRemediationField(x.sub.topic).title;weights[f]=(weights[f]||0)+(x.status==='wrong'?3:1)})
-    const weak=Object.entries(weights).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([x])=>x)
-    const result={score,correct:graded.filter(x=>x.status==='correct').length,wrong:graded.filter(x=>x.status==='wrong').length,unanswered:graded.filter(x=>x.status==='unanswered').length,weak}
+    const target=loadPreferences().target,items:StrategyItem[]=graded.map(x=>({key:x.key,major:x.major.major,subNo:x.sub.no,topic:x.sub.topic,grade:x.sub.grade,status:x.status,points:pointsFor(year,x.major.major,x.major.subquestions.length),cause:causeMap[x.key],flagged:!!flags[x.key]}))
+    const weak=rankWeakFields(target,items),strategy=buildTargetStrategy(target,score,items)
+    const result:SavedResult={score,correct:graded.filter(x=>x.status==='correct').length,wrong:graded.filter(x=>x.status==='wrong').length,unanswered:graded.filter(x=>x.status==='unanswered').length,weak,strategy}
     const now=new Date().toISOString(),prior=loadExamScores().some(x=>x.year===year&&x.completed!==false)
     saveExamScore({id:createRecordId(`exam-${year}`),year,score:result.score,correctCount:result.correct,wrongCount:result.wrong,unansweredCount:result.unanswered,completed:true,attemptKind:prior?'retake':'first',weakFields:weak,at:now})
     graded.forEach(x=>saveAttempt({id:createRecordId(`exam-${x.key}`),questionId:`exam-${x.key}`,mode:'multi',topic:x.sub.topic,status:x.status==='correct'?'correct':x.status==='unanswered'?'deferred':'wrong',mistakeTag:causeMap[x.key],diagnosis:x.status==='correct'?'correct':'recoverable',answer:answers[x.key]||'',flagged:!!flags[x.key],seconds,at:now}))
@@ -97,7 +98,9 @@ export default function PastPapers(){
   if(!integrity.ok)return <section className="card integrity-failed"><span className="eyebrow">SAFETY CHECK FAILED</span><h1>採点データを確認できないため開始を停止しました</h1><p>誤採点を防ぐための安全機能です。</p><ul>{integrity.issues.slice(0,8).map(x=><li key={x}>{x}</li>)}</ul><Link className="button" to="/">ホームへ戻る</Link></section>
   if(needsWarning&&!warningAccepted&&phase==='solve')return <section className="card warning-card"><span className="eyebrow">推奨ルート外の年度</span><h1>{year}年度を先に開きますか？</h1><p>{year===2025?'先に2024年度の弱点補強を終えると、改善を正しく比較できます。':'2026年度は仕上がり確認用です。先に2024・2025年度の診断と補強を終えることを推奨します。'}</p><div className="actions"><Link className="button primary" to="/">推奨ルートへ戻る</Link><button className="button" onClick={()=>setWarningAccepted(true)}>理解して開始する</button></div></section>
 
-  if(phase==='result'&&savedResult)return <><div className="page-head"><div><span className="eyebrow">AUTO SCORING COMPLETE</span><h1>{year}年度の自動採点結果</h1></div></div><section className="grid four result-scores"><article className="card stat"><b>{savedResult.score}</b><span>自動採点</span></article><article className="card stat"><b>{savedResult.correct}</b><span>正解</span></article><article className="card stat"><b>{savedResult.wrong}</b><span>不正解</span></article><article className="card stat"><b>{savedResult.unanswered}</b><span>未回答</span></article></section><section className="card"><span className="eyebrow">TOP 3 WEAKNESSES</span><h2>優先弱点3分野</h2>{savedResult.weak.length?<div className="weak-three">{savedResult.weak.map((x,i)=><article key={x}><strong>{i+1}</strong><div><b>{x}</b><p>過去問の該当問題を解いてから、類題4問で定着させます。</p></div></article>)}</div>:<p>失点分野はありませんでした。</p>}<div className="actions"><Link className="button primary" to={year===2024?'/reinforce?source=2024':year===2025?'/reinforce?source=2025':'/years'}>{year===2026?'残りの年度演習へ':'弱点補強を始める'}</Link><Link className="button" to="/">ホームへ</Link></div></section></>
+  if(phase==='result'&&savedResult){const strategy=savedResult.strategy;return <><div className="page-head"><div><span className="eyebrow">AUTO SCORING COMPLETE</span><h1>{year}年度の自動採点結果</h1></div></div><section className="grid four result-scores"><article className="card stat"><b>{savedResult.score}</b><span>自動採点</span></article><article className="card stat"><b>{savedResult.correct}</b><span>正解</span></article><article className="card stat"><b>{savedResult.wrong}</b><span>不正解</span></article><article className="card stat"><b>{savedResult.unanswered}</b><span>未回答</span></article></section>
+    <section className={`card target-result ${strategy.reached?'reached':''}`}><div className="section-head"><div><span className="eyebrow">TARGET {strategy.target}</span><h2>{strategy.reached?`${strategy.target}点目標に到達`:`目標まであと${strategy.gap}点`}</h2></div><b className="target-projection">回収目安 約{strategy.projectedScore}点</b></div><p>{strategy.summary}</p>{strategy.candidates.length>0&&<div className="recovery-list">{strategy.candidates.map((item,i)=><article key={item.key}><strong>{i+1}</strong><div><b>{item.label}</b><small>優先度{item.grade}・約{item.points}点　{item.reason}</small></div></article>)}</div>}<div className="time-plan"><b>目標別の時間配分</b><div>{strategy.timePlan.map(item=><span key={item.label} style={{flex:item.percent}}>{item.label}<small>{item.percent}%</small></span>)}</div></div><p className="muted">時間配分と回収点は学習上の目安です。正誤判定と実得点は目標設定によって変わりません。</p></section>
+    <section className="card"><span className="eyebrow">TOP 3 WEAKNESSES · TARGET {strategy.target}</span><h2>目標に直結する弱点3分野</h2>{savedResult.weak.length?<div className="weak-three">{savedResult.weak.map((x,i)=><article key={x}><strong>{i+1}</strong><div><b>{x}</b><p>過去問の該当問題を解いてから、類題4問で定着させます。</p></div></article>)}</div>:<p>失点分野はありませんでした。</p>}<div className="actions"><Link className="button primary" to={year===2024?'/reinforce?source=2024':year===2025?'/reinforce?source=2025':'/years'}>{year===2026?'残りの年度演習へ':'弱点補強を始める'}</Link><Link className="button" to="/">ホームへ</Link></div></section></>}
 
   return <>
     <div className="exam-compact-head"><div><span className="eyebrow">STEP {phase==='solve'?'解く':'自動採点・確認'}</span><h1>{year}年度｜{examRole(year)}</h1></div><div><b>{phase==='solve'?`入力 ${entered}/${allSubs.length}`:`自動採点 ${allSubs.length}問`}</b><Link to="/years">演習一覧</Link></div></div>

@@ -3,6 +3,7 @@ import {
   clearAttempts, clearExamScores, createRecordId, loadAttempts, loadExamScores,
   loadPreferences, saveExamScore
 } from '../storage'
+import { strategyForStoredExam, targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
 
 export default function Report() {
   const [version,setVersion]=useState(0)
@@ -42,8 +43,10 @@ export default function Report() {
     .slice(0,3)
 
   const latest=examScores[0]??null
-  const todoTopics:[string,number][]=latest?.weakFields?.length?latest.weakFields.map(x=>[x,1]):topicRanking.length?topicRanking:[['2024年度の診断',1]]
+  const targetWeak=latest?weakFieldsForStoredExam(prefs.target,latest,attempts):[]
+  const todoTopics:[string,number][]=targetWeak.length?targetWeak.map(x=>[x,1]):topicRanking.length?topicRanking:[['2024年度の診断',1]]
   const latestScore=latest?.score ?? null
+  const targetStrategy=latest?strategyForStoredExam(prefs.target,latest,attempts):null
   const stage =
     latestScore===null ? '未判定' :
     latestScore<50 ? '50点未満' :
@@ -110,6 +113,13 @@ export default function Report() {
         <article className="card stat"><b>{deferred}</b><span>見送り記録</span></article>
       </section>
 
+      <section className={`card target-result ${targetStrategy?.reached?'reached':''}`}>
+        <div className="section-head"><div><span className="eyebrow">TARGET {prefs.target}</span><h2>{targetStrategy?(targetStrategy.reached?`${prefs.target}点目標に到達`:`目標まであと${targetStrategy.gap}点`):`${prefs.target}点戦略`}</h2></div>{targetStrategy&&<b className="target-projection">回収目安 約{targetStrategy.projectedScore}点</b>}</div>
+        <p>{targetStrategy?.summary||targetProfile(prefs.target).summary}</p>
+        {!!targetStrategy?.candidates.length&&<div className="recovery-list">{targetStrategy.candidates.map((item,i)=><article key={item.key}><strong>{i+1}</strong><div><b>{item.label}</b><small>優先度{item.grade}・約{item.points}点　{item.reason}</small></div></article>)}</div>}
+        <div className="time-plan"><b>目標別の時間配分</b><div>{(targetStrategy?.timePlan||targetProfile(prefs.target).timePlan).map(item=><span key={item.label} style={{flex:item.percent}}>{item.label}<small>{item.percent}%</small></span>)}</div></div>
+      </section>
+
       <section className="card">
         <h2>練習の失点原因</h2>
         {ranking.length===0?<p className="muted">まだ失点分類データがありません。</p>:(
@@ -127,7 +137,7 @@ export default function Report() {
       </section>
 
       <section className="card">
-        <h2>次にやる3項目</h2>
+        <h2>{prefs.target}点に直結する弱点3分野</h2>
         <div className="todo-list">
           {todoTopics.map(([topic],i)=>(
             <div key={topic}><b>{i+1}</b><span>{topic}</span></div>
@@ -137,8 +147,8 @@ export default function Report() {
 
       <section className="card">
         <h2>現在の学習判断</h2>
-        <p>{advice}</p>
-        <p className="muted">目標設定：{prefs.target}点。これは公式の合格最低点ではなく、学習上の目安です。</p>
+        <p>{targetStrategy?.summary||advice}</p>
+        <p className="muted">目標設定：{prefs.target}点。目標は優先順位と時間配分にだけ使い、採点結果は変えません。公式の合格最低点ではなく、学習上の目安です。</p>
       </section>
 
       <section className="card">

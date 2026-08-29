@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { answerPages, examPages } from '../data/examConfig'
 import { classifyRemediationField } from '../data/remediation'
-import { createRecordId, loadAttempts, saveAttempt } from '../storage'
+import { createRecordId, loadAttempts, loadPreferences, saveAttempt } from '../storage'
 import { ensureReinforcementPlan, latestExam, loadLearningRoute, markOldQuestionCompleted, oldQuestionBank, reinforcementComplete } from '../learningRoute'
 import { getExamAnswer, isExamAnswerCorrect } from '../data/examAnswers'
 import { cleanAnswerInput } from '../answer'
+import { targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
 
 const BASE=import.meta.env.BASE_URL
 const pad=(n:number)=>String(n).padStart(2,'0')
@@ -20,11 +21,13 @@ export default function Reinforcement(){
   const [showAnswer,setShowAnswer]=useState<Record<string,boolean>>({})
   const [answers,setAnswers]=useState<Record<string,string>>({})
   const [results,setResults]=useState<Record<string,boolean>>({})
+  const target=loadPreferences().target
   const bank=useMemo(()=>oldQuestionBank(),[])
   if(!exam)return <section className="card warning-card"><span className="eyebrow">DIAGNOSIS REQUIRED</span><h1>{source}年度の診断が先です</h1><p>全小問を採点・分類すると、優先弱点3分野と過去問の該当問題を自動で選びます。</p><Link className="button primary" to={`/past-papers?year=${source}`}>{source}年度を解く</Link></section>
 
-  const plan=ensureReinforcementPlan(exam),state=loadLearningRoute(),fresh=state.reinforcement[String(source)]||plan
-  const completed=new Set(fresh.completedQuestionIds),attempts=loadAttempts(),fields=exam.weakFields||[]
+  const attempts=loadAttempts(),fields=weakFieldsForStoredExam(target,exam,attempts),targetExam={...exam,weakFields:fields}
+  const plan=ensureReinforcementPlan(targetExam,target),state=loadLearningRoute(),fresh=state.reinforcement[String(source)]||plan
+  const completed=new Set(fresh.completedQuestionIds)
   const done=reinforcementComplete(source)
   const mark=(id:string,topic:string,correct:boolean)=>{
     markOldQuestionCompleted(source,id)
@@ -39,7 +42,7 @@ export default function Reinforcement(){
   }
   void version
   return <>
-    <div className="page-head"><div><span className="eyebrow">TARGETED REINFORCEMENT</span><h1>{source}年度から見つかった弱点3分野</h1><p className="muted">過去問の該当問題 → 類題4問の順で、設定が変わっても解ける状態にします。</p></div><b className="route-status">{done?'補強完了':'補強中'}</b></div>
+    <div className="page-head"><div><span className="eyebrow">TARGETED REINFORCEMENT · TARGET {target}</span><h1>{source}年度から見つかった弱点3分野</h1><p className="muted">{targetProfile(target).summary} 過去問の該当問題 → 類題4問の順で、設定が変わっても解ける状態にします。</p></div><b className="route-status">{done?'補強完了':'補強中'}</b></div>
     <div className="reinforce-flow"><b>1　過去問の該当問題</b><span>→</span><b>2　同分野の類題4問連続正解</b><span>→</span><b>3　次年度で確認</b></div>
     {fields.length===0&&<section className="card"><h2>優先補強なし</h2><p>今回の診断では失点分野がありませんでした。次年度へ進めます。</p></section>}
     <div className="reinforce-fields">{fields.map((fieldName,fieldIndex)=>{

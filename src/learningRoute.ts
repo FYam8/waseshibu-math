@@ -1,14 +1,16 @@
 import questions from './data/questions.json'
 import type { ExamScore, MajorQuestion } from './types'
 import { classifyRemediationField } from './data/remediation'
-import { loadAttempts, loadExamScores } from './storage'
+import { loadAttempts, loadExamScores, loadPreferences } from './storage'
 import { canWriteLearningData, notifyWriteBlocked } from './version'
+import { weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
 
 const ROUTE_KEY='waseshibu-math-learning-route-v1'
 
 export type ReinforcementPlan={
   examId:string
   sourceYear:number
+  target?:TargetScore
   fields:Record<string,string[]>
   completedQuestionIds:string[]
   createdAt:string
@@ -56,23 +58,25 @@ export function oldQuestionBank():OldQuestionItem[]{
   })))
 }
 
-export function ensureReinforcementPlan(exam:ExamScore):ReinforcementPlan{
+export function ensureReinforcementPlan(exam:ExamScore,target:TargetScore=loadPreferences().target):ReinforcementPlan{
   const state=loadLearningRoute(),key=String(exam.year),existing=state.reinforcement[key]
-  if(existing?.examId===exam.id)return existing
+  const desired=exam.weakFields||[],sameFields=existing&&Object.keys(existing.fields).length===desired.length&&desired.every(field=>field in existing.fields)
+  if(existing?.examId===exam.id&&existing.target===target&&sameFields)return existing
   const used=new Set(state.usedOldQuestionIds),bank=oldQuestionBank()
   const fields:Record<string,string[]>={}
-  for(const field of exam.weakFields||[]){
+  for(const field of desired){
+    const retained=existing?.examId===exam.id?(existing.fields[field]||[]):[]
     const candidates=bank.filter(x=>x.field===field&&!used.has(x.id)).sort((a,b)=>b.year-a.year||a.major-b.major)
-    const selected:OldQuestionItem[]=[]
+    const selected:OldQuestionItem[]=retained.map(id=>bank.find(x=>x.id===id)).filter(Boolean) as OldQuestionItem[]
     for(const item of candidates){
       if(selected.length>=4)break
-      if(!selected.some(x=>x.year===item.year)||candidates.length<=4)selected.push(item)
+      if(!selected.some(x=>x.id===item.id)&&(!selected.some(x=>x.year===item.year)||candidates.length<=4))selected.push(item)
     }
     for(const item of candidates)if(selected.length<Math.min(4,candidates.length)&&!selected.some(x=>x.id===item.id))selected.push(item)
     fields[field]=selected.map(x=>x.id)
     selected.forEach(x=>used.add(x.id))
   }
-  const plan:ReinforcementPlan={examId:exam.id,sourceYear:exam.year,fields,completedQuestionIds:[],createdAt:new Date().toISOString()}
+  const plan:ReinforcementPlan={examId:exam.id,sourceYear:exam.year,target,fields,completedQuestionIds:existing?.examId===exam.id?[...existing.completedQuestionIds]:[],createdAt:new Date().toISOString()}
   saveLearningRoute({...state,usedOldQuestionIds:[...used],reinforcement:{...state.reinforcement,[key]:plan}})
   return plan
 }
@@ -88,11 +92,12 @@ export function latestExam(year:number){return loadExamScores().find(x=>x.year==
 export function reinforcementComplete(year:number){
   const exam=latestExam(year)
   if(!exam)return false
-  if(!(exam.weakFields||[]).length)return true
+  const attempts=loadAttempts(),target=loadPreferences().target,fields=weakFieldsForStoredExam(target,exam,attempts)
+  if(!fields.length)return true
   const state=loadLearningRoute(),plan=state.reinforcement[String(year)]
-  if(!plan||plan.examId!==exam.id)return false
-  const completed=new Set(plan.completedQuestionIds),attempts=loadAttempts()
-  return (exam.weakFields||[]).every(field=>{
+  if(!plan||plan.examId!==exam.id||plan.target!==target)return false
+  const completed=new Set(plan.completedQuestionIds)
+  return fields.every(field=>{
     const actualDone=(plan.fields[field]||[]).every(id=>completed.has(id))
     const mastered=attempts.some(a=>a.questionId.startsWith('mastery-')&&a.status==='correct'&&a.at>exam.at&&classifyRemediationField(a.topic).title===field)
     return actualDone&&mastered

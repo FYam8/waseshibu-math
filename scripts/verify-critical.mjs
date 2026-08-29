@@ -22,6 +22,7 @@ const safetyStorage=await loadModule('src/safetyStorage.ts')
 const safetyBootstrap=await loadModule('src/safetyBootstrap.ts')
 const version=await loadModule('src/version.ts')
 const diagnostics=await loadModule('src/diagnostics.ts')
+const targetStrategy=await loadModule('src/targetStrategy.ts')
 const sample={
   'waseshibu-math-attempts':[{id:'a1',questionId:'2024-Q1-1',answer:'６',status:'correct',at:'2026-01-01T00:00:00.000Z'}],
   'waseshibu-math-preferences':{target:70,name:'受験生',updatedAt:'2026-01-01T00:00:00.000Z'},
@@ -132,5 +133,26 @@ assert.deepEqual([report.learning.attempts,report.learning.scores,report.learnin
 for(const secret of ['受験生','－１６','2025-Q1-1','prep-1'])assert.equal(reportText.includes(secret),false,`diagnostic excludes learning content: ${secret}`)
 assert.equal(report.grading.ok,true)
 
+const strategyItems=[
+  {key:'a',major:1,subNo:'1',topic:'数式計算',grade:'A',status:'wrong',points:5,cause:'計算ミス'},
+  {key:'b1',major:2,subNo:'1',topic:'放物線',grade:'B',status:'wrong',points:5},
+  {key:'b2',major:2,subNo:'2',topic:'二次関数',grade:'B',status:'wrong',points:5},
+  {key:'c',major:5,subNo:'3',topic:'相似・面積比',grade:'C',status:'wrong',points:5}
+]
+assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTarget(60,'B'),targetStrategy.gradeInTarget(70,'B'),targetStrategy.gradeInTarget(70,'C'),targetStrategy.gradeInTarget(75,'C')],[true,false,true,false,true])
+for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100,`time plan totals 100: ${target}`)
+const plan60=targetStrategy.buildTargetStrategy(60,55,strategyItems),plan70=targetStrategy.buildTargetStrategy(70,55,strategyItems),plan75=targetStrategy.buildTargetStrategy(75,55,strategyItems)
+assert.deepEqual(plan60.candidates.map(x=>x.grade),['A'])
+assert.deepEqual(plan70.candidates.map(x=>x.grade),['A','B','B'])
+assert.deepEqual(plan75.candidates.map(x=>x.grade),['A','B','B'])
+assert.deepEqual([plan60.gap,plan70.gap,plan75.gap],[5,15,20])
+assert.notEqual(targetStrategy.rankWeakFields(60,strategyItems)[0],targetStrategy.rankWeakFields(70,strategyItems)[0],'target changes weak-field priority')
+const storedItems=targetStrategy.storedExamItems({id:'exam',year:2024,score:55,at:'2026-01-02T00:00:00.000Z'},[{id:'x',questionId:'exam-2024-Q1-1',topic:'数式計算',status:'wrong',at:'2026-01-02T00:00:00.000Z'}])
+assert.equal(storedItems.length,1)
+assert.deepEqual([storedItems[0].major,storedItems[0].subNo,storedItems[0].grade],[1,'1','A'])
+const onlyC=[{id:'c',questionId:'exam-2024-Q5-3',topic:'相似・面積比',status:'wrong',at:'2026-01-02T00:00:00.000Z'}]
+assert.deepEqual(targetStrategy.weakFieldsForStoredExam(60,{id:'exam',year:2024,score:55,weakFields:['相似・面積比'],at:'2026-01-02T00:00:00.000Z'},onlyC),[],'old C weakness does not return for target 60')
+assert.deepEqual(targetStrategy.weakFieldsForStoredExam(60,{id:'manual',year:2024,score:55,weakFields:['手入力時の保存分野'],at:'2026-01-03T00:00:00.000Z'},[]),['手入力時の保存分野'],'manual score can use saved fields')
+
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`backup keys: ${backup.BACKUP_KEYS.length}, round-trip: OK, merge: OK, rollback: OK, safety upgrade/interruption/quota/newer-tab: OK, privacy-safe diagnostics: OK, integrity: 160/160 + 2024 20, prep: 5, input variants: ${accepted.length}+160 full-width answers`)
+console.log(`backup keys: ${backup.BACKUP_KEYS.length}, round-trip: OK, merge: OK, rollback: OK, safety upgrade/interruption/quota/newer-tab: OK, target 60/70/75 strategy: OK, privacy-safe diagnostics: OK, integrity: 160/160 + 2024 20, prep: 5, input variants: ${accepted.length}+160 full-width answers`)
