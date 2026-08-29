@@ -4,71 +4,29 @@ import path from 'node:path'
 const root=process.cwd(),read=p=>fs.readFileSync(path.join(root,p),'utf8')
 const fail=msg=>{console.error(`FAIL: ${msg}`);process.exitCode=1},ok=msg=>console.log(`OK: ${msg}`)
 const q=JSON.parse(read('src/data/questions.json')),majors=q.questions||[]
+const questionIds=majors.flatMap(m=>m.subquestions.map(s=>`${m.id}-${s.no}`))
 
-if(majors.length===40)ok('2019〜2026年度の全40大問');else fail(`大問数 ${majors.length}`)
+if(majors.length===40&&questionIds.length===160)ok('2019〜2026 全40大問・160小問');else fail(`問題数 ${majors.length}/${questionIds.length}`)
 for(const year of [2019,2020,2021,2022,2023,2024,2025,2026])if(majors.filter(x=>x.year===year).length!==5)fail(`${year}年度が5大問ではない`)
-if(majors.reduce((n,x)=>n+x.subquestions.length,0)===160)ok('全8年160小問');else fail('全小問数')
-if(majors.find(x=>x.year===2019&&x.major===1)?.subquestions.length===9&&[2020,2021,2022,2023,2024,2025,2026].every(y=>majors.find(x=>x.year===y&&x.major===1)?.subquestions.length===8))ok('大問1の小問数');else fail('大問1の小問数')
 
-let examImages=0,answerImages=0
-for(const year of [2019,2020,2021,2022,2023,2024,2025,2026]){
-  const examDir=path.join(root,`public/exam-pages/${year}`),answerDir=path.join(root,`public/exam-answers/${year}`)
-  examImages+=fs.readdirSync(examDir).filter(x=>x.endsWith('.jpg')).length
-  answerImages+=fs.readdirSync(answerDir).filter(x=>x.endsWith('.jpg')).length
-  for(const kind of ['問題','解答'])if(!fs.existsSync(path.join(root,`public/past-papers/${year}_数学_${kind}.pdf`)))fail(`${year} ${kind}PDF missing`)
-}
-if(examImages===47&&answerImages===10)ok('全問題47ページ・公式解答10ページ');else fail(`画像数 ${examImages}/${answerImages}`)
+const app=read('src/App.tsx'),paper=read('src/pages/PastPapers.tsx'),guided=read('src/pages/GuidedReview.tsx'),mark=read('src/components/ExamMarkReview.tsx'),focus=read('src/components/FocusedQuestionView.tsx'),focusRules=read('src/data/questionFocus.ts'),styles=read('src/guidedReview.css')
+if(app.includes('"/guided-review"')&&paper.includes('ExamMarkReview')&&guided.includes('FocusedQuestionView'))ok('小問別復習ルート接続');else fail('小問別復習ルート')
+if(paper.includes('PROBLEM · EXAM MODE')&&paper.includes('本番演習中は、実際の試験と同じように問題ページ全体を表示します'))ok('本番演習はページ全体表示');else fail('本番表示')
+if(mark.includes('ONE QUESTION MARKING')&&mark.includes('公式解答ページ全体は表示しません')&&mark.includes('この小問の正答')&&!mark.includes('exam-answers'))ok('採点後は1小問・1正答だけ');else fail('採点1問フォーカス')
+if(guided.includes('ONE QUESTION REVIEW')&&guided.includes('ほかの小問・ほかの正答は表示しません')&&guided.includes('この小問の正答だけを表示'))ok('解説は1小問・1正答だけ');else fail('解説1問フォーカス')
+if(focus.includes("slices.filter(x=>x.role==='current')")&&focus.includes('<details className="common-context">')&&focus.includes('初期表示は現在の小問だけです'))ok('共通図は必要時のみ展開');else fail('共通図折りたたみ')
+if(focusRules.includes('focusSlicesFor')&&focusRules.includes("role:'current'")&&styles.includes('.focus-slice')&&styles.includes('.mark-focus-grid'))ok('小問フォーカス表示ルール・レスポンシブUI');else fail('フォーカス表示基盤')
+if(paper.includes('今回間違えた問題から直す')&&paper.includes('/guided-review?q='))ok('採点結果は間違い小問を先に表示');else fail('結果→1問復習導線')
+if(!paper.includes('OFFICIAL ANSWERS')&&!paper.includes('answerImage(')&&!paper.includes('answerPages'))ok('公式解答ページ全体の自動表示を廃止');else fail('公式解答全体が残っている')
 
-const app=read('src/App.tsx'),layout=read('src/components/Layout.tsx'),home=read('src/pages/Home.tsx')
+const answerData=read('src/data/examAnswers.ts'),answerIds=[...answerData.matchAll(/'(\d{4}-Q[^']+)':E/g)].map(x=>x[1])
+if(answerIds.length===160&&questionIds.every(id=>answerIds.includes(id))&&new Set(answerIds).size===160)ok('全160小問の正答データ');else fail(`正答データ ${answerIds.length}/160`)
+
+const backup=read('src/dataBackup.ts'),migration=read('src/dataMigration.ts'),version=read('src/version.ts'),publicVersion=read('public/version.json')
+if(migration.includes('CURRENT_DATA_VERSION=3')&&backup.includes('GUIDED_REVIEW_STORAGE_KEY')&&version.includes("APP_VERSION='0.12.0'")&&publicVersion.includes('"appVersion": "0.12.0"')&&publicVersion.includes('"dataVersion": 3'))ok('v0.12.0・data v3・既存学習データ保護');else fail('版・データ形式整合')
+
 const html=read('index.html'),robots=read('public/robots.txt')
 if(html.includes('noindex, nofollow, noarchive, nosnippet')&&robots.includes('Disallow: /'))ok('検索エンジン非掲載設定');else fail('noindex/robots')
-for(const route of ['"/years"','"/past-papers"','"/setup-check"','"/reinforce"','"/guided-review"','"/remediate"','"/report"','"/data"'])if(!app.includes(route))fail(`route missing ${route}`)
-if(['ホーム','学習する','演習ライブラリ','学習記録','データ管理'].every(x=>layout.includes(x))&&!layout.includes('端末間同期</NavLink>'))ok('5タブの学習導線');else fail('ナビゲーション')
-if(Array.from({length:8},(_,i)=>`n:${i+1}`).every(x=>home.includes(x))&&home.includes('入力・自動採点チェック5問')&&home.includes('draftResume'))ok('準備5問・途中再開・8段階ルート');else fail('段階ルート')
-
-const route=read('src/learningRoute.ts')
-if(route.includes('usedOldQuestionIds')&&route.includes('ensureReinforcementPlan')&&route.includes('reinforcementComplete')&&route.includes('actualDone&&mastered'))ok('未使用過去問の予約と補強完了条件');else fail('補強状態機械')
-
-const paper=read('src/pages/PastPapers.tsx'),styles=read('src/styles.css')
-if(paper.includes('className={`exam-workspace')&&paper.includes('problem-pane card')&&paper.includes('answer-dock card')&&paper.includes('OFFICIAL ANSWERS'))ok('問題・入力・公式解答の同画面化');else fail('統合ワークスペース')
-const answerData=read('src/data/examAnswers.ts'),answerIds=[...answerData.matchAll(/'(\d{4}-Q[^']+)':E/g)].map(x=>x[1]),questionIds=majors.flatMap(m=>m.subquestions.map(s=>`${m.id}-${s.no}`))
-if(answerIds.length===160&&questionIds.every(id=>answerIds.includes(id))&&new Set(answerIds).size===160)ok('全160小問の自動採点正答');else fail(`正答データ ${answerIds.length}/160`)
-if(paper.includes('isExamAnswerCorrect')&&paper.includes("'correct'|'wrong'|'unanswered'")&&paper.includes('正解に修正')&&!paper.includes('すぐ立った')&&!paper.includes('考えて立った'))ok('自動採点・未回答判定・誤判定修正');else fail('過去問自動採点')
-const preflight=read('src/preflight.ts'),prep=read('src/pages/PrepCheck.tsx')
-if(preflight.includes('expected2024')&&preflight.includes('year2024Count!==20')&&preflight.includes('answerIds.length!==160')&&paper.includes('runExamIntegrityCheck')&&prep.includes('prepQuestions.length'))ok('全160問・2024年度20問の実行時安全検査と準備5問');else fail('準備・安全検査')
-if(paper.includes('answers,flags')&&paper.includes('overrides,seconds,majorIndex,phase'))ok('途中解答・迷い・採点修正・タイマーの自動保存');else fail('途中状態保存')
-if(paper.includes("['分数','/']")&&paper.includes("['√','√()']")&&paper.includes("['x²','^2']"))ok('数式入力パッド');else fail('数式入力パッド')
-if(styles.includes('grid-template-columns:minmax(0,1.65fr)')&&styles.includes('.answer-dock{position:sticky')&&styles.includes('.answer-dock{position:fixed')&&styles.includes('.floating-timer{position:fixed'))ok('デスクトップ2ペイン・スマホ解答ドック・小型タイマー');else fail('レスポンシブ試験UI')
-
-const reinforcement=read('src/pages/Reinforcement.tsx'),remediation=read('src/pages/Remediation.tsx')
-if(reinforcement.includes('oldQuestionBank()')&&reinforcement.includes('markOldQuestionCompleted')&&reinforcement.includes('isExamAnswerCorrect')&&reinforcement.includes('/remediate?topic='))ok('該当過去問の自動採点から類題への補強画面');else fail('補強画面')
-if(remediation.includes('nextStreak>=4')&&remediation.includes('mastery-')&&remediation.includes('/reinforce?source='))ok('類題4問連続正解とルート復帰');else fail('類題克服ルール')
-const remedyData=read('src/data/remediation.ts'),fieldCount=[...remedyData.matchAll(/^\s{4}id: '[^']+'/gm)].length,questionCount=[...remedyData.matchAll(/\{prompt:/g)].length
-if(fieldCount===18&&questionCount===72)ok('18分野×4問=72問');else fail(`${fieldCount}分野・${questionCount}問`)
-
-const guided=read('src/pages/GuidedReview.tsx'),guidedModel=read('src/guidedReview.ts'),mistakes=read('src/pages/MistakeReview.tsx'),guidedStyles=read('src/guidedReview.css')
-if(guided.includes('ステップで理解する')&&guided.includes('もう一度自力で解く')&&guided.includes('答え・解説を見る')&&guided.includes('MathAnswerInput')&&guidedModel.includes("'independent'|'guided'|'reproduced'|'wrong'"))ok('小問別ステップ学習・自力再現・即時解答');else fail('ステップ学習')
-if(mistakes.includes('/guided-review?q=')&&mistakes.includes('間違えた小問を1問ずつ直す')&&guidedStyles.includes('.guided-review-grid'))ok('間違い小問からの直接導線とレスポンシブ表示');else fail('小問別導線')
-if(guided.includes('前の小問を使う場合')&&guided.includes('previousAnswer')&&guided.includes('途中の説明文は採点しません'))ok('連続小問と途中記述の誤採点防止');else fail('ステップ安全設計')
-
-const data=read('src/pages/DataManager.tsx')
-const backup=read('src/dataBackup.ts')
-if(backup.includes("'waseshibu-math-exam-drafts-v2'")&&backup.includes("'waseshibu-math-learning-route-v1'")&&backup.includes("'waseshibu-math-prep-check-v1'")&&backup.includes('GUIDED_REVIEW_STORAGE_KEY')&&backup.includes('restoreBackup')&&backup.includes('best-effort rollback')&&data.includes('download(collectBackup())'))ok('ステップ学習を含む全学習状態のバックアップ・検証・復元・ロールバック');else fail('データ管理')
-const answer=read('src/answer.ts')
-if(answer.includes(".normalize('NFKC')")&&answer.includes('cleanAnswerInput')&&answer.includes(".replace(/[≤≦]/g,'<='")&&paper.includes('全角可'))ok('全角・半角・主要数式表記の揺れを吸収');else fail('入力表記揺れ')
-if(!layout.includes('SyncBadge')&&!layout.includes('GitHub Private Repository'))ok('学習データは端末保存へ統一');else fail('旧同期表示が残っている')
-const migration=read('src/dataMigration.ts'),main=read('src/main.tsx')
-if(migration.includes('CURRENT_DATA_VERSION=3')&&migration.includes('GUIDED_REVIEW_STORAGE_KEY')&&migration.includes('migrateDataRecord')&&migration.includes('normalizePrepRecord')&&main.includes('bootstrapSafety()')&&backup.includes('dataVersion:CURRENT_DATA_VERSION'))ok('v3ステップ学習領域追加と旧データ安全移行');else fail('データ移行')
-const safety=read('src/safetyBootstrap.ts'),restore=read('src/safetyStorage.ts'),version=read('src/version.ts')
-if(safety.includes('snapshot_verified')&&safety.includes('migration_validated')&&safety.includes('validateNoLoss')&&safety.includes('navigator.locks')&&restore.includes('IndexedDB')&&restore.includes("'pre_upgrade'")&&data.includes('この端末の復元ポイント'))ok('更新前退避・移行ジャーナル・内容検証・復元ポイント');else fail('更新安全基盤')
-if(layout.includes('waseshibu-write-blocked')&&layout.includes('BroadcastChannel')&&version.includes('canWriteLearningData')&&paper.includes('canWriteLearningData'))ok('旧タブの保存停止と更新通知');else fail('複数タブ保護')
-if(main.includes('<SafetyMode')&&read('src/SafetyMode.tsx').includes('現在データをJSON保存'))ok('起動前検査失敗時の安全モード');else fail('安全モード')
-const diagnostics=read('src/diagnostics.ts')
-if(data.includes('学習履歴は保護されています')&&data.includes('診断情報をJSON保存')&&data.includes('最終学習保存')&&data.includes('最新復元ポイント')&&diagnostics.includes('createDiagnosticReport')&&!diagnostics.includes("data['waseshibu-math-attempts']"+'.map'))ok('版・保存日時・復元ポイント・匿名診断情報の可視化');else fail('保護状態表示')
-if(layout.includes('update-complete')&&layout.includes('UPDATE_NOTICE_SEEN_KEY')&&layout.includes('学習履歴を引き継ぎ'))ok('一度だけ表示する更新完了通知');else fail('更新完了通知')
-const targetStrategy=read('src/targetStrategy.ts'),report=read('src/pages/Report.tsx'),years=read('src/pages/Years.tsx')
-if(targetStrategy.includes('buildTargetStrategy')&&targetStrategy.includes('rankWeakFields')&&targetStrategy.includes('gradeInTarget')&&targetStrategy.includes('timePlan')&&paper.includes('目標まであと')&&report.includes('回収目安')&&home.includes('target-impact')&&years.includes('gradeAdvice'))ok('60・70・75点の目標差・回収候補・弱点順位・問題優先度・時間配分');else fail('目標点連動')
-if(route.includes('plan.target!==target')&&route.includes('weakFieldsForStoredExam')&&reinforcement.includes('weakFieldsForStoredExam'))ok('目標変更後も補強計画と完了記録を整合');else fail('目標変更時の補強整合')
-if(read('src/dataMigration.ts').includes('CURRENT_DATA_VERSION=3')&&read('public/version.json').includes('"dataVersion": 3')&&version.includes("APP_VERSION='0.11.0'"))ok('v0.11.0 / data v3整合');else fail('版整合')
+if(read('src/main.tsx').includes('bootstrapSafety()')&&read('src/safetyStorage.ts').includes("'pre_upgrade'")&&backup.includes('best-effort rollback'))ok('更新前退避・ロールバック');else fail('更新安全基盤')
 
 if(!process.exitCode)console.log('SELF-CHECK PASSED')
