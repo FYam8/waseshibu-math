@@ -26,7 +26,7 @@ export function guidedQuestion(questionId:string){
   const sub=major.subquestions.find(s=>`${major.id}-${s.no}`===id)
   if(!sub)return null
   const index=major.subquestions.indexOf(sub),previous=index>0?major.subquestions[index-1]:null,previousId=previous?`${major.id}-${previous.no}`:undefined
-  return {id,year:major.year,major:major.major,subNo:sub.no,topic:sub.topic,grade:sub.grade,title:major.title,coreIdeas:major.core_ideas,answer:getExamAnswer(id),previousId,previousAnswer:previousId?getExamAnswer(previousId):undefined,...guideForTopic(sub.topic)}
+  return {id,year:major.year,major:major.major,subNo:sub.no,subIndex:index,subCount:major.subquestions.length,topic:sub.topic,grade:sub.grade,title:major.title,coreIdeas:major.core_ideas,answer:getExamAnswer(id),previousId,previousAnswer:previousId?getExamAnswer(previousId):undefined,...guideForTopic(sub.topic)}
 }
 export function loadGuidedReviews(storage:Pick<Storage,'getItem'>=localStorage):GuidedReviewState{try{const raw=JSON.parse(storage.getItem(GUIDED_REVIEW_KEY)||'{}');return raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{}}catch{return {}}}
 export function loadGuidedReview(questionId:string,storage:Pick<Storage,'getItem'>=localStorage){return loadGuidedReviews(storage)[normalizeGuidedQuestionId(questionId)]}
