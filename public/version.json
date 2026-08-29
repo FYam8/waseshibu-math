@@ -1,6 +1,6 @@
 {
-  "appVersion": "0.10.0",
-  "dataVersion": 2,
-  "releasedAt": "2026-08-29",
-  "release": "target-score-guidance"
+  "appVersion": "0.11.0",
+  "dataVersion": 3,
+  "releasedAt": "2026-08-30",
+  "release": "guided-step-review"
 }
