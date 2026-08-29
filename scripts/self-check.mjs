@@ -19,7 +19,7 @@ if(home.includes('PREPARATION + 6 LEARNING PHASES')&&home.includes('2024年度 �
 if(route.includes('currentLearningPhase')&&route.includes('routePhaseDone')&&route.includes('sourceMistakeProgress')&&route.includes('requiresSourceReview')&&route.includes('旧方式の補強を完了'))ok('6フェーズ進捗・元誤答先行・旧完了者保護');else fail('新学習フェーズ進捗')
 if(reinforcement.includes('まず')&&reinforcement.includes('元の間違いを直す')&&reinforcement.includes('sourceMistakeProgress')&&reinforcement.includes('SOURCE QUESTION FIRST'))ok('補強前に元の誤答を再現');else fail('元誤答→補強の順序')
 if(mistake.includes('gradeInTarget(prefs.target,meta.grade)')&&mistake.includes('weakFieldsForStoredExam(prefs.target,latestExam,attempts)')&&mistake.includes('QUESTION BY QUESTION · TARGET ONLY')&&mistake.includes('今は後回しの問題'))ok('間違い直しを60=A / 70=A+B / 75=A+B+Cに限定');else fail('間違い直しの目標点フィルタ')
-if(paper.includes('今直す問題')&&paper.includes('gradeInTarget(strategy.target,item.grade)')&&paper.includes('今は後回しの問題')&&paper.includes(`/mistakes?year=${year}`))ok('採点直後も目標範囲だけを先に直す');else fail('採点直後の目標点フィルタ')
+if(paper.includes('今直す問題')&&paper.includes('gradeInTarget(strategy.target,item.grade)')&&paper.includes('今は後回しの問題')&&paper.includes('/mistakes?year=${year}'))ok('採点直後も目標範囲だけを先に直す');else fail('採点直後の目標点フィルタ')
 
 const manifestIds=[...manifest.matchAll(/'(\d{4}-Q[^']+)':/g)].map(x=>x[1])
 if(manifestIds.length===160&&new Set(manifestIds).size===160&&questionIds.every(id=>manifestIds.includes(id)))ok('全160小問に固定表示マップ');else fail(`固定表示マップ ${manifestIds.length}/160`)
