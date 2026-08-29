@@ -15,6 +15,7 @@ class MemoryStorage{
 const backup=await loadModule('src/dataBackup.ts')
 const answer=await loadModule('src/answer.ts')
 const exam=await loadModule('src/data/examAnswers.ts')
+const examConfig=await loadModule('src/data/examConfig.ts')
 const preflight=await loadModule('src/preflight.ts')
 const migration=await loadModule('src/dataMigration.ts')
 const guided=await loadModule('src/guidedReview.ts')
@@ -22,9 +23,10 @@ const focus=await loadModule('src/data/questionFocus.ts')
 const targetStrategy=await loadModule('src/targetStrategy.ts')
 const version=await loadModule('src/version.ts')
 
-assert.equal(version.APP_VERSION,'0.12.1')
+assert.equal(version.APP_VERSION,'0.13.0')
 assert.equal(migration.CURRENT_DATA_VERSION,3)
 assert.equal(guided.GUIDED_REVIEW_KEY,'waseshibu-math-guided-review-v1')
+assert.deepEqual(examConfig.examPages[2023],[[4,5],[6],[7],[8,9],[10]])
 
 const sample={
   'waseshibu-math-attempts':[{id:'a1',questionId:'exam-2024-Q1-1',answer:'６',status:'wrong',at:'2026-01-01T00:00:00.000Z'}],
@@ -73,24 +75,35 @@ guided.saveGuidedReview({questionId:'exam-2024-Q1-1',step1:'a',step2:'b',finalAn
 assert.equal(guided.loadGuidedReview('2024-Q1-1',guideStore).outcome,'independent')
 
 const questions=(await import('../src/data/questions.json',{with:{type:'json'}})).default.questions
-let focusCount=0
+const questionIds=questions.flatMap(major=>major.subquestions.map(sub=>`${major.id}-${sub.no}`))
+assert.equal(questionIds.length,160)
+assert.equal(Object.keys(focus.questionFocusManifest).length,160)
+assert.deepEqual(Object.keys(focus.questionFocusManifest).sort(),[...questionIds].sort())
+assert.equal(focus.focusCoverageOk(questionIds),true)
 for(const major of questions){
-  assert.equal(focus.focusCoverageOk(major.year,major.major,major.subquestions.length),true,`focus coverage ${major.id}`)
   for(let i=0;i<major.subquestions.length;i++){
-    const sub=major.subquestions[i]
+    const sub=major.subquestions[i],id=`${major.id}-${sub.no}`
+    const entry=focus.questionFocusFor(id)
+    assert.ok(entry,`manifest ${id}`)
+    assert.ok(entry.current.length>=1,`current ${id}`)
     const slices=focus.focusSlicesFor(major.year,major.major,i,major.subquestions.length,sub.no)
-    assert.equal(slices.filter(x=>x.role==='current').length>=1,true,`current focus ${major.id}-${sub.no}`)
-    focusCount++
+    assert.ok(slices.some(x=>x.role==='current'),`focus slice ${id}`)
+    for(const rect of [...entry.common,...entry.current]){
+      assert.ok(rect.top>=0&&rect.height>0&&rect.top+rect.height<=100,`rect bounds ${id}`)
+    }
   }
 }
-assert.equal(focusCount,160)
-assert.equal(focus.hasExactFocusOverride(2024,2,'1'),true)
-const q21=focus.focusSlicesFor(2024,2,0,3,'1').find(x=>x.role==='current')
-assert.deepEqual([q21.page,q21.top,q21.height],[6,23,9])
-const q22=focus.focusSlicesFor(2024,2,1,3,'2').find(x=>x.role==='current')
-assert.equal(q22.top,29)
-const q23=focus.focusSlicesFor(2024,2,2,3,'3').find(x=>x.role==='current')
-assert.equal(q23.height,18)
+assert.equal(focus.questionFocusFor('2021-Q2-1').sharedTask,true)
+assert.equal(focus.questionFocusFor('2021-Q2-2').sharedTask,true)
+assert.equal(focus.questionFocusFor('2021-Q2-3').sharedTask,true)
+assert.ok(focus.questionFocusFor('2022-Q3-2-i'))
+assert.ok(focus.questionFocusFor('2022-Q3-2-ii'))
+for(const id of ['2023-Q5-1','2023-Q5-2','2023-Q5-3']){
+  const entry=focus.questionFocusFor(id)
+  assert.ok([...entry.common,...entry.current].every(x=>x.page===10),`${id} must only use page 10`)
+}
+const q42=focus.questionFocusFor('2023-Q4-2')
+assert.ok(q42.common.some(x=>x.page===8)&&q42.current.some(x=>x.page===9),'2023 Q4 spans pages 8-9')
 
 const accepted=[['６','6'],['３／４','3/4'],['２×√１５','2√15'],['（－１，－１）','(-1,-1)']]
 for(const [input,expected] of accepted)assert.equal(answer.isAcceptedAnswer(input,expected),true,`${input} => ${expected}`)
@@ -109,4 +122,4 @@ assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTar
 for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100)
 
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`v0.12.1, data v3, focus: ${focusCount}/160, 2024-Q2 verified crop: OK, backup/no-loss migration: OK, integrity: 160/160`)
+console.log(`v0.13.0, data v3, verified fixed focus: ${questionIds.length}/160, 2023 page map: OK, backup/no-loss migration: OK, integrity: 160/160`)
