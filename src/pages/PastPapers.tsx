@@ -8,6 +8,8 @@ import { currentLearningStep, markYearSolved } from '../learningRoute'
 import { getExamAnswer, isExamAnswerCorrect } from '../data/examAnswers'
 import { cleanAnswerInput } from '../answer'
 import { runExamIntegrityCheck } from '../preflight'
+import { createRestorePoint } from '../safetyStorage'
+import { canWriteLearningData, notifyWriteBlocked } from '../version'
 import type { MajorQuestion } from '../types'
 
 const DRAFT_KEY='waseshibu-math-exam-drafts-v2'
@@ -25,6 +27,7 @@ function readDraft(year:number):Partial<Draft>{
   }catch{return {}}
 }
 function writeDraft(year:number,draft:Draft){
+  if(!canWriteLearningData()){notifyWriteBlocked();return}
   try{const all=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');all[String(year)]=draft;localStorage.setItem(DRAFT_KEY,JSON.stringify(all))}catch{/* storage unavailable */}
 }
 const keyFor=(q:MajorQuestion,no:string)=>`${q.id}-${no}`
@@ -76,6 +79,7 @@ export default function PastPapers(){
   const changeMajor=(next:number)=>{setMajorIndex(Math.max(0,Math.min(majors.length-1,next)));window.scrollTo({top:0,behavior:'smooth'})}
   const beginMarking=()=>{setRunning(false);markYearSolved(year);setPhase('mark');setMajorIndex(0);setAnswerOpen(window.innerWidth>700);window.scrollTo({top:0,behavior:'smooth'})}
   const finish=()=>{
+    if(!canWriteLearningData()){notifyWriteBlocked();return}
     const graded=allSubs.map(x=>({...x,status:statusFor(x.key)}))
     const score=Math.round(graded.reduce((sum,x)=>sum+(x.status==='correct'?pointsFor(year,x.major.major,x.major.subquestions.length):0),0))
     const weights:Record<string,number>={}
@@ -86,6 +90,7 @@ export default function PastPapers(){
     saveExamScore({id:createRecordId(`exam-${year}`),year,score:result.score,correctCount:result.correct,wrongCount:result.wrong,unansweredCount:result.unanswered,completed:true,attemptKind:prior?'retake':'first',weakFields:weak,at:now})
     graded.forEach(x=>saveAttempt({id:createRecordId(`exam-${x.key}`),questionId:`exam-${x.key}`,mode:'multi',topic:x.sub.topic,status:x.status==='correct'?'correct':x.status==='unanswered'?'deferred':'wrong',mistakeTag:causeMap[x.key],diagnosis:x.status==='correct'?'correct':'recoverable',answer:answers[x.key]||'',flagged:!!flags[x.key],seconds,at:now}))
     try{const all=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');delete all[String(year)];localStorage.setItem(DRAFT_KEY,JSON.stringify(all))}catch{/* no-op */}
+    void createRestorePoint('exam_complete').catch(()=>{/* the saved result remains available for manual export */})
     setSavedResult(result);setPhase('result');window.scrollTo({top:0,behavior:'smooth'})
   }
 

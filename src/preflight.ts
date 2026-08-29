@@ -2,6 +2,7 @@ import questions from './data/questions.json'
 import { examAnswers, isExamAnswerCorrect } from './data/examAnswers'
 import type { MajorQuestion } from './types'
 import { normalizePrepRecord } from './dataMigration'
+import { canWriteLearningData, notifyWriteBlocked } from './version'
 
 export const PREP_KEY='waseshibu-math-prep-check-v1'
 export const PREP_VERSION=1
@@ -28,6 +29,7 @@ export function loadPrepState():PrepState{
 }
 
 export function savePrepState(state:PrepState){
+  if(!canWriteLearningData()){notifyWriteBlocked();return}
   localStorage.setItem(PREP_KEY,JSON.stringify({...state,version:PREP_VERSION,updatedAt:new Date().toISOString()}))
   window.dispatchEvent(new CustomEvent('waseshibu-route-change'))
 }

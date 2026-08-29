@@ -2,6 +2,7 @@ import questions from './data/questions.json'
 import type { ExamScore, MajorQuestion } from './types'
 import { classifyRemediationField } from './data/remediation'
 import { loadAttempts, loadExamScores } from './storage'
+import { canWriteLearningData, notifyWriteBlocked } from './version'
 
 const ROUTE_KEY='waseshibu-math-learning-route-v1'
 
@@ -36,6 +37,7 @@ export function loadLearningRoute():LearningRouteState{
 }
 
 export function saveLearningRoute(state:LearningRouteState){
+  if(!canWriteLearningData()){notifyWriteBlocked();return}
   localStorage.setItem(ROUTE_KEY,JSON.stringify({...state,updatedAt:new Date().toISOString()}))
   window.dispatchEvent(new CustomEvent('waseshibu-route-change'))
 }

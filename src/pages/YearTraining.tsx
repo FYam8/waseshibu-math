@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { canWriteLearningData, notifyWriteBlocked } from '../version'
 import { useSearchParams } from 'react-router-dom'
 import { yearTraining } from '../data/yearTraining'
 import { isAcceptedAnswer } from '../answer'
@@ -35,6 +36,7 @@ export default function YearTraining() {
     if(result===null)return
     saveAttempt({id:createRecordId(lesson.id),questionId:`year-${lesson.id}`,mode:'multi',topic:lesson.pastPattern,status:result?'correct':'wrong',mistakeTag:result?undefined:mistake,at:new Date().toISOString()})
     completed.add(lesson.id)
+    if(!canWriteLearningData()){notifyWriteBlocked();return}
     localStorage.setItem('waseshibu.math.yearTraining.completed',JSON.stringify([...completed]))
     if(major<5)choose(year,major+1)
     else if(year<2026)choose(year+1,1)

@@ -13,8 +13,13 @@ export type StorageLike=Pick<Storage,'getItem'|'setItem'|'removeItem'>
 const isObject=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)
 
 export function collectBackup(storage:StorageLike=localStorage):BackupPackage{
-  const data:Partial<Record<BackupKey,unknown>>={}
-  BACKUP_KEYS.forEach(key=>{const raw=storage.getItem(key);if(raw!==null)try{data[key]=JSON.parse(raw)}catch{data[key]=raw}})
+  const source:Record<string,unknown>={}
+  for(const key of [...BACKUP_KEYS,LEGACY_DRAFT_KEY]){
+    const raw=storage.getItem(key);if(raw!==null)try{source[key]=JSON.parse(raw)}catch{source[key]=raw}
+  }
+  const storedVersion=Number(storage.getItem(DATA_VERSION_KEY)||'0')
+  const migrated=migrateDataRecord(source,Number.isFinite(storedVersion)?storedVersion:0),data:Partial<Record<BackupKey,unknown>>={}
+  BACKUP_KEYS.forEach(key=>{if(key in migrated.data)data[key]=migrated.data[key]})
   data[DATA_VERSION_KEY]=CURRENT_DATA_VERSION
   return {app:'waseshibu-math',schemaVersion:3,dataVersion:CURRENT_DATA_VERSION,exportedAt:new Date().toISOString(),data}
 }
@@ -78,5 +83,5 @@ export function restoreBackup(storage:StorageLike,incoming:BackupPackage,mode:Re
 
 export function backupStats(pkg:BackupPackage){
   const attempts=pkg.data['waseshibu-math-attempts'],scores=pkg.data['waseshibu-math-exam-scores'],drafts=pkg.data['waseshibu-math-exam-drafts-v2'],prep=pkg.data['waseshibu-math-prep-check-v1']
-  return {attempts:Array.isArray(attempts)?attempts.length:0,scores:Array.isArray(scores)?scores.length:0,drafts:isObject(drafts)?Object.keys(drafts).length:0,prepDone:isObject(prep)&&prep.completed===true}
+  return {attempts:Array.isArray(attempts)?attempts.length:0,scores:Array.isArray(scores)?scores.length:0,drafts:isObject(drafts)?Object.keys(drafts).length:0,prepStarted:isObject(prep)&&Object.keys(prep).length>0,prepDone:isObject(prep)&&prep.completed===true}
 }
