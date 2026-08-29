@@ -22,7 +22,7 @@ const focus=await loadModule('src/data/questionFocus.ts')
 const targetStrategy=await loadModule('src/targetStrategy.ts')
 const version=await loadModule('src/version.ts')
 
-assert.equal(version.APP_VERSION,'0.12.0')
+assert.equal(version.APP_VERSION,'0.12.1')
 assert.equal(migration.CURRENT_DATA_VERSION,3)
 assert.equal(guided.GUIDED_REVIEW_KEY,'waseshibu-math-guided-review-v1')
 
@@ -77,12 +77,20 @@ let focusCount=0
 for(const major of questions){
   assert.equal(focus.focusCoverageOk(major.year,major.major,major.subquestions.length),true,`focus coverage ${major.id}`)
   for(let i=0;i<major.subquestions.length;i++){
-    const slices=focus.focusSlicesFor(major.year,major.major,i,major.subquestions.length)
-    assert.equal(slices.filter(x=>x.role==='current').length>=1,true,`current focus ${major.id}-${major.subquestions[i].no}`)
+    const sub=major.subquestions[i]
+    const slices=focus.focusSlicesFor(major.year,major.major,i,major.subquestions.length,sub.no)
+    assert.equal(slices.filter(x=>x.role==='current').length>=1,true,`current focus ${major.id}-${sub.no}`)
     focusCount++
   }
 }
 assert.equal(focusCount,160)
+assert.equal(focus.hasExactFocusOverride(2024,2,'1'),true)
+const q21=focus.focusSlicesFor(2024,2,0,3,'1').find(x=>x.role==='current')
+assert.deepEqual([q21.page,q21.top,q21.height],[6,23,9])
+const q22=focus.focusSlicesFor(2024,2,1,3,'2').find(x=>x.role==='current')
+assert.equal(q22.top,29)
+const q23=focus.focusSlicesFor(2024,2,2,3,'3').find(x=>x.role==='current')
+assert.equal(q23.height,18)
 
 const accepted=[['６','6'],['３／４','3/4'],['２×√１５','2√15'],['（－１，－１）','(-1,-1)']]
 for(const [input,expected] of accepted)assert.equal(answer.isAcceptedAnswer(input,expected),true,`${input} => ${expected}`)
@@ -101,4 +109,4 @@ assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTar
 for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100)
 
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`v0.12.0, data v3, focus: ${focusCount}/160, backup/no-loss migration: OK, integrity: 160/160`)
+console.log(`v0.12.1, data v3, focus: ${focusCount}/160, 2024-Q2 verified crop: OK, backup/no-loss migration: OK, integrity: 160/160`)
