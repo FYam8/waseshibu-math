@@ -20,6 +20,8 @@ for(const year of [2019,2020,2021,2022,2023,2024,2025,2026]){
 if(examImages===47&&answerImages===10)ok('全問題47ページ・公式解答10ページ');else fail(`画像数 ${examImages}/${answerImages}`)
 
 const app=read('src/App.tsx'),layout=read('src/components/Layout.tsx'),home=read('src/pages/Home.tsx')
+const html=read('index.html'),robots=read('public/robots.txt')
+if(html.includes('noindex, nofollow, noarchive, nosnippet')&&robots.includes('Disallow: /'))ok('検索エンジン非掲載設定');else fail('noindex/robots')
 for(const route of ['"/years"','"/past-papers"','"/setup-check"','"/reinforce"','"/remediate"','"/report"','"/data"'])if(!app.includes(route))fail(`route missing ${route}`)
 if(['ホーム','学習する','演習ライブラリ','学習記録','データ管理'].every(x=>layout.includes(x))&&!layout.includes('端末間同期</NavLink>'))ok('5タブの学習導線');else fail('ナビゲーション')
 if(Array.from({length:8},(_,i)=>`n:${i+1}`).every(x=>home.includes(x))&&home.includes('入力・自動採点チェック5問')&&home.includes('draftResume'))ok('準備5問・途中再開・8段階ルート');else fail('段階ルート')
