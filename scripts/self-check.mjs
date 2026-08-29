@@ -19,6 +19,7 @@ if(home.includes('PREPARATION + 6 LEARNING PHASES')&&home.includes('2024年度 �
 if(route.includes('currentLearningPhase')&&route.includes('routePhaseDone')&&route.includes('sourceMistakeProgress')&&route.includes('requiresSourceReview')&&route.includes('旧方式の補強を完了'))ok('6フェーズ進捗・元誤答先行・旧完了者保護');else fail('新学習フェーズ進捗')
 if(reinforcement.includes('まず')&&reinforcement.includes('元の間違いを直す')&&reinforcement.includes('sourceMistakeProgress')&&reinforcement.includes('SOURCE QUESTION FIRST'))ok('補強前に元の誤答を再現');else fail('元誤答→補強の順序')
 if(mistake.includes('gradeInTarget(prefs.target,meta.grade)')&&mistake.includes('weakFieldsForStoredExam(prefs.target,latestExam,attempts)')&&mistake.includes('QUESTION BY QUESTION · TARGET ONLY')&&mistake.includes('今は後回しの問題'))ok('間違い直しを60=A / 70=A+B / 75=A+B+Cに限定');else fail('間違い直しの目標点フィルタ')
+if(paper.includes('今直す問題')&&paper.includes('gradeInTarget(strategy.target,item.grade)')&&paper.includes('今は後回しの問題')&&paper.includes(`/mistakes?year=${year}`))ok('採点直後も目標範囲だけを先に直す');else fail('採点直後の目標点フィルタ')
 
 const manifestIds=[...manifest.matchAll(/'(\d{4}-Q[^']+)':/g)].map(x=>x[1])
 if(manifestIds.length===160&&new Set(manifestIds).size===160&&questionIds.every(id=>manifestIds.includes(id)))ok('全160小問に固定表示マップ');else fail(`固定表示マップ ${manifestIds.length}/160`)
@@ -28,7 +29,6 @@ if(!focus.includes('<figcaption')&&!styles.includes('.focus-slice figcaption')&&
 if(manifest.includes("'2021-Q2-1'")&&manifest.includes('"sharedTask":true')&&manifest.includes("'2022-Q3-2-i'")&&manifest.includes("'2022-Q3-2-ii'"))ok('共通文章型・枝番小問を個別管理');else fail('特殊小問マップ')
 if(examConfig.includes('2023:[[4,5],[6],[7],[8,9],[10]]'))ok('2023年度 大問4=8・9頁 / 大問5=10頁');else fail('2023ページ割り当て')
 if(manifest.includes("'2023-Q5-1':{\"common\":[{\"page\":10")&&manifest.includes("'2023-Q5-3':{\"common\":[{\"page\":10"))ok('2023大問5は10頁だけ');else fail('2023大問5マップ')
-if(paper.includes('今回間違えた問題から直す')&&paper.includes('/guided-review?q='))ok('採点結果は間違い小問を先に表示');else fail('結果→1問復習導線')
 if(!paper.includes('OFFICIAL ANSWERS')&&!paper.includes('answerImage(')&&!paper.includes('answerPages'))ok('過去問採点の公式解答ページ全体表示を廃止');else fail('公式解答全体が残っている')
 
 const answerData=read('src/data/examAnswers.ts'),answerIds=[...answerData.matchAll(/'(\d{4}-Q[^']+)':E/g)].map(x=>x[1])
