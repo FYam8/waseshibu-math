@@ -18,10 +18,11 @@ const exam=await loadModule('src/data/examAnswers.ts')
 const preflight=await loadModule('src/preflight.ts')
 const migration=await loadModule('src/dataMigration.ts')
 const guided=await loadModule('src/guidedReview.ts')
+const focus=await loadModule('src/data/questionFocus.ts')
 const targetStrategy=await loadModule('src/targetStrategy.ts')
 const version=await loadModule('src/version.ts')
 
-assert.equal(version.APP_VERSION,'0.11.0')
+assert.equal(version.APP_VERSION,'0.12.0')
 assert.equal(migration.CURRENT_DATA_VERSION,3)
 assert.equal(guided.GUIDED_REVIEW_KEY,'waseshibu-math-guided-review-v1')
 
@@ -66,9 +67,22 @@ assert.equal(guide.id,'2024-Q1-1')
 assert.equal(guide.year,2024)
 assert.equal(guide.answer.answer,exam.examAnswers['2024-Q1-1'].answer)
 assert.equal(guided.guidedQuestion('2024-Q2-2').previousId,'2024-Q2-1')
+assert.equal(guide.subCount>0,true)
 const guideStore=new MemoryStorage()
 guided.saveGuidedReview({questionId:'exam-2024-Q1-1',step1:'a',step2:'b',finalAnswer:'6',hintUsed:false,answerSeen:false,outcome:'independent',updatedAt:'x'},guideStore)
 assert.equal(guided.loadGuidedReview('2024-Q1-1',guideStore).outcome,'independent')
+
+const questions=(await import('../src/data/questions.json',{with:{type:'json'}})).default.questions
+let focusCount=0
+for(const major of questions){
+  assert.equal(focus.focusCoverageOk(major.year,major.major,major.subquestions.length),true,`focus coverage ${major.id}`)
+  for(let i=0;i<major.subquestions.length;i++){
+    const slices=focus.focusSlicesFor(major.year,major.major,i,major.subquestions.length)
+    assert.equal(slices.filter(x=>x.role==='current').length>=1,true,`current focus ${major.id}-${major.subquestions[i].no}`)
+    focusCount++
+  }
+}
+assert.equal(focusCount,160)
 
 const accepted=[['６','6'],['３／４','3/4'],['２×√１５','2√15'],['（－１，－１）','(-1,-1)']]
 for(const [input,expected] of accepted)assert.equal(answer.isAcceptedAnswer(input,expected),true,`${input} => ${expected}`)
@@ -87,4 +101,4 @@ assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTar
 for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100)
 
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`v0.11.0, data v3, backup keys: ${backup.BACKUP_KEYS.length}, guided review: OK, v2→v3 no-loss migration: OK, integrity: 160/160 + 2024 20`)
+console.log(`v0.12.0, data v3, focus: ${focusCount}/160, backup/no-loss migration: OK, integrity: 160/160`)
