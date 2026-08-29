@@ -23,7 +23,7 @@ const focus=await loadModule('src/data/questionFocus.ts')
 const targetStrategy=await loadModule('src/targetStrategy.ts')
 const version=await loadModule('src/version.ts')
 
-assert.equal(version.APP_VERSION,'0.13.1')
+assert.equal(version.APP_VERSION,'0.13.2')
 assert.equal(migration.CURRENT_DATA_VERSION,3)
 assert.equal(guided.GUIDED_REVIEW_KEY,'waseshibu-math-guided-review-v1')
 assert.deepEqual(examConfig.examPages[2023],[[4,5],[6],[7],[8,9],[10]])
@@ -118,8 +118,11 @@ const strategyItems=[
   {key:'b',major:2,subNo:'1',topic:'放物線',grade:'B',status:'wrong',points:5},
   {key:'c',major:5,subNo:'3',topic:'相似・面積比',grade:'C',status:'wrong',points:5}
 ]
+assert.deepEqual(['A','B','C'].filter(g=>targetStrategy.gradeInTarget(60,g)),['A'])
+assert.deepEqual(['A','B','C'].filter(g=>targetStrategy.gradeInTarget(70,g)),['A','B'])
+assert.deepEqual(['A','B','C'].filter(g=>targetStrategy.gradeInTarget(75,g)),['A','B','C'])
 assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTarget(60,'B'),targetStrategy.gradeInTarget(70,'B'),targetStrategy.gradeInTarget(75,'C')],[true,false,true,true])
 for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100)
 
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`v0.13.1, data v3, verified fixed focus: ${questionIds.length}/160, 2023 page map: OK, backup/no-loss migration: OK, integrity: 160/160`)
+console.log(`v0.13.2, data v3, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK, integrity: 160/160`)
