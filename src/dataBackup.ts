@@ -1,10 +1,12 @@
+import { CURRENT_DATA_VERSION, DATA_VERSION_KEY, LEGACY_DRAFT_KEY, migrateDataRecord } from './dataMigration'
+
 export const BACKUP_KEYS=[
   'waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily',
-  'waseshibu-math-exam-scores','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1'
+  'waseshibu-math-exam-scores','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1','waseshibu-math-data-version'
 ] as const
 
 export type BackupKey=typeof BACKUP_KEYS[number]
-export type BackupPackage={app:'waseshibu-math';schemaVersion:1|2;exportedAt:string;data:Partial<Record<BackupKey,unknown>>}
+export type BackupPackage={app:'waseshibu-math';schemaVersion:1|2|3;dataVersion:number;exportedAt:string;data:Partial<Record<BackupKey,unknown>>}
 export type RestoreMode='replace'|'merge'
 export type StorageLike=Pick<Storage,'getItem'|'setItem'|'removeItem'>
 
@@ -13,18 +15,23 @@ const isObject=(value:unknown):value is Record<string,unknown>=>!!value&&typeof 
 export function collectBackup(storage:StorageLike=localStorage):BackupPackage{
   const data:Partial<Record<BackupKey,unknown>>={}
   BACKUP_KEYS.forEach(key=>{const raw=storage.getItem(key);if(raw!==null)try{data[key]=JSON.parse(raw)}catch{data[key]=raw}})
-  return {app:'waseshibu-math',schemaVersion:2,exportedAt:new Date().toISOString(),data}
+  data[DATA_VERSION_KEY]=CURRENT_DATA_VERSION
+  return {app:'waseshibu-math',schemaVersion:3,dataVersion:CURRENT_DATA_VERSION,exportedAt:new Date().toISOString(),data}
 }
 
 export function validateBackup(value:unknown):BackupPackage{
-  if(!isObject(value)||value.app!=='waseshibu-math'||(value.schemaVersion!==1&&value.schemaVersion!==2)||typeof value.exportedAt!=='string'||Number.isNaN(Date.parse(value.exportedAt))||!isObject(value.data))throw new Error('このアプリのバックアップ形式ではありません')
-  const data=value.data
-  for(const key of Object.keys(data))if(!BACKUP_KEYS.includes(key as BackupKey))throw new Error(`未対応のデータ項目が含まれています：${key}`)
+  if(!isObject(value)||value.app!=='waseshibu-math'||typeof value.schemaVersion!=='number'||value.schemaVersion<1||value.schemaVersion>3||typeof value.exportedAt!=='string'||Number.isNaN(Date.parse(value.exportedAt))||!isObject(value.data))throw new Error('このアプリのバックアップ形式ではありません')
+  const declared=Number(value.dataVersion??value.data[DATA_VERSION_KEY]??0)
+  if(declared>CURRENT_DATA_VERSION)throw new Error('このバックアップは新しいアプリで作成されています。アプリを更新してから復元してください')
+  const migrated=migrateDataRecord(value.data,Number.isFinite(declared)?declared:0),data=migrated.data
+  for(const key of Object.keys(data))if(!BACKUP_KEYS.includes(key as BackupKey)&&key!==LEGACY_DRAFT_KEY)throw new Error(`未対応のデータ項目が含まれています：${key}`)
   const arrays:BackupKey[]=['waseshibu-math-attempts','waseshibu-math-exam-scores']
   for(const key of arrays)if(key in data&&!Array.isArray(data[key]))throw new Error(`${key} の形式が壊れています`)
   const objects:BackupKey[]=['waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1']
   for(const key of objects)if(key in data&&data[key]!==null&&!isObject(data[key]))throw new Error(`${key} の形式が壊れています`)
-  return value as BackupPackage
+  const filtered:Partial<Record<BackupKey,unknown>>={}
+  BACKUP_KEYS.forEach(key=>{if(key in data)filtered[key]=data[key]})
+  return {app:'waseshibu-math',schemaVersion:3,dataVersion:CURRENT_DATA_VERSION,exportedAt:value.exportedAt,data:filtered}
 }
 
 export function parseBackup(text:string):BackupPackage{
@@ -52,12 +59,12 @@ export function mergeBackupValue(key:BackupKey,local:unknown,incoming:unknown){
 }
 
 export function restoreBackup(storage:StorageLike,incoming:BackupPackage,mode:RestoreMode){
-  validateBackup(incoming)
+  const upgraded=validateBackup(incoming)
   const before=new Map<BackupKey,string|null>(BACKUP_KEYS.map(key=>[key,storage.getItem(key)]))
   const next=new Map<BackupKey,string|null>()
   BACKUP_KEYS.forEach(key=>{
-    if(!(key in incoming.data)){next.set(key,mode==='replace'?null:before.get(key)??null);return}
-    let value=incoming.data[key]
+    if(!(key in upgraded.data)){next.set(key,mode==='replace'?null:before.get(key)??null);return}
+    let value=upgraded.data[key]
     if(mode==='merge'){let local:unknown=null;try{local=JSON.parse(before.get(key)||'null')}catch{/* invalid local data is replaced */}value=mergeBackupValue(key,local,value)}
     next.set(key,JSON.stringify(value))
   })

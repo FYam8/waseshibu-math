@@ -17,6 +17,7 @@ const backup=await loadModule('src/dataBackup.ts')
 const answer=await loadModule('src/answer.ts')
 const exam=await loadModule('src/data/examAnswers.ts')
 const preflight=await loadModule('src/preflight.ts')
+const migration=await loadModule('src/dataMigration.ts')
 const sample={
   'waseshibu-math-attempts':[{id:'a1',questionId:'2024-Q1-1',answer:'６',status:'correct',at:'2026-01-01T00:00:00.000Z'}],
   'waseshibu-math-preferences':{target:70,name:'受験生',updatedAt:'2026-01-01T00:00:00.000Z'},
@@ -25,6 +26,7 @@ const sample={
   'waseshibu-math-exam-drafts-v2':{'2025':{answers:{'2025-Q1-1':'－１６'},flags:{'2025-Q1-2':true},seconds:321,majorIndex:1,phase:'solve'}},
   'waseshibu-math-learning-route-v1':{solvedYears:[2024],usedOldQuestionIds:['2019-Q1-1'],reinforcement:{'2024':{examId:'s1',completedQuestionIds:['2019-Q1-1']}},updatedAt:'2026-01-01T00:00:00.000Z'}
   ,'waseshibu-math-prep-check-v1':{version:1,index:2,answers:{'prep-1':'６','prep-2':'－３'},tries:{'prep-1':1,'prep-2':1},completed:false,skipped:false,updatedAt:'2026-01-01T00:00:00.000Z'}
+  ,'waseshibu-math-data-version':2
 }
 const source=new MemoryStorage(Object.fromEntries(Object.entries(sample).map(([key,value])=>[key,JSON.stringify(value)])))
 const pkg=backup.collectBackup(source)
@@ -39,6 +41,28 @@ assert.deepEqual(Object.keys(JSON.parse(merged.getItem('waseshibu-math-exam-draf
 
 assert.throws(()=>backup.parseBackup('{broken'),/JSON/)
 assert.throws(()=>backup.validateBackup({...pkg,data:{unknown:[]}}),/未対応/)
+assert.throws(()=>backup.validateBackup({...pkg,dataVersion:99}),/アプリを更新/)
+const legacy=backup.validateBackup({app:'waseshibu-math',schemaVersion:1,exportedAt:'2025-01-01T00:00:00.000Z',data:{'waseshibu-math-attempts':sample['waseshibu-math-attempts'],'waseshibu-math-exam-drafts':{'2024':{answers:{old:'1'}}},'waseshibu-math-prep-check-v1':{version:0,index:3,answers:{'prep-1':'6'},tries:{'prep-1':2},completed:true}}})
+assert.equal(legacy.schemaVersion,3)
+assert.equal(legacy.dataVersion,migration.CURRENT_DATA_VERSION)
+assert.deepEqual(legacy.data['waseshibu-math-exam-drafts-v2'],{'2024':{answers:{old:'1'}}})
+assert.equal(legacy.data['waseshibu-math-prep-check-v1'].completed,true)
+assert.equal(legacy.data['waseshibu-math-prep-check-v1'].answers['prep-1'],'6')
+const localLegacy=new MemoryStorage({'waseshibu-math-attempts':JSON.stringify(sample['waseshibu-math-attempts']),'waseshibu-math-exam-drafts':JSON.stringify({'2024':{seconds:15}}),'waseshibu-math-prep-check-v1':JSON.stringify({version:0,index:4,completed:true,answers:{'prep-5':'(2,1)'}})})
+const localMigration=migration.runDataMigrations(localLegacy)
+assert.equal(localMigration.ok,true)
+assert.equal(localLegacy.getItem('waseshibu-math-data-version'),String(migration.CURRENT_DATA_VERSION))
+assert.deepEqual(JSON.parse(localLegacy.getItem('waseshibu-math-exam-drafts-v2')),{'2024':{seconds:15}})
+assert.equal(JSON.parse(localLegacy.getItem('waseshibu-math-prep-check-v1')).completed,true)
+const migrationBefore={'waseshibu-math-attempts':JSON.stringify([{id:'keep'}]),'waseshibu-math-exam-drafts':JSON.stringify({'2024':{seconds:9}})},migrationFailing=new MemoryStorage(migrationBefore,2)
+const failedMigration=migration.runDataMigrations(migrationFailing)
+assert.equal(failedMigration.ok,false)
+for(const [key,value] of Object.entries(migrationBefore))assert.equal(migrationFailing.getItem(key),value,`migration rollback: ${key}`)
+assert.equal(migrationFailing.getItem('waseshibu-math-data-version'),null)
+const alreadyCurrent=new MemoryStorage({'waseshibu-math-data-version':String(migration.CURRENT_DATA_VERSION),'waseshibu-math-attempts':JSON.stringify([{id:'untouched'}])})
+const currentMigration=migration.runDataMigrations(alreadyCurrent)
+assert.equal(currentMigration.ok,true)
+assert.equal(alreadyCurrent.writes,0)
 const before=Object.fromEntries(backup.BACKUP_KEYS.map(key=>[key,source.getItem(key)])),failing=new MemoryStorage(before,2)
 assert.throws(()=>backup.restoreBackup(failing,parsed,'replace'),/元のデータへ戻しました/)
 for(const key of backup.BACKUP_KEYS)assert.equal(failing.getItem(key),before[key],`rollback: ${key}`)

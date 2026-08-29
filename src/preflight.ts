@@ -1,6 +1,7 @@
 import questions from './data/questions.json'
 import { examAnswers, isExamAnswerCorrect } from './data/examAnswers'
 import type { MajorQuestion } from './types'
+import { normalizePrepRecord } from './dataMigration'
 
 export const PREP_KEY='waseshibu-math-prep-check-v1'
 export const PREP_VERSION=1
@@ -20,8 +21,9 @@ const emptyPrep=():PrepState=>({version:PREP_VERSION,index:0,answers:{},tries:{}
 export function loadPrepState():PrepState{
   try{
     const raw=JSON.parse(localStorage.getItem(PREP_KEY)||'null')
-    if(!raw||raw.version!==PREP_VERSION)return emptyPrep()
-    return {version:PREP_VERSION,index:Math.max(0,Math.min(prepQuestions.length-1,Number(raw.index)||0)),answers:raw.answers&&typeof raw.answers==='object'?raw.answers:{},tries:raw.tries&&typeof raw.tries==='object'?raw.tries:{},completed:raw.completed===true,skipped:raw.skipped===true,updatedAt:typeof raw.updatedAt==='string'?raw.updatedAt:new Date(0).toISOString()}
+    if(!raw)return emptyPrep()
+    const migrated=normalizePrepRecord(raw)
+    return {...migrated,version:PREP_VERSION,index:Math.max(0,Math.min(prepQuestions.length-1,migrated.index))}
   }catch{return emptyPrep()}
 }
 

@@ -50,5 +50,7 @@ if(backup.includes("'waseshibu-math-exam-drafts-v2'")&&backup.includes("'waseshi
 const answer=read('src/answer.ts')
 if(answer.includes(".normalize('NFKC')")&&answer.includes('cleanAnswerInput')&&answer.includes(".replace(/[≤≦]/g,'<='")&&paper.includes('全角可'))ok('全角・半角・主要数式表記の揺れを吸収');else fail('入力表記揺れ')
 if(!layout.includes('SyncBadge')&&!layout.includes('GitHub Private Repository'))ok('学習データは端末保存へ統一');else fail('旧同期表示が残っている')
+const migration=read('src/dataMigration.ts'),main=read('src/main.tsx')
+if(migration.includes('CURRENT_DATA_VERSION')&&migration.includes('migrateDataRecord')&&migration.includes('normalizePrepRecord')&&main.includes('runDataMigrations()')&&backup.includes('dataVersion:CURRENT_DATA_VERSION'))ok('アプリ更新・旧バックアップからの学習データ移行');else fail('データ移行')
 
 if(!process.exitCode)console.log('SELF-CHECK PASSED')
