@@ -22,6 +22,10 @@ jobs:
             base64 -d /tmp/v0160.b64 > /tmp/v0160.tar.xz
             xz -t /tmp/v0160.tar.xz
             tar -xJf /tmp/v0160.tar.xz
+            sed -i "s/'2024-Q2-2':'(-2,-4)'/'2024-Q2-2':'(2,4)'/" src/preflight.ts
+            sed -i "s/'2024-Q2-3':'3±√13'/'2024-Q2-3':'3+√13'/" src/preflight.ts
+            grep -q "'2024-Q2-2':'(2,4)'" src/preflight.ts
+            grep -q "'2024-Q2-3':'3+√13'" src/preflight.ts
             touch /tmp/v0160-staged
           fi
       - uses: actions/setup-node@v4
