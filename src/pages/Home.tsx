@@ -3,8 +3,9 @@ import { useMemo, useState } from 'react'
 import { currentLearningPhase, latestExam, reinforcementComplete, routePhaseDone, sourceMistakeProgress } from '../learningRoute'
 import { loadAttempts, loadExamScores, loadPreferences, savePreferences } from '../storage'
 import { loadPrepState, runExamIntegrityCheck, savePrepState } from '../preflight'
-import { buildTodayTasks } from '../dailyPlan'
+import { buildOptionalNextTask, buildTodayTasks, todayPlanSummary } from '../dailyPlan'
 import { gradeInTarget, storedExamItems, strategyForStoredExam, targetGoalLabel, targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
+import { buildGoalDayEstimates } from '../targetEta'
 
 type DraftState={phase?:'solve'|'mark';answers?:Record<string,string>;seconds?:number;majorIndex?:number}
 function draftFor(year:number):DraftState|null{
@@ -37,7 +38,7 @@ export default function Home(){
   const source24=exam24?sourceMistakeProgress(2024,prefs.target):null,source25=exam25?sourceMistakeProgress(2025,prefs.target):null
   const weakLatest=latest?weakFieldsForStoredExam(prefs.target,latest,attempts):[]
   const targetStrategy=latest?strategyForStoredExam(prefs.target,latest,attempts):null
-  const todayTasks=useMemo(()=>buildTodayTasks(prefs.target),[prefs.target])
+  const goalDayEstimates=useMemo(()=>buildGoalDayEstimates(),[prefs.target])
   const prepInProgress=!prep.completed&&!prep.skipped&&(prep.index>0||Object.keys(prep.answers).length>0)
   const resume=draftResume()||(prepInProgress?{to:'/setup-check',label:`準備問題 ${prep.index+1}/5 から続ける`}:null)
   const setTarget=(target:60|70|75)=>{const next={...prefs,target};setPrefs(next);savePreferences(next)}
@@ -71,20 +72,35 @@ export default function Home(){
   }
 
   const progression=resume||(!prep.completed&&!prep.skipped?{to:'/setup-check',label:'準備5問を確認する'}:phase<6?phaseAction(phase):null)
-  const taskList=todayTasks.length?todayTasks:progression?[{id:'progression',kind:'past-paper' as const,title:progression.label,detail:'学習サイクルの次の1ステップ',to:progression.to,priority:1}]:[]
+  const progressionTask=progression?{id:`progression:${progression.to}`,kind:'past-paper' as const,title:progression.label,detail:'学習サイクルの次の1ステップ',to:progression.to,priority:1}:undefined
+  const todayTasks=useMemo(()=>buildTodayTasks(prefs.target,new Date(),progressionTask),[prefs.target,progressionTask?.id])
+  const todaySummary=useMemo(()=>todayPlanSummary(prefs.target,new Date(),progressionTask),[prefs.target,progressionTask?.id,todayTasks.length])
+  const optionalNext=useMemo(()=>buildOptionalNextTask(prefs.target,new Date(),progressionTask),[prefs.target,progressionTask?.id,todayTasks.length])
+  // 通常候補がない日も「次の学習サイクル1件」を日次計画へ固定する。完了後に次フェーズを必須補充しない。
+  const taskList=todayTasks
   const latestItems=latest?storedExamItems(latest,attempts):[]
   const q1Miss=latestItems.filter(x=>x.major===1&&x.status!=='correct'&&gradeInTarget(prefs.target,x.grade)).length
 
   return <>
     <section className={`card today-hero ${integrity.ok?'':'integrity-failed'}`}>
       <div className="today-head">
-        <div><span className="eyebrow">TODAY · MAX 5 TASKS</span><h1>今日やること</h1><p>上から順に進めれば大丈夫です。弱点が多くても、今日の必須課題は最大5件に絞ります。</p></div>
+        <div><span className="eyebrow">TODAY · MAX 10 TASKS</span><h1>今日やること</h1><p>上から順に進めれば大丈夫です。弱点が多くても、今日の必須課題は最大10件に絞ります。終わった後は、時間があれば任意で先へ進めます。</p></div>
         <div className="goal-block"><span>学習目標</span><strong>{targetGoalLabel(prefs.target)}</strong><small>目標と現在得点は別に管理</small></div>
       </div>
       <div className="target-row goal-selector"><span>目標を変更</span>{([60,70,75] as const).map((t,i)=><button key={t} className={`target-chip ${prefs.target===t?'selected':''}`} onClick={()=>setTarget(t)}>{String.fromCharCode(65+i)} {t}点</button>)}</div>
+      <div className="goal-eta" aria-label="学習目標ごとの推定残り日数">
+        {goalDayEstimates.map(estimate=><article key={estimate.target} className={prefs.target===estimate.target?'selected':''}>
+          <div><b>{estimate.label}</b><small>{estimate.includedQuestions}問を対象</small></div>
+          <strong>{estimate.complete?'達成':`約${estimate.days}日`}</strong>
+        </article>)}
+      </div>
+      <p className="goal-eta-note">現在の学習履歴と「1日最大10課題」から計算した学習量の目安です。新しい誤答や定着状況に応じて自動更新します。合格点到達を保証する日数ではありません。</p>
       {!integrity.ok?<div className="notice-box"><b>採点データを確認してください。</b><span>{integrity.issues[0]}</span></div>:taskList.length?
-        <div className="today-list">{taskList.map((task,i)=><article key={task.id}><span>{i+1}</span><div><b>{task.title}</b><small>{task.detail}</small></div><Link className={i===0?'button primary':'button'} to={task.to}>{i===0?'今これをやる':'開く'}</Link></article>)}</div>
-        :<div className="today-complete"><b>✓ 今日の数学は完了</b><p>必須課題はありません。追加したい場合だけ残り年度を確認してください。</p><Link className="button" to="/years">もう少し練習する</Link></div>}
+        <>
+          <div className="today-list">{taskList.map((task,i)=><article key={task.id}><span>{i+1}</span><div><b>{task.title}</b><small>{task.detail}</small></div><Link className={i===0?'button primary':'button'} to={task.to}>{i===0?'今これをやる':'開く'}</Link></article>)}</div>
+          <div className="today-more"><span>まず今日の必須課題を終えます。追加演習は完了後に表示します。</span></div>
+        </>
+        :<div className="today-complete"><b>✓ 今日の数学は完了</b><p>必須課題は完了です。ここで終えても大丈夫です。時間があれば、アプリが次の1件を選んで任意で先へ進めます。</p><Link className="button" to={optionalNext?.to||'/years'}>{optionalNext?'時間があれば次の1件へ':'時間があれば先へ進む'}</Link>{optionalNext&&<small>{optionalNext.title}</small>}</div>}
     </section>
 
     <section className="grid three status-grid">

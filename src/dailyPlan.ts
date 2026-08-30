@@ -35,7 +35,7 @@ const localDateKey=(d=new Date())=>{
 }
 export const todayDateKey=localDateKey
 
-export function buildTodayTasks(target:TargetScore, now=new Date()):TodayTask[]{
+function buildTodayTaskCandidates(target:TargetScore, now=new Date()):TodayTask[]{
   const attempts=loadAttempts(),scores=loadExamScores(),progress=loadGuidedProgressState()
   const latest=scores.find(x=>x.completed!==false)
   const latestByQuestion=new Map<string,(typeof attempts)[number]>()
@@ -101,11 +101,86 @@ export function buildTodayTasks(target:TargetScore, now=new Date()):TodayTask[]{
     seenQuestion.add(task.questionId);return true
   })
 
-  // 今日の必須課題は最大5件。弱点が多くても無限に増やさない。
-  return unique.slice(0,5)
+  return unique
 }
 
-export function todayPlanSummary(target:TargetScore,now=new Date()){
-  const tasks=buildTodayTasks(target,now)
-  return {date:localDateKey(now),tasks,complete:tasks.length===0,limit:5}
+const DAILY_REQUIRED_PLAN_KEY='waseshibu-math-daily-required-plan-v2'
+type DailyRequiredPlan={date:string;target:TargetScore;pendingIds:string[];completedIds:string[];fallbackTask?:TodayTask}
+function loadDailyRequiredPlan(date:string,target:TargetScore):DailyRequiredPlan{
+  try{
+    const parsed=JSON.parse(localStorage.getItem(DAILY_REQUIRED_PLAN_KEY)||'null') as DailyRequiredPlan|null
+    if(parsed&&parsed.date===date&&Array.isArray(parsed.pendingIds)&&Array.isArray(parsed.completedIds)){
+      return {...parsed,target:parsed.target===60||parsed.target===70||parsed.target===75?parsed.target:target}
+    }
+  }catch{/* regenerate safely */}
+  return {date,target,pendingIds:[],completedIds:[]}
+}
+function saveDailyRequiredPlan(plan:DailyRequiredPlan){
+  try{localStorage.setItem(DAILY_REQUIRED_PLAN_KEY,JSON.stringify(plan))}catch{/* learning can continue without freezing */}
+}
+
+function reconcileDailyPlan(target:TargetScore,now=new Date(),fallbackTask?:TodayTask){
+  const date=localDateKey(now),plan=loadDailyRequiredPlan(date,target)
+  const targetCandidates=buildTodayTaskCandidates(target,now)
+  const allCandidates=buildTodayTaskCandidates(75,now)
+  const allCandidateIds=new Set(allCandidates.map(task=>task.id))
+
+  // 過去問開始など候補外の1件を今日の必須にした場合、次回来訪時に進行先が変われば完了扱い。
+  let storedFallback=plan.fallbackTask
+  const fallbackCompleted=!!storedFallback&&(!fallbackTask||fallbackTask.id!==storedFallback.id)
+  const fallbackCompletedIds=fallbackCompleted&&storedFallback?[`fallback:${storedFallback.id}`]:[]
+  if(fallbackCompleted)storedFallback=undefined
+
+  // 以前の必須課題が候補から消えた = その課題を完了した、とみなす。
+  // 「直し」が終わって「類題」が新候補になっても、同日に11件目として自動補充しない。
+  const newlyCompleted=plan.pendingIds.filter(id=>!allCandidateIds.has(id))
+  const completedIds=[...new Set([...plan.completedIds,...newlyCompleted,...fallbackCompletedIds])].slice(0,10)
+  const targetCandidateIds=new Set(targetCandidates.map(task=>task.id))
+  let pendingIds=plan.pendingIds.filter(id=>allCandidateIds.has(id)&&targetCandidateIds.has(id))
+
+  // 目標A/B/Cを途中で変えても、1日の必須総数は「完了済み + 現在の必須」で最大10件。
+  // 目標外になった未完了課題は枠を消費せず、新しい目標に合う課題へ置き換える。
+  const remainingSlots=Math.max(0,10-completedIds.length)
+  if(plan.target!==target||(!pendingIds.length&&!completedIds.length)){
+    const keep=new Set(pendingIds)
+    const fill=targetCandidates.filter(task=>!keep.has(task.id)).slice(0,Math.max(0,remainingSlots-pendingIds.length)).map(task=>task.id)
+    pendingIds=[...pendingIds,...fill].slice(0,remainingSlots)
+  }
+
+  // 初回生成。通常候補がなければ、過去問開始など「学習サイクルの次の1件」を1件だけ固定する。
+  // 完了後は同日に次フェーズを11件目として自動補充しない。
+  if(!pendingIds.length&&!completedIds.length&&!storedFallback){
+    pendingIds=targetCandidates.slice(0,10).map(task=>task.id)
+    if(!pendingIds.length&&fallbackTask)storedFallback=fallbackTask
+  }
+
+  const next:DailyRequiredPlan={date,target,pendingIds,completedIds,...(storedFallback?{fallbackTask:storedFallback}:{})}
+  saveDailyRequiredPlan(next)
+  return {plan:next,targetCandidates}
+}
+
+export function buildTodayTasks(target:TargetScore, now=new Date(),fallbackTask?:TodayTask):TodayTask[]{
+  const {plan,targetCandidates}=reconcileDailyPlan(target,now,fallbackTask)
+  const assigned=new Set(plan.pendingIds)
+  const tasks=targetCandidates.filter(task=>assigned.has(task.id))
+  if(plan.fallbackTask)tasks.push(plan.fallbackTask)
+  return tasks
+}
+
+export function buildOptionalNextTask(target:TargetScore,now=new Date(),fallbackTask?:TodayTask):TodayTask|null{
+  const {plan,targetCandidates}=reconcileDailyPlan(target,now,fallbackTask)
+  // 必須が残っている間は追加演習へ誘導しない。
+  if(plan.pendingIds.length>0)return null
+  const completed=new Set(plan.completedIds)
+  return targetCandidates.find(task=>!completed.has(task.id))||fallbackTask||null
+}
+
+export function todayPlanSummary(target:TargetScore,now=new Date(),fallbackTask?:TodayTask){
+  const tasks=buildTodayTasks(target,now,fallbackTask)
+  const plan=loadDailyRequiredPlan(localDateKey(now),target)
+  const plannedCount=plan.pendingIds.length+plan.completedIds.length+(plan.fallbackTask?1:0)
+  return {
+    date:localDateKey(now),tasks,complete:plannedCount>0&&tasks.length===0,limit:10,
+    planned:plannedCount>0,completedCount:plan.completedIds.length
+  }
 }
