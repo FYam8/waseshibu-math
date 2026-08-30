@@ -13,8 +13,8 @@ const practiceQuestions:PracticeQuestion[]=remediationFields.flatMap(field=>fiel
   answer:q.answer,
   acceptedAnswers:q.acceptedAnswers,
   topic:field.title,
-  grade:index<2?'A':'B',
-  sourcePattern:'18分野・全72問の類題バンク',
+  grade:'A',
+  sourcePattern:'18分野・基礎確認バンク',
   hint1:'過去問で使った公式・条件整理を思い出しましょう。',
   hint2:q.explanation,
   explanation:q.explanation
@@ -237,7 +237,7 @@ export default function Practice() {
             <article className="stat"><b>{wrongCount}</b><span>不正解</span></article>
             <article className="stat"><b>{deferredCount}</b><span>見送り</span></article>
           </div>
-          <p className="muted">実際の過去問得点とは別の、18分野の復習結果です。</p>
+          <p className="muted">実際の過去問得点とは別の、18分野の基礎確認結果です。過去問と同程度の類題は各問題の弱点補強から出題します。</p>
           <div className="actions">
             <button className="button primary" onClick={restart}>同じ8問を再挑戦</button>
             <a className="button" href="#/report">弱点・得点記録へ</a>
@@ -252,7 +252,7 @@ export default function Practice() {
   return (
     <>
       <div className="page-head">
-        <div><span className="eyebrow">18 FIELDS / 72-QUESTION BANK</span><h1>弱点復習8問</h1><p className="muted">全72問から、記録済みの弱点を優先して8問出題します。</p></div>
+        <div><span className="eyebrow">18 FIELDS / FOUNDATION REVIEW</span><h1>弱点復習8問</h1><p className="muted">18分野の基礎確認問題から、記録済みの弱点を優先して8問出題します。</p></div>
         <div className="practice-meta">
           <span>{settled} / 8 完了</span>
           <span>問題 {fmt(questionElapsed)}</span>

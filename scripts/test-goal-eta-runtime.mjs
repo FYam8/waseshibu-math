@@ -35,4 +35,4 @@ global.localStorage.setItem('waseshibu-math-guided-progress-v2',JSON.stringify({
 const after=eta.buildGoalDayEstimates(new Date('2026-08-31T09:00:00Z'))
 for(const x of after)if(x.remainingUnits!==compact[x.target].units-1)throw new Error(`mastery did not reduce ${x.target} ETA units`)
 
-console.log('PASS: goal ETA runtime A=9日 / B=15日 / C=16日 (1日最大10課題・初期状態), progress-aware')
+console.log('PASS: goal ETA runtime A=9日 / B=15日 / C=16日 (1日最大10課題の初期状態), progress-aware')
