@@ -1,6 +1,6 @@
 {
-  "appVersion": "0.14.0",
-  "dataVersion": 3,
+  "appVersion": "0.15.1",
+  "dataVersion": 4,
   "releasedAt": "2026-08-30",
-  "release": "unified-diagnosis-learning-phases"
+  "release": "guided-solution-160-non-destructive-migration"
 }

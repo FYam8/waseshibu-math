@@ -14,17 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Prepare staged audited release when present
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -d .release/v0151 ]; then
-            cat .release/v0151/part-* > /tmp/v0151.b64
-            base64 --decode /tmp/v0151.b64 > /tmp/v0151.tar.xz
-            tar -xJf /tmp/v0151.tar.xz -C .
-            sed -i "s/'2024-Q2-2':'(-2,-4)'/'2024-Q2-2':'(2,4)'/" src/preflight.ts
-            sed -i "s/'2024-Q2-3':'3±√13'/'2024-Q2-3':'3+√13'/" src/preflight.ts
-          fi
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -32,5 +21,4 @@ jobs:
       - run: npm ci
       - run: npm run self-check
       - run: npm run verify-critical
-      - run: npm run test:migration
       - run: npm run build

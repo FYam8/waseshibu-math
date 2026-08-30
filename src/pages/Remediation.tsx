@@ -4,17 +4,19 @@ import MathAnswerInput from '../components/MathAnswerInput'
 import { classifyRemediationField } from '../data/remediation'
 import { isAcceptedAnswer } from '../answer'
 import { createRecordId, saveAttempt } from '../storage'
+import { loadGuidedProgress, recordPracticeStreak } from '../guidedReview'
 
 export default function Remediation(){
-  const [params]=useSearchParams(),topic=params.get('topic')||'式の計算・文字式',source=params.get('source'),field=classifyRemediationField(topic),questions=field.questions
+  const [params]=useSearchParams(),topic=params.get('topic')||'式の計算・文字式',source=params.get('source'),sourceQuestion=params.get('q')||'',field=classifyRemediationField(topic),questions=field.questions
   const [index,setIndex]=useState(0),[answer,setAnswer]=useState(''),[result,setResult]=useState<boolean|null>(null)
-  const [streak,setStreak]=useState(0),[total,setTotal]=useState(0),[finished,setFinished]=useState(false)
+  const [streak,setStreak]=useState(()=>sourceQuestion?loadGuidedProgress(sourceQuestion).practiceStreak:0),[total,setTotal]=useState(0),[finished,setFinished]=useState(false)
   const q=questions[index]
   const submit=()=>{if(result!==null||!answer.trim())return;setResult(isAcceptedAnswer(answer,q.answer,q.acceptedAnswers))}
   const next=()=>{
     if(result===null)return
     saveAttempt({id:createRecordId(`remedy-${index}`),questionId:`remedy-${field.id}-${index}`,mode:'multi',topic,status:result?'correct':'wrong',mistakeTag:result?undefined:'解法未習得',at:new Date().toISOString()})
     const nextStreak=result?streak+1:0
+    if(sourceQuestion)recordPracticeStreak(sourceQuestion,result)
     setTotal(v=>v+1)
     if(nextStreak>=4){
       saveAttempt({id:createRecordId('mastery'),questionId:`mastery-${topic}`,mode:'multi',topic,status:'correct',at:new Date().toISOString()})

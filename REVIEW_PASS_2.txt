@@ -1,0 +1,6 @@
+REVIEW PASS 2 — 2026-08-30
+PASS: guided math audit 160/160
+PASS: v3 localStorage -> v4 non-destructive migration; all legacy keys and Guided Review history preserved
+PASS: self-check (40 major questions / 160 subquestions, focused display, GuidedSolution, version/data migration)
+Math-content corrections required in this pass: none
+No GuidedSolution/exam-answer content was changed between PASS 1 and PASS 2.

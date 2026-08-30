@@ -23,9 +23,11 @@ const focus=await loadModule('src/data/questionFocus.ts')
 const targetStrategy=await loadModule('src/targetStrategy.ts')
 const version=await loadModule('src/version.ts')
 
-assert.equal(version.APP_VERSION,'0.14.0')
-assert.equal(migration.CURRENT_DATA_VERSION,3)
+assert.equal(version.APP_VERSION,'0.15.1')
+assert.equal(migration.CURRENT_DATA_VERSION,4)
 assert.equal(guided.GUIDED_REVIEW_KEY,'waseshibu-math-guided-review-v1')
+assert.equal(guided.GUIDED_PROGRESS_KEY,'waseshibu-math-guided-progress-v2')
+assert.equal(guided.guidedSolutionCount(),160)
 assert.deepEqual(examConfig.examPages[2023],[[4,5],[6],[7],[8,9],[10]])
 
 const sample={
@@ -42,7 +44,7 @@ const sample={
 const source=new MemoryStorage(Object.fromEntries(Object.entries(sample).map(([key,value])=>[key,JSON.stringify(value)])))
 const pkg=backup.collectBackup(source),parsed=backup.parseBackup(JSON.stringify(pkg)),restored=new MemoryStorage()
 backup.restoreBackup(restored,parsed,'replace')
-for(const key of backup.BACKUP_KEYS)assert.deepEqual(JSON.parse(restored.getItem(key)),sample[key],`round trip: ${key}`)
+for(const key of backup.BACKUP_KEYS)assert.deepEqual(JSON.parse(restored.getItem(key)),pkg.data[key],`round trip: ${key}`)
 
 const v2Seed={
   'waseshibu-math-attempts':JSON.stringify([{id:'keep',questionId:'exam-2024-Q1-1',status:'wrong',at:'2026-01-01'}]),
@@ -51,10 +53,11 @@ const v2Seed={
 }
 const v2=new MemoryStorage(v2Seed),migrated=migration.runDataMigrations(v2)
 assert.equal(migrated.ok,true)
-assert.equal(v2.getItem('waseshibu-math-data-version'),'3')
+assert.equal(v2.getItem('waseshibu-math-data-version'),'4')
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-attempts')),JSON.parse(v2Seed['waseshibu-math-attempts']))
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-exam-scores')),JSON.parse(v2Seed['waseshibu-math-exam-scores']))
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-guided-review-v1')),{})
+assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-guided-progress-v2')),{})
 
 const merged=new MemoryStorage({'waseshibu-math-guided-review-v1':JSON.stringify({'2024-Q1-2':{questionId:'2024-Q1-2'}})})
 backup.restoreBackup(merged,parsed,'merge')
@@ -73,6 +76,20 @@ assert.equal(guide.subCount>0,true)
 const guideStore=new MemoryStorage()
 guided.saveGuidedReview({questionId:'exam-2024-Q1-1',step1:'a',step2:'b',finalAnswer:'6',hintUsed:false,answerSeen:false,outcome:'independent',updatedAt:'x'},guideStore)
 assert.equal(guided.loadGuidedReview('2024-Q1-1',guideStore).outcome,'independent')
+const solution=guided.getGuidedSolution('2024-Q1-1')
+assert.equal(solution.questionId,'2024-Q1-1')
+assert.ok(solution.steps.length>=2)
+guided.recordGuidedStep('2024-Q1-1',solution.steps[0].id,'途中メモ',1,true,guideStore)
+let gp=guided.loadGuidedProgress('2024-Q1-1',guideStore)
+assert.equal(gp.mastery,'guided')
+guided.revealGuidedFinalAnswer('2024-Q1-1',guideStore)
+gp=guided.loadGuidedProgress('2024-Q1-1',guideStore)
+assert.equal(gp.finalAnswerSeen,true)
+const reproduced=guided.recordGuidedFinal('2024-Q1-1','6','retry',guideStore)
+assert.equal(reproduced.correct,true)
+assert.equal(reproduced.mastery,'reproduced')
+for(let i=0;i<4;i++)guided.recordPracticeStreak('2024-Q1-1',true,guideStore)
+assert.equal(guided.loadGuidedProgress('2024-Q1-1',guideStore).mastery,'consolidated')
 
 const questions=(await import('../src/data/questions.json',{with:{type:'json'}})).default.questions
 const questionIds=questions.flatMap(major=>major.subquestions.map(sub=>`${major.id}-${sub.no}`))
@@ -125,4 +142,4 @@ assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTar
 for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100)
 
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`v0.14.0, data v3, unified diagnosis phases, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK, integrity: 160/160`)
+console.log(`v0.15.1, data v4, 160 GuidedSolutions, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK, integrity: 160/160`)

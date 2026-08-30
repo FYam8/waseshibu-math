@@ -1,9 +1,11 @@
+
 export const DATA_VERSION_KEY='waseshibu-math-data-version'
-export const CURRENT_DATA_VERSION=3
+export const CURRENT_DATA_VERSION=4
 export const LEGACY_DRAFT_KEY='waseshibu-math-exam-drafts'
 export const CURRENT_DRAFT_KEY='waseshibu-math-exam-drafts-v2'
 export const PREP_STORAGE_KEY='waseshibu-math-prep-check-v1'
 export const GUIDED_REVIEW_STORAGE_KEY='waseshibu-math-guided-review-v1'
+export const GUIDED_PROGRESS_STORAGE_KEY='waseshibu-math-guided-progress-v2'
 
 export type MigrationStorage=Pick<Storage,'getItem'|'setItem'|'removeItem'>
 const isObject=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)
@@ -25,6 +27,41 @@ export function normalizePrepRecord(value:unknown){
   }
 }
 
+function migratedMastery(record:Record<string,unknown>){
+  const outcome=String(record.outcome||'')
+  if(outcome==='independent')return 'independent'
+  if(outcome==='reproduced')return 'reproduced'
+  if(outcome==='guided')return 'guided'
+  if(record.answerSeen===true)return 'exposed'
+  if(outcome==='wrong'||record.step1||record.step2||record.finalAnswer)return 'attempted'
+  return 'unseen'
+}
+
+export function guidedProgressFromLegacy(value:unknown){
+  const legacy=isObject(value)?value:{},result:Record<string,unknown>={}
+  for(const [questionId,item] of Object.entries(legacy)){
+    if(!isObject(item))continue
+    const hintUsed=item.hintUsed===true,answerSeen=item.answerSeen===true,outcome=String(item.outcome||'')
+    const stepProgress:Record<string,unknown>={}
+    if(typeof item.step1==='string'&&item.step1)stepProgress.focus={stepId:'focus',answer:item.step1,tries:1,hintLevelUsed:hintUsed?1:0,completed:true}
+    if(typeof item.step2==='string'&&item.step2)stepProgress.method={stepId:'method',answer:item.step2,tries:1,hintLevelUsed:hintUsed?1:0,completed:true}
+    result[questionId]={
+      questionId,
+      stepProgress,
+      finalAnswer:typeof item.finalAnswer==='string'?item.finalAnswer:'',
+      finalAnswerSeen:answerSeen,
+      reproductionAttempts:outcome==='reproduced'?1:0,
+      reproductionSucceeded:outcome==='reproduced',
+      independentSucceeded:outcome==='independent',
+      practiceStreak:0,
+      mastery:migratedMastery(item),
+      updatedAt:typeof item.updatedAt==='string'?item.updatedAt:new Date(0).toISOString(),
+      migratedFrom:'waseshibu-math-guided-review-v1'
+    }
+  }
+  return result
+}
+
 export function migrateDataRecord(input:Record<string,unknown>,fromVersion:number){
   if(fromVersion>CURRENT_DATA_VERSION)throw new Error('このデータは新しいバージョンのアプリで作成されています。アプリを更新してから復元してください')
   const data={...input};let version=Math.max(0,fromVersion)
@@ -41,6 +78,11 @@ export function migrateDataRecord(input:Record<string,unknown>,fromVersion:numbe
     if(!(GUIDED_REVIEW_STORAGE_KEY in data))data[GUIDED_REVIEW_STORAGE_KEY]={}
     version=3
   }
+  if(version<4){
+    // 旧Guided Reviewは一切削除・上書きせず、新形式へコピーして派生させる。
+    if(!(GUIDED_PROGRESS_STORAGE_KEY in data))data[GUIDED_PROGRESS_STORAGE_KEY]=guidedProgressFromLegacy(data[GUIDED_REVIEW_STORAGE_KEY])
+    version=4
+  }
   data[DATA_VERSION_KEY]=CURRENT_DATA_VERSION
   return {data,version}
 }
@@ -49,7 +91,7 @@ export function runDataMigrations(storage:MigrationStorage=localStorage){
   const storedVersion=Number(storage.getItem(DATA_VERSION_KEY)||'0')
   if(storedVersion>CURRENT_DATA_VERSION)return {ok:false,fromVersion:storedVersion,toVersion:storedVersion,error:'新しいデータ形式です'}
   if(storedVersion===CURRENT_DATA_VERSION)return {ok:true,fromVersion:storedVersion,toVersion:CURRENT_DATA_VERSION}
-  const keys=['waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-scores',CURRENT_DRAFT_KEY,'waseshibu-math-learning-route-v1',PREP_STORAGE_KEY,GUIDED_REVIEW_STORAGE_KEY,LEGACY_DRAFT_KEY]
+  const keys=['waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-scores',CURRENT_DRAFT_KEY,'waseshibu-math-learning-route-v1',PREP_STORAGE_KEY,GUIDED_REVIEW_STORAGE_KEY,GUIDED_PROGRESS_STORAGE_KEY,LEGACY_DRAFT_KEY]
   const source:Record<string,unknown>={}
   for(const key of keys){const raw=storage.getItem(key);if(raw===null)continue;try{source[key]=JSON.parse(raw)}catch{source[key]=raw}}
   const managedKeys=[...keys,DATA_VERSION_KEY],before=new Map(managedKeys.map(key=>[key,storage.getItem(key)]))
