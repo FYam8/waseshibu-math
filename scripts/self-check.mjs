@@ -15,7 +15,7 @@ if(paper.includes('PROBLEM · EXAM MODE')&&paper.includes('本番演習中は、
 if(mark.includes('ONE QUESTION MARKING')&&mark.includes('公式解答ページ全体は表示しません')&&mark.includes('この小問の正答')&&!mark.includes('exam-answers'))ok('採点後は1小問・1正答だけ');else fail('採点1問フォーカス')
 if(guided.includes('GUIDED SOLUTION')&&guided.includes('ほかの小問・ほかの正答は表示しません')&&guided.includes('の正答だけを表示'))ok('解説は1小問・1正答だけ');else fail('解説1問フォーカス')
 if(reinforcement.includes('この小問の正答だけ見る')&&reinforcement.includes('別小問や公式解答ページ全体は表示しません')&&!reinforcement.includes('answerPages')&&!reinforcement.includes('answerImage(')&&!reinforcement.includes('exam-images'))ok('弱点補強も1小問・1正答だけ');else fail('弱点補強に旧全体表示が残っている')
-if(home.includes('PREPARATION + 6 LEARNING PHASES')&&home.includes('2024年度 診断テスト')&&home.includes('診断を更新してもう一度受ける')&&home.includes('/mistakes?year=2024')&&home.includes('弱点分析を見る')&&homeStyles.includes('.diagnosis-route-card'))ok('2024実施・採点・弱点抽出を1枚の診断カードへ統合');else fail('診断カード統合')
+if(home.includes('今日やること')&&home.includes('MAX 5 TASKS')&&home.includes('buildTodayTasks')&&home.includes('この1問を直す')&&home.includes('A＝60点、B＝70点、C＝75点'))ok('今日やること・弱点直結・A60/B70/C75ホームUX');else fail('ホーム共通UX')
 if(route.includes('currentLearningPhase')&&route.includes('routePhaseDone')&&route.includes('sourceMistakeProgress')&&route.includes('requiresSourceReview')&&route.includes('旧方式の補強を完了'))ok('6フェーズ進捗・元誤答先行・旧完了者保護');else fail('新学習フェーズ進捗')
 if(reinforcement.includes('まず')&&reinforcement.includes('元の間違いを直す')&&reinforcement.includes('sourceMistakeProgress')&&reinforcement.includes('SOURCE QUESTION FIRST'))ok('補強前に元の誤答を再現');else fail('元誤答→補強の順序')
 if(mistake.includes('gradeInTarget(prefs.target,meta.grade)')&&mistake.includes('weakFieldsForStoredExam(prefs.target,latestExam,attempts)')&&mistake.includes('QUESTION BY QUESTION · TARGET ONLY')&&mistake.includes('今は後回しの問題'))ok('間違い直しを60=A / 70=A+B / 75=A+B+Cに限定');else fail('間違い直しの目標点フィルタ')
@@ -35,12 +35,16 @@ const answerData=read('src/data/examAnswers.ts'),answerIds=[...answerData.matchA
 if(answerIds.length===160&&questionIds.every(id=>answerIds.includes(id))&&new Set(answerIds).size===160)ok('全160小問の正答データ');else fail(`正答データ ${answerIds.length}/160`)
 
 const backup=read('src/dataBackup.ts'),migration=read('src/dataMigration.ts'),version=read('src/version.ts'),publicVersion=read('public/version.json')
-if(migration.includes('CURRENT_DATA_VERSION=4')&&backup.includes('GUIDED_PROGRESS_STORAGE_KEY')&&migration.includes('旧Guided Reviewは一切削除・上書きせず')&&version.includes("APP_VERSION='0.15.1'")&&publicVersion.includes('"appVersion": "0.15.1"')&&publicVersion.includes('"dataVersion": 4'))ok('v0.15.1・data v4・既存学習データ保護');else fail('版・データ形式整合')
+if(migration.includes('CURRENT_DATA_VERSION=5')&&backup.includes('GUIDED_PROGRESS_STORAGE_KEY')&&migration.includes('MIGRATION_BACKUP_STORAGE_KEY')&&migration.includes('更新前バックアップ')&&version.includes("APP_VERSION='0.16.0'")&&publicVersion.includes('"appVersion": "0.16.0"')&&publicVersion.includes('"dataVersion": 5'))ok('v0.16.0・data v5・migration前バックアップ');else fail('版・データ形式整合')
 
 const guidedData=JSON.parse(read('src/data/guidedSolutions.json')),guidedIds=Object.keys(guidedData.solutions||{})
 if(guidedData.count===160&&guidedIds.length===160&&questionIds.every(id=>guidedIds.includes(id))&&guidedIds.every(id=>Array.isArray(guidedData.solutions[id].steps)&&guidedData.solutions[id].steps.length>=2))ok('160小問すべてに問題専用GuidedSolution');else fail(`GuidedSolution ${guidedIds.length}/160`)
 if(guided.includes('ヒント1')&&guided.includes('さらにヒント')&&guided.includes('STEPの答え')&&guided.includes('解説を閉じて自力再現へ'))ok('3段階ヒント・自力再現UX');else fail('GuidedSolution UX')
 if(read('src/pages/Remediation.tsx').includes('recordPracticeStreak')&&guided.includes('&q=${encodeURIComponent(q.id)}'))ok('類題4問連続正解を元問題の習得状態へ接続');else fail('類題4問の習得接続')
+
+const dailyPlan=read('src/dailyPlan.ts')
+if(dailyPlan.includes('slice(0,5)')&&dailyPlan.includes("grade==='A'")&&dailyPlan.includes("target>=70")&&dailyPlan.includes("target>=75")&&dailyPlan.includes('practiceStreak'))ok('今日やることは最大5件・目標帯・定着進捗を反映');else fail('今日やることロジック')
+if(read('src/targetStrategy.ts').includes("target===60?'A 60点':target===70?'B 70点':'C 75点'")&&read('src/targetStrategy.ts').includes("grade==='A'||(grade==='B'&&target>=70)||(grade==='C'&&target>=75)"))ok('学習目標A60/B70/C75と問題帯A/A+B/A+B+Cを維持');else fail('学習目標ロジック')
 
 const html=read('index.html'),robots=read('public/robots.txt')
 if(html.includes('noindex, nofollow, noarchive, nosnippet')&&robots.includes('Disallow: /'))ok('検索エンジン非掲載設定');else fail('noindex/robots')

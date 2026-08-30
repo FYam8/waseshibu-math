@@ -1,0 +1,53 @@
+REVIEW PASS 1 — 修正事項 0件
+
+$ node scripts/self-check.mjs
+OK: 2019〜2026 全40大問・160小問
+OK: 採点・解説・弱点補強を同じ1問表示へ統一
+OK: 本番演習はページ全体表示
+OK: 採点後は1小問・1正答だけ
+OK: 解説は1小問・1正答だけ
+OK: 弱点補強も1小問・1正答だけ
+OK: 今日やること・弱点直結・A60/B70/C75ホームUX
+OK: 6フェーズ進捗・元誤答先行・旧完了者保護
+OK: 補強前に元の誤答を再現
+OK: 間違い直しを60=A / 70=A+B / 75=A+B+Cに限定
+OK: 採点直後も目標範囲だけを先に直す
+OK: 全160小問に固定表示マップ
+OK: 均等配分・位置推定を廃止
+OK: 確認済み小問・共通条件・原本フォールバック
+OK: 問題画像上にラベル・UIを重ねない
+OK: 共通文章型・枝番小問を個別管理
+OK: 2023年度 大問4=8・9頁 / 大問5=10頁
+OK: 2023大問5は10頁だけ
+OK: 過去問採点の公式解答ページ全体表示を廃止
+OK: 全160小問の正答データ
+OK: v0.16.0・data v5・migration前バックアップ
+OK: 160小問すべてに問題専用GuidedSolution
+OK: 3段階ヒント・自力再現UX
+OK: 類題4問連続正解を元問題の習得状態へ接続
+OK: 今日やることは最大5件・目標帯・定着進捗を反映
+OK: 学習目標A60/B70/C75と問題帯A/A+B/A+B+Cを維持
+OK: 検索エンジン非掲載設定
+OK: 更新前退避・新UI・ロールバック
+SELF-CHECK PASSED
+EXIT 0
+
+$ node scripts/test-migration-preservation.mjs
+PASS: エクスポートなしのv3 localStorageをv5へ非破壊移行し、全旧キーとGuided Review履歴を保持
+EXIT 0
+
+$ node scripts/test-today-plan.mjs
+PASS: 今日やること 最大5件・A60/B70/C75・新しい再誤答で弱点再開
+EXIT 0
+
+$ node scripts/test-mastery-reactivation.mjs
+PASS: 定着済み→再確認正解は維持、再誤答は弱点を再開
+EXIT 0
+
+$ node scripts/audit-guided-solutions.mjs
+PASS guided math audit: 160/160 solutions, all contentVersion=2, all approved, all numeric/symbolic step reveals present.
+EXIT 0
+
+$ node scripts/syntax-check.mjs
+PASS: syntax 46 TS/TSX files
+EXIT 0

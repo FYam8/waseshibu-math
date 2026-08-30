@@ -16,6 +16,8 @@ const profiles:Record<TargetScore,{summary:string;timePlan:{label:string;percent
 }
 
 export const targetProfile=(target:TargetScore)=>profiles[target]
+export const targetGoalLabel=(target:TargetScore)=>target===60?'A 60点':target===70?'B 70点':'C 75点'
+export const targetGoalLetter=(target:TargetScore)=>target===60?'A':target===70?'B':'C'
 export const gradeInTarget=(target:TargetScore,grade:Grade)=>grade==='A'||(grade==='B'&&target>=70)||(grade==='C'&&target>=75)
 export function gradeAdvice(target:TargetScore,grade:Grade){
   if(grade==='A')return '目標点にかかわらず最優先'

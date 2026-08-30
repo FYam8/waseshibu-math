@@ -38,14 +38,16 @@ const seed={
 const storage=new MemoryStorage(seed)
 const before=Object.fromEntries([...storage.map.entries()].map(([k,v])=>[k,JSON.parse(v)]))
 const result=migration.runDataMigrations(storage)
-if(!result.ok||result.fromVersion!==3||result.toVersion!==4)throw new Error('v3→v4 migration result is invalid')
+if(!result.ok||result.fromVersion!==3||result.toVersion!==5)throw new Error('v3→v5 migration result is invalid')
 for(const [key,value] of Object.entries(before)){
   if(key==='waseshibu-math-data-version')continue
   const after=JSON.parse(storage.getItem(key))
   if(JSON.stringify(after)!==JSON.stringify(value))throw new Error(`既存データが変化しました: ${key}`)
 }
-if(storage.getItem('waseshibu-math-data-version')!=='4')throw new Error('dataVersion is not 4')
+if(storage.getItem('waseshibu-math-data-version')!=='5')throw new Error('dataVersion is not 5')
+const migrationBackup=JSON.parse(storage.getItem('waseshibu-math-migration-backup-v1'))
+if(migrationBackup.fromVersion!==3||!migrationBackup.raw['waseshibu-math-attempts'])throw new Error('migration前バックアップが保存されていません')
 const progress=JSON.parse(storage.getItem('waseshibu-math-guided-progress-v2'))
 if(progress['2024-Q1-1'].mastery!=='guided')throw new Error('guided history migration failed')
 if(progress['2025-Q1-1'].mastery!=='reproduced'||progress['2025-Q1-1'].finalAnswerSeen!==true)throw new Error('reproduced history migration failed')
-console.log('PASS: エクスポートなしのv3 localStorageをv4へ非破壊移行し、全旧キーとGuided Review履歴を保持')
+console.log('PASS: エクスポートなしのv3 localStorageをv5へ非破壊移行し、全旧キーとGuided Review履歴を保持')

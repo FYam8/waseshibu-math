@@ -1,6 +1,7 @@
 {
-  "appVersion": "0.15.1",
-  "dataVersion": 4,
-  "releasedAt": "2026-08-30",
-  "release": "guided-solution-160-non-destructive-migration"
+  "appVersion": "0.16.0",
+  "dataVersion": 5,
+  "releasedAt": "2026-08-31",
+  "release": "common-ux-today-plan-target-goals",
+  "version": "0.16.0"
 }

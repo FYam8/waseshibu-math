@@ -6,7 +6,7 @@ export const BACKUP_KEYS=[
 ] as const
 
 export type BackupKey=typeof BACKUP_KEYS[number]
-export type BackupPackage={app:'waseshibu-math';schemaVersion:1|2|3|4;dataVersion:number;exportedAt:string;data:Partial<Record<BackupKey,unknown>>}
+export type BackupPackage={app:'waseshibu-math';schemaVersion:1|2|3|4|5;dataVersion:number;exportedAt:string;data:Partial<Record<BackupKey,unknown>>}
 export type RestoreMode='replace'|'merge'
 export type StorageLike=Pick<Storage,'getItem'|'setItem'|'removeItem'>
 
@@ -21,11 +21,11 @@ export function collectBackup(storage:StorageLike=localStorage):BackupPackage{
   const migrated=migrateDataRecord(source,Number.isFinite(storedVersion)?storedVersion:0),data:Partial<Record<BackupKey,unknown>>={}
   BACKUP_KEYS.forEach(key=>{if(key in migrated.data)data[key]=migrated.data[key]})
   data[DATA_VERSION_KEY]=CURRENT_DATA_VERSION
-  return {app:'waseshibu-math',schemaVersion:4,dataVersion:CURRENT_DATA_VERSION,exportedAt:new Date().toISOString(),data}
+  return {app:'waseshibu-math',schemaVersion:5,dataVersion:CURRENT_DATA_VERSION,exportedAt:new Date().toISOString(),data}
 }
 
 export function validateBackup(value:unknown):BackupPackage{
-  if(!isObject(value)||value.app!=='waseshibu-math'||typeof value.schemaVersion!=='number'||value.schemaVersion<1||value.schemaVersion>4||typeof value.exportedAt!=='string'||Number.isNaN(Date.parse(value.exportedAt))||!isObject(value.data))throw new Error('このアプリのバックアップ形式ではありません')
+  if(!isObject(value)||value.app!=='waseshibu-math'||typeof value.schemaVersion!=='number'||value.schemaVersion<1||value.schemaVersion>5||typeof value.exportedAt!=='string'||Number.isNaN(Date.parse(value.exportedAt))||!isObject(value.data))throw new Error('このアプリのバックアップ形式ではありません')
   const declared=Number(value.dataVersion??value.data[DATA_VERSION_KEY]??0)
   if(declared>CURRENT_DATA_VERSION)throw new Error('このバックアップは新しいアプリで作成されています。アプリを更新してから復元してください')
   const migrated=migrateDataRecord(value.data,Number.isFinite(declared)?declared:0),data=migrated.data
@@ -36,7 +36,7 @@ export function validateBackup(value:unknown):BackupPackage{
   for(const key of objects)if(key in data&&data[key]!==null&&!isObject(data[key]))throw new Error(`${key} の形式が壊れています`)
   const filtered:Partial<Record<BackupKey,unknown>>={}
   BACKUP_KEYS.forEach(key=>{if(key in data)filtered[key]=data[key]})
-  return {app:'waseshibu-math',schemaVersion:4,dataVersion:CURRENT_DATA_VERSION,exportedAt:value.exportedAt,data:filtered}
+  return {app:'waseshibu-math',schemaVersion:5,dataVersion:CURRENT_DATA_VERSION,exportedAt:value.exportedAt,data:filtered}
 }
 
 export function parseBackup(text:string):BackupPackage{

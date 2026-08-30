@@ -6,7 +6,7 @@ import { createRecordId, loadAttempts, loadPreferences, saveAttempt } from '../s
 import { ensureReinforcementPlan, latestExam, loadLearningRoute, markOldQuestionCompleted, oldQuestionBank, reinforcementComplete, sourceMistakeProgress } from '../learningRoute'
 import { getExamAnswer, isExamAnswerCorrect } from '../data/examAnswers'
 import { cleanAnswerInput } from '../answer'
-import { targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
+import { targetGoalLabel, targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
 import { guidedQuestion } from '../guidedReview'
 
 export default function Reinforcement(){
@@ -40,12 +40,12 @@ export default function Reinforcement(){
   void version
 
   if(!done&&sourceReviewRequired&&!sourceProgress.complete)return <>
-    <div className="page-head"><div><span className="eyebrow">SOURCE QUESTION FIRST · TARGET {target}</span><h1>まず{source}年度で間違えた問題を直します</h1><p className="muted">旧年度問題へ進む前に、診断で実際に間違えた目標範囲の小問を理解し、もう一度再現できる状態にします。</p></div><b className="route-status">{sourceProgress.completedIds.length}/{sourceProgress.requiredIds.length}問</b></div>
-    <section className="card source-review-gate"><h2>残り {sourceProgress.remainingIds.length}問</h2><p>{target}点目標では、元の誤答を先に直してから「2019〜2023該当問題 → 類題4問」へ進みます。</p><div className="reinforce-flow four-step"><b>1　元の誤答を再現</b><span>→</span><b>2　旧年度の該当問題</b><span>→</span><b>3　類題4問</b><span>→</span><b>4　次年度で確認</b></div><div className="actions"><Link className="button primary" to={`/mistakes?year=${source}`}>元の間違いを直す</Link><Link className="button" to="/">ホームへ戻る</Link></div><p className="muted">答えを見ただけでは完了になりません。「ヒントなしで再現」または「答え確認後に再現」まで進めると、この補強が解放されます。</p></section>
+    <div className="page-head"><div><span className="eyebrow">SOURCE QUESTION FIRST · {targetGoalLabel(target)}</span><h1>まず{source}年度で間違えた問題を直します</h1><p className="muted">旧年度問題へ進む前に、診断で実際に間違えた目標範囲の小問を理解し、もう一度再現できる状態にします。</p></div><b className="route-status">{sourceProgress.completedIds.length}/{sourceProgress.requiredIds.length}問</b></div>
+    <section className="card source-review-gate"><h2>残り {sourceProgress.remainingIds.length}問</h2><p>{targetGoalLabel(target)}目標では、元の誤答を先に直してから「2019〜2023該当問題 → 類題4問」へ進みます。</p><div className="reinforce-flow four-step"><b>1　元の誤答を再現</b><span>→</span><b>2　旧年度の該当問題</b><span>→</span><b>3　類題4問</b><span>→</span><b>4　次年度で確認</b></div><div className="actions"><Link className="button primary" to={`/mistakes?year=${source}`}>元の間違いを直す</Link><Link className="button" to="/">ホームへ戻る</Link></div><p className="muted">答えを見ただけでは完了になりません。「ヒントなしで再現」または「答え確認後に再現」まで進めると、この補強が解放されます。</p></section>
   </>
 
   return <>
-    <div className="page-head"><div><span className="eyebrow">TARGETED REINFORCEMENT · TARGET {target}</span><h1>{source}年度から見つかった弱点3分野</h1><p className="muted">{targetProfile(target).summary} 元の誤答 → 過去問の該当問題 → 類題4問の順で、設定が変わっても解ける状態にします。</p></div><b className="route-status">{done?'補強完了':'補強中'}</b></div>
+    <div className="page-head"><div><span className="eyebrow">TARGETED REINFORCEMENT · {targetGoalLabel(target)}</span><h1>{source}年度から見つかった弱点3分野</h1><p className="muted">{targetProfile(target).summary} 元の誤答 → 過去問の該当問題 → 類題4問の順で、設定が変わっても解ける状態にします。</p></div><b className="route-status">{done?'補強完了':'補強中'}</b></div>
     {done&&!sourceProgress.complete&&fresh.requiresSourceReview===false&&<div className="notice-box"><b>旧バージョンで補強完了済みです。</b> 完了状態は維持しています。元の{source}年度誤答の再確認は任意です。</div>}
     <div className="reinforce-flow four-step"><b>1　元の誤答を再現</b><span>→</span><b>2　旧年度の該当問題</b><span>→</span><b>3　類題4問連続正解</b><span>→</span><b>4　次年度で確認</b></div>
     {fields.length===0&&<section className="card"><h2>優先補強なし</h2><p>今回の診断では目標範囲の失点分野がありませんでした。次年度へ進めます。</p></section>}

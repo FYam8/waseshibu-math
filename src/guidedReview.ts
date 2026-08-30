@@ -138,17 +138,22 @@ export function recordGuidedFinal(questionId:string,input:string,mode:'guided'|'
   let independentSucceeded=current.independentSucceeded
   if(mode==='retry')reproductionAttempts++
   if(correct){
-    if(mode==='retry'&&answerExposed){mastery='reproduced';reproductionSucceeded=true}
+    // すでに定着済みの問題を忘却防止で再確認して正解した場合は、定着状態を下げない。
+    if(current.mastery==='consolidated')mastery='consolidated'
+    else if(mode==='retry'&&answerExposed){mastery='reproduced';reproductionSucceeded=true}
     else if(!answerExposed&&!hintUsed&&current.dependencyMode!=='official'){mastery='independent';independentSucceeded=true}
     else if(answerExposed){mastery='reproduced';reproductionSucceeded=true}
     else mastery='guided'
-  }else if(mastery==='unseen')mastery='attempted'
-  updateGuidedProgress(questionId,{finalAnswer:input,reproductionAttempts,reproductionSucceeded,independentSucceeded,mastery},storage)
+  }else{
+    // 定着済みでも再度間違えたら「克服済み」のままにしない。
+    mastery='attempted'
+  }
+  updateGuidedProgress(questionId,{finalAnswer:input,reproductionAttempts,reproductionSucceeded,independentSucceeded,mastery,practiceStreak:correct?current.practiceStreak:0},storage)
   return {correct,mastery}
 }
 export function recordPracticeStreak(questionId:string,correct:boolean,storage:Pick<Storage,'getItem'|'setItem'>=localStorage){
   const current=loadGuidedProgress(questionId,storage),practiceStreak=correct?Math.min(4,current.practiceStreak+1):0
-  const mastery=practiceStreak>=4?'consolidated':current.mastery
+  const mastery=practiceStreak>=4?'consolidated':correct?current.mastery:(current.independentSucceeded?'independent':current.reproductionSucceeded?'reproduced':'attempted')
   return updateGuidedProgress(questionId,{practiceStreak,mastery},storage)
 }
 

@@ -1,11 +1,12 @@
 
 export const DATA_VERSION_KEY='waseshibu-math-data-version'
-export const CURRENT_DATA_VERSION=4
+export const CURRENT_DATA_VERSION=5
 export const LEGACY_DRAFT_KEY='waseshibu-math-exam-drafts'
 export const CURRENT_DRAFT_KEY='waseshibu-math-exam-drafts-v2'
 export const PREP_STORAGE_KEY='waseshibu-math-prep-check-v1'
 export const GUIDED_REVIEW_STORAGE_KEY='waseshibu-math-guided-review-v1'
 export const GUIDED_PROGRESS_STORAGE_KEY='waseshibu-math-guided-progress-v2'
+export const MIGRATION_BACKUP_STORAGE_KEY='waseshibu-math-migration-backup-v1'
 
 export type MigrationStorage=Pick<Storage,'getItem'|'setItem'|'removeItem'>
 const isObject=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)
@@ -83,6 +84,10 @@ export function migrateDataRecord(input:Record<string,unknown>,fromVersion:numbe
     if(!(GUIDED_PROGRESS_STORAGE_KEY in data))data[GUIDED_PROGRESS_STORAGE_KEY]=guidedProgressFromLegacy(data[GUIDED_REVIEW_STORAGE_KEY])
     version=4
   }
+  if(version<5){
+    // v5はUX・目標ロジックの更新。学習履歴の意味は変更せず、そのまま保持する。
+    version=5
+  }
   data[DATA_VERSION_KEY]=CURRENT_DATA_VERSION
   return {data,version}
 }
@@ -95,6 +100,10 @@ export function runDataMigrations(storage:MigrationStorage=localStorage){
   const source:Record<string,unknown>={}
   for(const key of keys){const raw=storage.getItem(key);if(raw===null)continue;try{source[key]=JSON.parse(raw)}catch{source[key]=raw}}
   const managedKeys=[...keys,DATA_VERSION_KEY],before=new Map(managedKeys.map(key=>[key,storage.getItem(key)]))
+  // migration前の生データを別キーへ退避する。成功前に旧データを削除しない。
+  const backupPayload={fromVersion:Number.isFinite(storedVersion)?storedVersion:0,createdAt:new Date().toISOString(),raw:Object.fromEntries([...before].filter(([,value])=>value!==null))}
+  try{storage.setItem(MIGRATION_BACKUP_STORAGE_KEY,JSON.stringify(backupPayload))}
+  catch(error){return {ok:false,fromVersion:storedVersion,toVersion:storedVersion,error:`更新前バックアップを保存できないため移行を中止しました：${error instanceof Error?error.message:'保存エラー'}`}}
   try{
     const migrated=migrateDataRecord(source,Number.isFinite(storedVersion)?storedVersion:0)
     for(const [key,value] of Object.entries(migrated.data))storage.setItem(key,JSON.stringify(value))

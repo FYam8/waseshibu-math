@@ -23,8 +23,8 @@ const focus=await loadModule('src/data/questionFocus.ts')
 const targetStrategy=await loadModule('src/targetStrategy.ts')
 const version=await loadModule('src/version.ts')
 
-assert.equal(version.APP_VERSION,'0.15.1')
-assert.equal(migration.CURRENT_DATA_VERSION,4)
+assert.equal(version.APP_VERSION,'0.16.0')
+assert.equal(migration.CURRENT_DATA_VERSION,5)
 assert.equal(guided.GUIDED_REVIEW_KEY,'waseshibu-math-guided-review-v1')
 assert.equal(guided.GUIDED_PROGRESS_KEY,'waseshibu-math-guided-progress-v2')
 assert.equal(guided.guidedSolutionCount(),160)
@@ -53,11 +53,12 @@ const v2Seed={
 }
 const v2=new MemoryStorage(v2Seed),migrated=migration.runDataMigrations(v2)
 assert.equal(migrated.ok,true)
-assert.equal(v2.getItem('waseshibu-math-data-version'),'4')
+assert.equal(v2.getItem('waseshibu-math-data-version'),'5')
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-attempts')),JSON.parse(v2Seed['waseshibu-math-attempts']))
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-exam-scores')),JSON.parse(v2Seed['waseshibu-math-exam-scores']))
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-guided-review-v1')),{})
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-guided-progress-v2')),{})
+assert.ok(v2.getItem('waseshibu-math-migration-backup-v1'))
 
 const merged=new MemoryStorage({'waseshibu-math-guided-review-v1':JSON.stringify({'2024-Q1-2':{questionId:'2024-Q1-2'}})})
 backup.restoreBackup(merged,parsed,'merge')
@@ -138,6 +139,7 @@ const strategyItems=[
 assert.deepEqual(['A','B','C'].filter(g=>targetStrategy.gradeInTarget(60,g)),['A'])
 assert.deepEqual(['A','B','C'].filter(g=>targetStrategy.gradeInTarget(70,g)),['A','B'])
 assert.deepEqual(['A','B','C'].filter(g=>targetStrategy.gradeInTarget(75,g)),['A','B','C'])
+assert.deepEqual([60,70,75].map(x=>targetStrategy.targetGoalLabel(x)),['A 60点','B 70点','C 75点'])
 assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTarget(60,'B'),targetStrategy.gradeInTarget(70,'B'),targetStrategy.gradeInTarget(75,'C')],[true,false,true,true])
 for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100)
 

@@ -8,7 +8,7 @@ import {
   recordGuidedStep,revealGuidedFinalAnswer,saveGuidedReview,updateGuidedProgress,type GuidedOutcome
 } from '../guidedReview'
 import { loadPreferences } from '../storage'
-import { gradeAdvice } from '../targetStrategy'
+import { gradeAdvice, targetGoalLabel } from '../targetStrategy'
 
 export default function GuidedReview(){
   const [params]=useSearchParams(),questionId=params.get('q')||''
@@ -63,7 +63,7 @@ export default function GuidedReview(){
   const remedyLink=`/remediate?topic=${encodeURIComponent(q.topic)}${remedySource}&q=${encodeURIComponent(q.id)}`
 
   return <>
-    <div className="page-head"><div><span className="eyebrow">GUIDED SOLUTION · TARGET {prefs.target}</span><h1>{q.year}年度 大問{q.major}（{q.subNo}）</h1><p className="muted">{q.topic}・優先度{q.grade}　{gradeAdvice(prefs.target,q.grade)}</p></div><Link className="button" to="/mistakes">間違い直しへ戻る</Link></div>
+    <div className="page-head"><div><span className="eyebrow">GUIDED SOLUTION · {targetGoalLabel(prefs.target)}</span><h1>{q.year}年度 大問{q.major}（{q.subNo}）</h1><p className="muted">{q.topic}・優先度{q.grade}　{gradeAdvice(prefs.target,q.grade)}</p></div><Link className="button" to="/mistakes">間違い直しへ戻る</Link></div>
     <div className="one-question-banner"><b>今はこの1問だけ</b><span>ほかの小問・ほかの正答は表示しません。</span><em>{guidedOutcomeLabel(mastery)}</em></div>
     <div className="guided-review-grid">
       <section className="card guided-problem"><div className="section-head"><div><span className="eyebrow">FOCUSED PROBLEM</span><h2>{q.title}</h2></div><b>（{q.subNo}）</b></div><FocusedQuestionView year={q.year} major={q.major} subIndex={q.subIndex} subCount={q.subCount} subNo={q.subNo} topic={q.topic}/></section>

@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { currentLearningPhase, latestExam, reinforcementComplete, routePhaseDone, sourceMistakeProgress } from '../learningRoute'
 import { loadAttempts, loadExamScores, loadPreferences, savePreferences } from '../storage'
 import { loadPrepState, runExamIntegrityCheck, savePrepState } from '../preflight'
-import { gradeInTarget, storedExamItems, strategyForStoredExam, targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
+import { buildTodayTasks } from '../dailyPlan'
+import { gradeInTarget, storedExamItems, strategyForStoredExam, targetGoalLabel, targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
 
 type DraftState={phase?:'solve'|'mark';answers?:Record<string,string>;seconds?:number;majorIndex?:number}
 function draftFor(year:number):DraftState|null{
@@ -20,69 +21,96 @@ function draftResume(){
 }
 
 const phases=[
+  {n:1,title:'2024年度で診断'},
   {n:2,title:'2024年度の弱点を直す'},
   {n:3,title:'2025年度で改善確認'},
   {n:4,title:'残った弱点を直す'},
   {n:5,title:'2026年度で仕上がり確認'},
-  {n:6,title:'2019〜2023年度の残りを演習'}
+  {n:6,title:'仕上げ・任意演習'}
 ]
 
 export default function Home(){
-  const [prefs,setPrefs]=useState(loadPreferences()),phase=currentLearningPhase(),scores=loadExamScores(),attempts=loadAttempts(),prep=loadPrepState(),integrity=runExamIntegrityCheck()
+  const [prefs,setPrefs]=useState(loadPreferences())
+  const phase=currentLearningPhase(),scores=loadExamScores(),attempts=loadAttempts(),prep=loadPrepState(),integrity=runExamIntegrityCheck()
   const latest=scores[0],exam24=latestExam(2024),exam25=latestExam(2025),exam26=latestExam(2026)
   const draft24=draftFor(2024),draft25=draftFor(2025),draft26=draftFor(2026)
   const source24=exam24?sourceMistakeProgress(2024,prefs.target):null,source25=exam25?sourceMistakeProgress(2025,prefs.target):null
-  const weak24=exam24?weakFieldsForStoredExam(prefs.target,exam24,attempts):[],weak25=exam25?weakFieldsForStoredExam(prefs.target,exam25,attempts):[]
-  const items24=exam24?storedExamItems(exam24,attempts):[]
-  const deferred24=items24.filter(item=>item.status!=='correct'&&!gradeInTarget(prefs.target,item.grade)).length
+  const weakLatest=latest?weakFieldsForStoredExam(prefs.target,latest,attempts):[]
   const targetStrategy=latest?strategyForStoredExam(prefs.target,latest,attempts):null
+  const todayTasks=useMemo(()=>buildTodayTasks(prefs.target),[prefs.target])
   const prepInProgress=!prep.completed&&!prep.skipped&&(prep.index>0||Object.keys(prep.answers).length>0)
   const resume=draftResume()||(prepInProgress?{to:'/setup-check',label:`準備問題 ${prep.index+1}/5 から続ける`}:null)
   const setTarget=(target:60|70|75)=>{const next={...prefs,target};setPrefs(next);savePreferences(next)}
 
   const phaseAction=(n:number)=>{
     if(n===1){
-      if(hasDraftProgress(draft24))return draft24?.phase==='mark'?{to:'/past-papers?year=2024&review=1',label:'採点を続ける'}:{to:'/past-papers?year=2024',label:exam24?'診断更新の続きを解く':'続きから解く'}
-      if(!exam24)return {to:'/past-papers?year=2024',label:'診断テストを始める'}
-      if(source24&&source24.remainingIds.length)return {to:'/mistakes?year=2024',label:`優先${source24.remainingIds.length}問の間違い直しを始める`}
-      return {to:'/report',label:'診断結果を見る'}
+      if(hasDraftProgress(draft24))return draft24?.phase==='mark'?{to:'/past-papers?year=2024&review=1',label:'採点を続ける'}:{to:'/past-papers?year=2024',label:'続きを解く'}
+      return {to:'/past-papers?year=2024',label:exam24?'診断を更新する':'2024年度を解く'}
     }
     if(n===2){
-      if(!exam24)return {to:'/past-papers?year=2024',label:'2024年度の診断から'}
-      if(source24&&source24.remainingIds.length)return {to:'/mistakes?year=2024',label:`元の間違い${source24.remainingIds.length}問を直す`}
-      return {to:'/reinforce?source=2024',label:reinforcementComplete(2024)?'補強を復習する':'旧年度＋類題へ進む'}
+      if(!exam24)return phaseAction(1)
+      if(source24?.remainingIds.length)return {to:'/mistakes?year=2024',label:`元の誤答 ${source24.remainingIds.length}問を直す`}
+      return {to:'/reinforce?source=2024',label:reinforcementComplete(2024)?'補強を復習する':'類題・旧年度で補強する'}
     }
     if(n===3){
       if(!reinforcementComplete(2024))return phaseAction(2)
-      if(hasDraftProgress(draft25))return draft25?.phase==='mark'?{to:'/past-papers?year=2025&review=1',label:'採点を続ける'}:{to:'/past-papers?year=2025',label:'続きから解く'}
-      return {to:'/past-papers?year=2025',label:exam25?'診断を更新する':'2025年度を解く'}
+      if(hasDraftProgress(draft25))return draft25?.phase==='mark'?{to:'/past-papers?year=2025&review=1',label:'採点を続ける'}:{to:'/past-papers?year=2025',label:'続きを解く'}
+      return {to:'/past-papers?year=2025',label:exam25?'2025年度を再確認':'2025年度を解く'}
     }
     if(n===4){
-      if(!exam25)return {to:'/past-papers?year=2025',label:'2025年度の確認から'}
-      if(source25&&source25.remainingIds.length)return {to:'/mistakes?year=2025',label:`元の間違い${source25.remainingIds.length}問を直す`}
-      return {to:'/reinforce?source=2025',label:reinforcementComplete(2025)?'補強を復習する':'旧年度＋類題へ進む'}
+      if(!exam25)return phaseAction(3)
+      if(source25?.remainingIds.length)return {to:'/mistakes?year=2025',label:`元の誤答 ${source25.remainingIds.length}問を直す`}
+      return {to:'/reinforce?source=2025',label:reinforcementComplete(2025)?'補強を復習する':'類題・旧年度で補強する'}
     }
     if(n===5){
       if(!reinforcementComplete(2025))return phaseAction(4)
-      if(hasDraftProgress(draft26))return draft26?.phase==='mark'?{to:'/past-papers?year=2026&review=1',label:'採点を続ける'}:{to:'/past-papers?year=2026',label:'続きから解く'}
-      return {to:'/past-papers?year=2026',label:exam26?'仕上がりを再確認する':'2026年度を解く'}
+      if(hasDraftProgress(draft26))return draft26?.phase==='mark'?{to:'/past-papers?year=2026&review=1',label:'採点を続ける'}:{to:'/past-papers?year=2026',label:'続きを解く'}
+      return {to:'/past-papers?year=2026',label:exam26?'2026年度を再確認':'2026年度を解く'}
     }
-    return exam26?{to:'/years',label:'残り年度を演習する'}:{to:'/past-papers?year=2026',label:'2026年度の確認から'}
+    return {to:'/years',label:'任意で残り年度を演習する'}
   }
 
-  const primary=resume||(!prep.completed&&!prep.skipped?{to:'/setup-check',label:'準備5問から始める'}:phaseAction(phase))
-  const diagDone=!!exam24,diagUpdating=diagDone&&hasDraftProgress(draft24)
-  const diagStatus=!diagDone?(hasDraftProgress(draft24)?draft24?.phase==='mark'?'解答済み・採点待ち':'途中':'未着手'):diagUpdating?'診断更新中':'診断完了'
+  const progression=resume||(!prep.completed&&!prep.skipped?{to:'/setup-check',label:'準備5問を確認する'}:phase<6?phaseAction(phase):null)
+  const taskList=todayTasks.length?todayTasks:progression?[{id:'progression',kind:'past-paper' as const,title:progression.label,detail:'学習サイクルの次の1ステップ',to:progression.to,priority:1}]:[]
+  const latestItems=latest?storedExamItems(latest,attempts):[]
+  const q1Miss=latestItems.filter(x=>x.major===1&&x.status!=='correct'&&gradeInTarget(prefs.target,x.grade)).length
 
   return <>
-    <section className={`hero card route-hero ${integrity.ok?'':'integrity-failed'}`}><div><span className="eyebrow">PASS ROUTE · 60–75 POINTS</span><h1>{resume?'今日も、続きから少しずつ。':'次にやることは、1つだけ。'}</h1><p>2024年度で診断し、まず元の間違いを直してから旧年度問題・類題へ進み、2025・2026年度で改善を確認します。</p><div className="integrity-line">{integrity.ok?<><b>✓ 採点データ確認済み</b><span>全{integrity.answerCount}問・2024年度{integrity.year2024Count}問</span></>:<><b>採点データに問題があります</b><span>{integrity.issues[0]}</span></>}</div><div className="target-row"><span>学習目標</span>{[60,70,75].map(t=><button key={t} className={`target-chip ${prefs.target===t?'selected':''}`} onClick={()=>setTarget(t as 60|70|75)}>{t}点</button>)}</div><div className="target-impact"><b>{prefs.target}点方針</b><span>{targetProfile(prefs.target).summary}</span>{targetStrategy&&<em>{targetStrategy.reached?'目標到達済み':`最新得点からあと${targetStrategy.gap}点`}</em>}</div><div className="actions">{integrity.ok&&<Link className="button primary next-action" to={primary.to}>{primary.label}</Link>}{integrity.ok&&!prep.completed&&!prep.skipped&&<Link className="button" to="/past-papers?year=2024" onClick={()=>savePrepState({...prep,skipped:true})}>準備を後回しにして2024年度へ</Link>}<a className="button" href="#step-selector">学習フェーズを見る</a></div></div><div className="score-orb"><strong>{latest?.score??'--'}</strong><span>{latest?`${latest.year}年度 実得点`:'診断前'}</span></div></section>
+    <section className={`card today-hero ${integrity.ok?'':'integrity-failed'}`}>
+      <div className="today-head">
+        <div><span className="eyebrow">TODAY · MAX 5 TASKS</span><h1>今日やること</h1><p>上から順に進めれば大丈夫です。弱点が多くても、今日の必須課題は最大5件に絞ります。</p></div>
+        <div className="goal-block"><span>学習目標</span><strong>{targetGoalLabel(prefs.target)}</strong><small>目標と現在得点は別に管理</small></div>
+      </div>
+      <div className="target-row goal-selector"><span>目標を変更</span>{([60,70,75] as const).map((t,i)=><button key={t} className={`target-chip ${prefs.target===t?'selected':''}`} onClick={()=>setTarget(t)}>{String.fromCharCode(65+i)} {t}点</button>)}</div>
+      {!integrity.ok?<div className="notice-box"><b>採点データを確認してください。</b><span>{integrity.issues[0]}</span></div>:taskList.length?
+        <div className="today-list">{taskList.map((task,i)=><article key={task.id}><span>{i+1}</span><div><b>{task.title}</b><small>{task.detail}</small></div><Link className={i===0?'button primary':'button'} to={task.to}>{i===0?'今これをやる':'開く'}</Link></article>)}</div>
+        :<div className="today-complete"><b>✓ 今日の数学は完了</b><p>必須課題はありません。追加したい場合だけ残り年度を確認してください。</p><Link className="button" to="/years">もう少し練習する</Link></div>}
+    </section>
 
-    <section className="card learning-route" id="step-selector"><div className="section-head"><div><span className="eyebrow">PREPARATION + 6 LEARNING PHASES</span><h2>同じ画面へ行く重複ステップをなくしました</h2></div><b>推奨 PHASE {phase}/6</b></div>
-      <div className="route-grid route-grid-unified"><article className={`${prep.completed?'done':''} ${!prep.completed&&!prep.skipped?'active':''}`}><span>{prep.completed?'✓':'準'}</span><div><b>入力・自動採点チェック5問</b><small>{prep.completed?'完了':prep.skipped?'後回し':'最初に推奨'}</small></div><Link to="/setup-check">{prepInProgress?'続き':'開く'}</Link></article>
-        <article className={`diagnosis-route-card ${diagDone?'done':''} ${phase===1&&(prep.completed||prep.skipped)?'active':''}`}><span>{diagDone?'✓':'1'}</span><div className="diagnosis-route-main"><b>2024年度 診断テスト</b><small>{diagStatus}</small>{exam24&&<div className="diagnosis-summary"><strong>{exam24.score}<em>/100点</em></strong><span>{prefs.target}点目標：優先要復習 {source24?.remainingIds.length||0}問</span>{deferred24>0&&<span>B・C等の目標外 {deferred24}問は後回し</span>}{weak24.length>0&&<span>弱点：{weak24.join(' / ')}</span>}</div>}{diagUpdating&&<p className="route-warning-text">新しい診断を途中まで進めています。完了するまでは現在の診断結果も保持されます。</p>}{exam24&&!diagUpdating&&<p className="route-warning-text">「診断を更新」して再採点すると、以後の弱点補強は新しい結果が基準になります。過去の得点・履歴は削除しません。</p>}<div className="route-card-actions"><Link className="button primary" to={phaseAction(1).to}>{phaseAction(1).label}</Link>{exam24&&<Link className="button" to="/report">弱点分析を見る</Link>}{exam24&&!diagUpdating&&<Link className="button ghost" to="/past-papers?year=2024">診断を更新してもう一度受ける</Link>}</div></div></article>
-        {phases.map(item=>{const done=routePhaseDone(item.n),active=item.n===phase&&(prep.completed||prep.skipped),action=phaseAction(item.n);let detail='';if(item.n===2)detail=!exam24?'2024年度の診断が必要':source24?.remainingIds.length?`元の誤答 ${source24.remainingIds.length}問 → 旧年度問題 → 類題4問`:`元の誤答確認済み。旧年度問題・類題へ`;if(item.n===3)detail=exam25?`${exam25.score}点・改善確認済み`:'2024補強後に実施';if(item.n===4)detail=!exam25?'2025年度の確認が必要':source25?.remainingIds.length?`元の誤答 ${source25.remainingIds.length}問 → 旧年度問題 → 類題4問`:`元の誤答確認済み。旧年度問題・類題へ`;if(item.n===5)detail=exam26?`${exam26.score}点・仕上がり確認済み`:'2025補強後に実施';if(item.n===6)detail='仕上げ後に未使用年度・未使用問題を回す';return <article key={item.n} className={`${done?'done':''} ${active?'active':''}`}><span>{done?'✓':item.n}</span><div><b>{item.title}</b><small>{done?'完了':active?'現在の推奨':'次の段階'}</small>{detail&&<em className="route-detail">{detail}</em>}{item.n===2&&exam24&&weak24.length>0&&<em className="route-detail">対象：{weak24.join(' / ')}</em>}{item.n===4&&exam25&&weak25.length>0&&<em className="route-detail">対象：{weak25.join(' / ')}</em>}</div><Link to={action.to}>{action.label}</Link></article>})}
-      </div><p className="muted route-help">診断・採点・弱点抽出は1つの診断フェーズに統合しました。採点後は、目標点に含まれる元の間違いを先に直してから補強へ進みます。</p></section>
+    <section className="grid three status-grid">
+      <article className="card stat"><b>{latest?.score??'--'}</b><span>{latest?`${latest.year}年度の現在得点`:'過去問未実施'}</span></article>
+      <article className="card stat"><b>{targetGoalLabel(prefs.target)}</b><span>現在の学習目標</span></article>
+      <article className="card stat"><b>{q1Miss}</b><span>最新年度・大問1の優先失点</span></article>
+    </section>
 
-    <section className="grid three"><article className="card stat"><b>160問</b><span>内部検査済みの全小問</span></article><article className="card stat"><b>18分野</b><span>各分野の類題4問</span></article><article className="card stat"><b>自動保存</b><span>入力ごとに途中状態を保存</span></article></section>
+    <section className="card current-status">
+      <div className="section-head"><div><span className="eyebrow">CURRENT STATUS</span><h2>現在の到達状況</h2></div>{targetStrategy&&<b>{targetStrategy.reached?'目標到達':'あと'+targetStrategy.gap+'点'}</b>}</div>
+      <p>{targetProfile(prefs.target).summary}</p>
+      {targetStrategy&&<div className="target-impact"><b>{targetGoalLabel(prefs.target)}方針</b><span>{targetStrategy.summary}</span></div>}
+      <p className="muted">A＝60点、B＝70点、C＝75点。目標を変えても、これまでの得点・正誤・GuidedSolution・類題履歴は消しません。</p>
+    </section>
+
+    <section className="card weakness-direct">
+      <div className="section-head"><div><span className="eyebrow">WEAKNESS → ACTION</span><h2>いま直す弱点</h2></div><Link to="/mistakes">すべて見る</Link></div>
+      {targetStrategy?.candidates.length?<div className="weak-action-grid">{targetStrategy.candidates.map(c=><article key={c.key}><div><span className={`grade grade-${c.grade}`}>{c.grade}</span><b>{c.label}</b><small>{c.reason}・約{c.points}点</small></div><Link className="button primary" to={`/guided-review?q=${encodeURIComponent(c.key)}`}>この1問を直す</Link></article>)}</div>:weakLatest.length?<div className="weak-action-grid">{weakLatest.map(field=><article key={field}><div><b>{field}</b><small>最新過去問から抽出した目標範囲の弱点</small></div><Link className="button primary" to={`/remediate?topic=${encodeURIComponent(field)}`}>克服問題へ</Link></article>)}</div>:<p className="muted">目標範囲の優先弱点はまだありません。過去問を採点するとここに直接表示します。</p>}
+    </section>
+
+    <section className="card learning-route compact-route">
+      <div className="section-head"><div><span className="eyebrow">PAST PAPER CYCLE</span><h2>過去問 → 弱点 → 類題 → 別年度</h2></div><b>PHASE {phase}/6</b></div>
+      <div className="compact-phase-list">{phases.map(item=>{const done=routePhaseDone(item.n),active=item.n===phase,action=phaseAction(item.n);return <article key={item.n} className={`${done?'done':''} ${active?'active':''}`}><span>{done?'✓':item.n}</span><div><b>{item.title}</b><small>{active?'現在の推奨':done?'完了':'次の段階'}</small></div>{active&&<Link to={action.to}>{action.label}</Link>}</article>})}</div>
+      <p className="muted">問題ランクA/B/Cと、本番中の「今解く／後回し／最後に戻る」は別の情報として扱います。</p>
+    </section>
+
+    <section className="card home-secondary"><div><h2>学習履歴・データ</h2><p className="muted">今日の課題より下に配置しています。アップデート時も既存履歴を非破壊で移行します。</p></div><div className="actions"><Link className="button" to="/report">学習履歴を見る</Link><Link className="button" to="/data">バックアップ・入出力</Link><Link className="button" to="/years">過去問一覧</Link></div></section>
   </>
 }

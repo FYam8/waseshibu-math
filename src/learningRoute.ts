@@ -3,7 +3,7 @@ import type { ExamScore, MajorQuestion } from './types'
 import { classifyRemediationField } from './data/remediation'
 import { loadAttempts, loadExamScores, loadPreferences } from './storage'
 import { canWriteLearningData, notifyWriteBlocked } from './version'
-import { loadGuidedReviews } from './guidedReview'
+import { loadGuidedProgressState, loadGuidedReviews } from './guidedReview'
 import { gradeInTarget, storedExamItems, weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
 
 const ROUTE_KEY='waseshibu-math-learning-route-v1'
@@ -67,11 +67,14 @@ export function latestExam(year:number){return loadExamScores().find(x=>x.year==
 export function sourceMistakeProgress(year:number,target:TargetScore=loadPreferences().target):SourceMistakeProgress{
   const exam=latestExam(year)
   if(!exam)return {requiredIds:[],completedIds:[],remainingIds:[],complete:false}
-  const attempts=loadAttempts(),reviews=loadGuidedReviews()
+  const attempts=loadAttempts(),reviews=loadGuidedReviews(),progress=loadGuidedProgressState()
   const requiredIds=storedExamItems(exam,attempts).filter(item=>item.status!=='correct'&&gradeInTarget(target,item.grade)).map(item=>item.key)
   const completedIds=requiredIds.filter(id=>{
-    const review=reviews[id]
-    return !!review&&review.updatedAt>=exam.at&&(review.outcome==='independent'||review.outcome==='reproduced')
+    const current=progress[id]
+    if(current&&current.updatedAt>=exam.at&&['reproduced','independent','consolidated'].includes(current.mastery))return true
+    // v0.15以前の学習履歴も完了判定に残す。
+    const legacy=reviews[id]
+    return !!legacy&&legacy.updatedAt>=exam.at&&(legacy.outcome==='independent'||legacy.outcome==='reproduced')
   })
   const completed=new Set(completedIds),remainingIds=requiredIds.filter(id=>!completed.has(id))
   return {requiredIds,completedIds,remainingIds,complete:remainingIds.length===0}
