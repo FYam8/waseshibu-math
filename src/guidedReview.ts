@@ -160,6 +160,18 @@ export function recordGuidedFinal(questionId:string,input:string,mode:'guided'|'
   updateGuidedProgress(questionId,{finalAnswer:input,reproductionAttempts,reproductionSucceeded,independentSucceeded,mastery,practiceStreak:correct?current.practiceStreak:0},storage)
   return {correct,mastery}
 }
+
+export function effectivePracticeStreak(questionId:string,latestSourceAttemptAt?:string,storage:Pick<Storage,'getItem'|'setItem'>=localStorage){
+  const current=loadGuidedProgress(questionId,storage)
+  if(latestSourceAttemptAt&&current.updatedAt<latestSourceAttemptAt)return 0
+  return current.practiceStreak
+}
+export function resetPracticeIfSourceAttemptIsNewer(questionId:string,latestSourceAttemptAt?:string,storage:Pick<Storage,'getItem'|'setItem'>=localStorage){
+  const current=loadGuidedProgress(questionId,storage)
+  if(!latestSourceAttemptAt||current.updatedAt>=latestSourceAttemptAt)return current
+  return updateGuidedProgress(questionId,{practiceStreak:0,mastery:'attempted'},storage)
+}
+
 export function recordPracticeStreak(questionId:string,correct:boolean,storage:Pick<Storage,'getItem'|'setItem'>=localStorage){
   const current=loadGuidedProgress(questionId,storage),practiceStreak=correct?Math.min(4,current.practiceStreak+1):0
   const mastery=practiceStreak>=4?'consolidated':correct?current.mastery:(current.independentSucceeded?'independent':current.reproductionSucceeded?'reproduced':'attempted')

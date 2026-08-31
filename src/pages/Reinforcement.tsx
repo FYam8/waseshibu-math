@@ -15,6 +15,7 @@ export default function Reinforcement(){
   const [version,setVersion]=useState(0)
   const [open,setOpen]=useState<string|null>(null)
   const [showAnswer,setShowAnswer]=useState<Record<string,boolean>>({})
+  const [needsReproduction,setNeedsReproduction]=useState<Record<string,boolean>>({})
   const [answers,setAnswers]=useState<Record<string,string>>({})
   const [results,setResults]=useState<Record<string,boolean>>({})
   const target=loadPreferences().target
@@ -28,7 +29,8 @@ export default function Reinforcement(){
   const nextAfterDone=done?nextLearningAction(target):null
   const sourceReviewRequired=fresh.requiresSourceReview!==false
   const mark=(id:string,topic:string,correct:boolean)=>{
-    markOldQuestionCompleted(source,id)
+    // 間違えた時点では「補強完了」にしない。正解して初めて完了扱いにする。
+    if(correct)markOldQuestionCompleted(source,id)
     saveAttempt({id:createRecordId(`target-${id}`),questionId:`target-${id}`,mode:'multi',topic,status:correct?'correct':'wrong',mistakeTag:correct?undefined:'解法未習得',answer:answers[id]||'',at:new Date().toISOString()})
     setVersion(v=>v+1)
   }
@@ -55,7 +57,20 @@ export default function Reinforcement(){
       const actualDone=ids.every(id=>completed.has(id))
       const mastered=attempts.some(a=>a.questionId.startsWith('mastery-')&&a.status==='correct'&&a.at>exam.at&&classifyRemediationField(a.topic).title===fieldName)
       return <section className="card reinforce-field" key={fieldName}><div className="section-head"><div><span className="field-number">{fieldIndex+1}</span><h2>{fieldName}</h2></div><b>{actualDone?'過去問済み':'過去問演習中'} / {mastered?'類題済み':'類題未完了'}</b></div><p className="muted">この診断で予約した問題だけを表示します。同じ問題を別の補強で重複使用しません。</p>
-        <div className="target-question-list">{items.length===0?<p className="notice-box">この分野の未使用問題は残っていません。類題4問へ進んでください。</p>:items.map(item=>{const isOpen=open===item.id,isDone=completed.has(item.id),graded=item.id in results,meta=guidedQuestion(item.id),expected=getExamAnswer(item.id);return <article className={`target-question ${isDone?'done':''}`} key={item.id}><button className="target-question-head" onClick={()=>setOpen(isOpen?null:item.id)}><span>{isDone?'✓':'○'}</span><b>{item.year}年度{yearRole(item.year)==='different-structure'?'（構成が異なる年度）':''} 大問{item.major}（{item.subNo}）</b><small>{source}年度の「{fieldName}」補強・{item.topic}</small><em>{isOpen?'閉じる':isDone?'記録済み・復習':'1問だけ解く'}</em></button>{isOpen&&<div className="target-workspace one-question-reinforce"><div>{meta?<FocusedQuestionView year={meta.year} major={meta.major} subIndex={meta.subIndex} subCount={meta.subCount} subNo={meta.subNo} topic={meta.topic}/>:<div className="notice-box">この小問を特定できません。間違い直し画面から開き直してください。</div>}</div><aside><div className="reinforce-focus-note"><b>表示・正答はこの1問だけ</b><span>別小問や公式解答ページ全体は表示しません。</span></div><label>（{item.subNo}）の答え<input value={answers[item.id]||''} maxLength={120} onChange={e=>setAnswers(v=>({...v,[item.id]:cleanAnswerInput(e.target.value)}))} placeholder="答えを入力（全角可）" autoCapitalize="off" autoCorrect="off" spellCheck={false}/></label>{graded&&<div className={`auto-grade ${results[item.id]?'correct':'wrong'}`}><b>{results[item.id]?'○ 正解':'× 不正解'}</b><span>この小問の正答：{expected?.answer||'正答データなし'}</span></div>}<button className="button primary" disabled={isDone||!(answers[item.id]||'').trim()} onClick={()=>autoMark(item.id,item.topic)}>{isDone?'採点済み':'この1問を自動採点'}</button><button className="button" onClick={()=>setShowAnswer(v=>({...v,[item.id]:!v[item.id]}))}>{showAnswer[item.id]?'正答を隠す':'この小問の正答だけ見る'}</button>{showAnswer[item.id]&&<div className="single-answer-only"><span>この小問の正答</span><strong>{expected?.answer||'正答データなし'}</strong><small>正答を見ただけでは習得扱いになりません。隠してからもう一度解いてください。</small></div>}<Link className="button" to={`/guided-review?q=${encodeURIComponent(item.id)}`}>この1問をステップで理解する</Link><p>{isDone?'この問題は採点・記録済みです。':'答えを入力するとこの小問だけを自動採点します。全角数字・記号も使えます。'}</p></aside></div>}</article>})}</div>
+        <div className="target-question-list">{items.length===0?<p className="notice-box">この分野の未使用問題は残っていません。類題4問へ進んでください。</p>:items.map(item=>{const isOpen=open===item.id,isDone=completed.has(item.id),graded=item.id in results,meta=guidedQuestion(item.id),expected=getExamAnswer(item.id);return <article className={`target-question ${isDone?'done':''}`} key={item.id}><button className="target-question-head" onClick={()=>setOpen(isOpen?null:item.id)}><span>{isDone?'✓':'○'}</span><b>{item.year}年度{yearRole(item.year)==='different-structure'?'（構成が異なる年度）':''} 大問{item.major}（{item.subNo}）</b><small>{source}年度の「{fieldName}」補強・{item.topic}</small><em>{isOpen?'閉じる':isDone?'記録済み・復習':'1問だけ解く'}</em></button>{isOpen&&<div className="target-workspace one-question-reinforce"><div>{meta?<FocusedQuestionView year={meta.year} major={meta.major} subIndex={meta.subIndex} subCount={meta.subCount} subNo={meta.subNo} topic={meta.topic}/>:<div className="notice-box">この小問を特定できません。間違い直し画面から開き直してください。</div>}</div><aside><div className="reinforce-focus-note"><b>表示・正答はこの1問だけ</b><span>別小問や公式解答ページ全体は表示しません。</span></div><label>（{item.subNo}）の答え<input value={answers[item.id]||''} maxLength={120} onChange={e=>setAnswers(v=>({...v,[item.id]:cleanAnswerInput(e.target.value)}))} placeholder="答えを入力（全角可）" autoCapitalize="off" autoCorrect="off" spellCheck={false}/></label>{graded&&<div className={`auto-grade ${results[item.id]?'correct':'wrong'}`}><b>{results[item.id]?'○ 正解':'× 不正解'}</b><span>この小問の正答：{expected?.answer||'正答データなし'}</span></div>}<button className="button primary" disabled={isDone||showAnswer[item.id]||!(answers[item.id]||'').trim()} onClick={()=>autoMark(item.id,item.topic)}>{isDone?'採点済み':showAnswer[item.id]?'正答を隠してから再現':'この1問を自動採点'}</button><button className="button" onClick={()=>{
+          const currentlyShown=!!showAnswer[item.id]
+          if(!currentlyShown){
+            setNeedsReproduction(v=>({...v,[item.id]:true}))
+            setShowAnswer(v=>({...v,[item.id]:true}))
+          }else{
+            // 正答を見た後は、そのまま写して完了できないよう入力と直前採点をリセットする。
+            setShowAnswer(v=>({...v,[item.id]:false}))
+            if(needsReproduction[item.id]){
+              setAnswers(v=>({...v,[item.id]:''}))
+              setResults(v=>{const next={...v};delete next[item.id];return next})
+            }
+          }
+        }}>{showAnswer[item.id]?'正答を隠して自力で再現':'この小問の正答だけ見る'}</button>{showAnswer[item.id]&&<div className="single-answer-only"><span>この小問の正答</span><strong>{expected?.answer||'正答データなし'}</strong><small>正答を見ただけでは完了になりません。「正答を隠して自力で再現」を押すと入力をリセットし、もう一度正解したときだけ完了になります。</small></div>}<Link className="button" to={`/guided-review?q=${encodeURIComponent(item.id)}`}>この1問をステップで理解する</Link><p>{isDone?'この問題は採点・記録済みです。':'答えを入力するとこの小問だけを自動採点します。全角数字・記号も使えます。'}</p></aside></div>}</article>})}</div>
         <div className="reinforce-next"><div><b>過去問 {ids.filter(id=>completed.has(id)).length}/{ids.length}</b><span> → </span><b>類題 {mastered?'4/4':'0〜3/4'}</b></div><Link className={`button ${actualDone?'primary':'disabled'}`} aria-disabled={!actualDone} onClick={e=>{if(!actualDone)e.preventDefault()}} to={`/remediate?topic=${encodeURIComponent(fieldName)}&source=${source}`}>{mastered?'類題4問をもう一度':'類題4問へ進む'}</Link></div>
       </section>})}</div>
     <section className={`card route-complete ${done?'done':''}`}><h2>{done?'補強が完了しました':source===2026?'仕上げ補強を完了します':'次の確認は補強完了後に解放'}</h2><p>{done?`次の推奨は「${nextAfterDone?.label||'ホームで進捗を確認'}」です。未露出の確認年度が残っている場合は、そちらを優先します。`:'元の未解決問題確認、各分野の該当過去問、類題4問連続正解を順に完了します。'}</p>{done&&nextAfterDone?<Link className="button primary" to={nextAfterDone.to}>{nextAfterDone.label}</Link>:<Link className="button" to="/">ホームで進捗を見る</Link>}</section>
