@@ -2,7 +2,9 @@ import questions from './data/questions.json'
 import type { MajorQuestion } from './types'
 import { loadAttempts } from './storage'
 import { loadGuidedProgressState, type GuidedProgressState } from './guidedReview'
-import { gradeInTarget, targetGoalLabel, type TargetScore } from './targetStrategy'
+import { classifyRemediationField } from './data/remediation'
+import { latestExam, loadLearningRoute } from './learningRoute'
+import { gradeInTarget, storedExamItems, targetGoalLabel, weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
 
 export type GoalDayEstimate={
   target:TargetScore
@@ -17,8 +19,11 @@ export type GoalDayEstimate={
 const majors=questions.questions as MajorQuestion[]
 const questionMeta=majors.flatMap(major=>major.subquestions.map(sub=>({
   id:`${major.id}-${sub.no}`,
+  year:major.year,
+  topic:sub.topic,
   grade:sub.grade
 })))
+const questionById=new Map(questionMeta.map(q=>[q.id,q]))
 
 export const DEFAULT_DAILY_TASK_CAPACITY=10
 
@@ -33,19 +38,11 @@ function estimateUnitsForQuestion(
   const p=progress[questionId]
   const attemptIsNewer=!!latestAttempt&&(!p||latestAttempt.at>p.updatedAt)
 
-  // 最新の過去問でヒントなし正解できていれば、その時点では追加必須課題なし。
   if(attemptIsNewer&&latestAttempt?.status==='correct')return 0
-
-  // 克服後に再び誤答した場合は「直し + 類題確認」の2学習単位へ戻す。
   if(attemptIsNewer&&latestAttempt?.status!=='correct')return 2
 
-  if(!p){
-    // 未着手はまず過去問・確認問題で1回出会う。
-    return 1
-  }
-
+  if(!p)return 1
   if(p.mastery==='consolidated'||p.mastery==='independent'){
-    // 7日以上空いた場合だけ忘却防止の1単位を見込む。
     const age=now.getTime()-Date.parse(p.updatedAt||'')
     return Number.isFinite(age)&&age>=7*24*60*60*1000?1:0
   }
@@ -54,24 +51,76 @@ function estimateUnitsForQuestion(
   return 1
 }
 
-export function buildGoalDayEstimates(
-  now=new Date(),
-  dailyCapacity=DEFAULT_DAILY_TASK_CAPACITY,
-):GoalDayEstimate[]{
-  const progress=loadGuidedProgressState()
-  const attempts=loadAttempts()
-  const latestByQuestion=new Map<string,MinimalAttempt>()
-
-  // loadAttempts は新しい順。最初に見つかった過去問記録を最新として使う。
+function latestExamAttempts(){
+  const attempts=loadAttempts(),latestByQuestion=new Map<string,MinimalAttempt>()
   for(const attempt of attempts){
     if(!attempt.questionId.startsWith('exam-'))continue
     const id=attempt.questionId.slice(5)
     if(!latestByQuestion.has(id))latestByQuestion.set(id,attempt)
   }
+  return {attempts,latestByQuestion}
+}
+
+export function buildGoalDayEstimates(
+  now=new Date(),
+  dailyCapacity=DEFAULT_DAILY_TASK_CAPACITY,
+):GoalDayEstimate[]{
+  const progress=loadGuidedProgressState()
+  const {attempts,latestByQuestion}=latestExamAttempts()
+  const route=loadLearningRoute()
 
   return ([60,70,75] as TargetScore[]).map(target=>{
-    const included=questionMeta.filter(q=>gradeInTarget(target,q.grade))
-    const remainingUnits=included.reduce((sum,q)=>sum+estimateUnitsForQuestion(q.id,progress,latestByQuestion.get(q.id),now),0)
+    let remainingUnits=0
+    let includedQuestions=0
+
+    // 得点確認の主軸は2024〜2026。未実施年度はその年度の対象小問数を実学習量として数える。
+    // 実施済み年度は、正解済みを除き「解き直し・定着」に必要な分だけ数える。
+    for(const year of [2024,2025,2026]){
+      const exam=latestExam(year)
+      const targetQuestions=questionMeta.filter(q=>q.year===year&&gradeInTarget(target,q.grade))
+      if(!exam){
+        includedQuestions+=targetQuestions.length
+        remainingUnits+=targetQuestions.length
+        continue
+      }
+      const examItems=storedExamItems(exam,attempts)
+      const itemById=new Map(examItems.map(item=>[item.key,item]))
+      for(const q of targetQuestions){
+        const item=itemById.get(q.id)
+        if(!item)continue
+        includedQuestions++
+        if(item.status!=='correct')remainingUnits+=estimateUnitsForQuestion(q.id,progress,latestByQuestion.get(q.id),now)
+      }
+    }
+
+    // 2019〜2023年度は「全問題」を数えない。現在の補強計画に実際に選ばれた問題だけを数える。
+    // さらに、各弱点分野の類題4問も未完了なら学習単位として加える。
+    for(const sourceYear of [2024,2025,2026]){
+      const exam=latestExam(sourceYear)
+      if(!exam)continue
+      const plan=route.reinforcement[String(sourceYear)]
+      if(!plan||plan.examId!==exam.id||plan.target!==target)continue
+      const completed=new Set(plan.completedQuestionIds)
+      const fields=weakFieldsForStoredExam(target,exam,attempts)
+      for(const field of fields){
+        const selected=plan.fields[field]||[]
+        const remainingOld=selected.filter(id=>!completed.has(id))
+        remainingUnits+=remainingOld.length
+        includedQuestions+=remainingOld.length
+
+        const mastered=attempts.some(a=>a.questionId.startsWith('mastery-')&&a.status==='correct'&&a.at>exam.at&&classifyRemediationField(a.topic).title===field)
+        if(!mastered){
+          // 4問連続正解の類題セットを、実際の4学習単位として見込む。
+          const sourceIds=storedExamItems(exam,attempts)
+            .filter(item=>item.status!=='correct'&&gradeInTarget(target,item.grade))
+            .filter(item=>classifyRemediationField(item.topic).title===field)
+            .map(item=>item.key)
+          const streak=Math.max(0,...sourceIds.map(id=>progress[id]?.practiceStreak||0))
+          remainingUnits+=Math.max(0,4-Math.min(4,streak))
+        }
+      }
+    }
+
     const cap=Math.max(1,Math.floor(dailyCapacity))
     const days=remainingUnits===0?0:Math.ceil(remainingUnits/cap)
     return {
@@ -80,7 +129,7 @@ export function buildGoalDayEstimates(
       remainingUnits,
       days,
       complete:remainingUnits===0,
-      includedQuestions:included.length,
+      includedQuestions,
       dailyCapacity:cap
     }
   })

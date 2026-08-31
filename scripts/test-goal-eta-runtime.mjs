@@ -25,14 +25,14 @@ const require=createRequire(import.meta.url),eta=require(path.join(temp,'targetE
 
 const initial=eta.buildGoalDayEstimates(new Date('2026-08-31T09:00:00Z'))
 const compact=Object.fromEntries(initial.map(x=>[x.target,{days:x.days,questions:x.includedQuestions,units:x.remainingUnits}]))
-if(compact[60].questions!==88||compact[70].questions!==143||compact[75].questions!==160)throw new Error(`target inclusion mismatch ${JSON.stringify(compact)}`)
-if(compact[60].days!==9||compact[70].days!==15||compact[75].days!==16)throw new Error(`initial day estimate mismatch ${JSON.stringify(compact)}`)
+if(compact[60].questions!==36||compact[70].questions!==53||compact[75].questions!==60)throw new Error(`main-check target inclusion mismatch ${JSON.stringify(compact)}`)
+if(compact[60].days!==4||compact[70].days!==6||compact[75].days!==6)throw new Error(`initial day estimate mismatch ${JSON.stringify(compact)}`)
 
-// A問題を1問克服済みにすると、A/B/Cすべての残り単位が1つ減る。
+// 任意の2019年度を克服しても、補強計画に選ばれていない限り必須学習量は減らない。
 global.localStorage.setItem('waseshibu-math-guided-progress-v2',JSON.stringify({
   '2019-Q1-1':{questionId:'2019-Q1-1',stepProgress:{},finalAnswer:'',finalAnswerSeen:false,reproductionAttempts:1,reproductionSucceeded:true,independentSucceeded:true,practiceStreak:4,mastery:'consolidated',updatedAt:'2026-08-30T00:00:00.000Z'}
 }))
-const after=eta.buildGoalDayEstimates(new Date('2026-08-31T09:00:00Z'))
-for(const x of after)if(x.remainingUnits!==compact[x.target].units-1)throw new Error(`mastery did not reduce ${x.target} ETA units`)
+const afterOldOptional=eta.buildGoalDayEstimates(new Date('2026-08-31T09:00:00Z'))
+for(const x of afterOldOptional)if(x.remainingUnits!==compact[x.target].units)throw new Error(`optional old-year work incorrectly changed ${x.target} ETA units`)
 
-console.log('PASS: goal ETA runtime A=9日 / B=15日 / C=16日 (1日最大10課題の初期状態), progress-aware')
+console.log('PASS: goal ETA runtime counts 2024-2026 checkpoints + selected reinforcement only; unrelated old-year work is excluded')

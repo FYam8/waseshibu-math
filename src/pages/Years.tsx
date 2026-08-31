@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import questions from '../data/questions.json'
 import type { MajorQuestion } from '../types'
 import { Link } from 'react-router-dom'
-import { loadLearningRoute } from '../learningRoute'
+import { oldQuestionAssignmentState, yearRole } from '../learningRoute'
 import { loadPreferences } from '../storage'
 import { gradeAdvice, gradeInTarget, targetProfile } from '../targetStrategy'
 
@@ -17,10 +17,12 @@ export default function Years() {
   const years=[...new Set(data.map(q=>q.year))].sort()
   const [year,setYear]=useState(2026)
   const selected=useMemo(()=>data.filter(q=>q.year===year),[data,year])
-  const routeState=loadLearningRoute()
   const target=loadPreferences().target
   const selectedIds=selected.flatMap(q=>q.subquestions.map(s=>`${q.id}-${s.no}`))
-  const used=selectedIds.filter(id=>routeState.usedOldQuestionIds.includes(id)).length
+  const usage=selectedIds.map(id=>oldQuestionAssignmentState(id))
+  const reserved=usage.filter(x=>x==='reserved').length
+  const completed=usage.filter(x=>x==='completed').length
+  const exposed=usage.filter(x=>x==='exposed').length
 
   return (
     <>
@@ -37,7 +39,9 @@ export default function Years() {
 
       <div className="year-summary card">
         <strong>{year}年度</strong>
-        <span>{year>=2019&&year<=2023?`弱点補強に割当 ${used}/${selectedIds.length}小問・未割当 ${selectedIds.length-used}小問`:'大問1=40点 / 大問2〜5=各15点'}</span>
+        <span>{year>=2019&&year<=2023
+          ?`${yearRole(year)==='different-structure'?'構成が異なる年度・':''} 補強予約 ${reserved}問 / 補強完了 ${completed}問 / 任意演習などで露出 ${exposed}問`
+          :'得点確認の主軸年度'}</span>
       </div>
 
       <div className="actions library-actions"><Link className="button primary" to={`/past-papers?year=${year}`}>{year}年度を1年分解く</Link><Link className="button" to="/fields">18分野の類題を見る</Link></div>

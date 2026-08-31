@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useMemo, useState } from 'react'
-import { currentLearningPhase, firstUnresolvedSource, latestExam, nextLearningAction, resumeDraftAction, routePhaseDone } from '../learningRoute'
-import { loadAttempts, loadExamScores, loadPreferences, savePreferences } from '../storage'
+import { currentLearningPhase, firstUnresolvedSource, latestExam, latestMainCheckExam, nextLearningAction, coreResumeDraftAction, optionalOldYearDraftAction, routePhaseDone } from '../learningRoute'
+import { loadAttempts, loadPreferences, savePreferences } from '../storage'
 import { loadPrepState, runExamIntegrityCheck, savePrepState } from '../preflight'
 import { buildNextDayTasks, buildOptionalNextTask, buildTodayTasks, nextDayPlanSummary, startNextDayPlan, todayPlanSummary } from '../dailyPlan'
 import { gradeInTarget, storedExamItems, strategyForStoredExam, targetGoalLabel, targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
@@ -11,18 +11,18 @@ import { buildGoalDayEstimates } from '../targetEta'
 
 const phases=[
   {n:1,title:'2024年度で診断'},
-  {n:2,title:'2024年度の弱点を直す'},
-  {n:3,title:'2025年度で改善確認'},
-  {n:4,title:'残った弱点を直す'},
-  {n:5,title:'2026年度で仕上がり確認'},
-  {n:6,title:'2026年度の弱点補強・仕上げ'}
+  {n:2,title:'元問題を直す'},
+  {n:3,title:'類題・旧年度で補強'},
+  {n:4,title:'未使用年度で改善確認'},
+  {n:5,title:'残った弱点を再補強'},
+  {n:6,title:'仕上がり確認'}
 ]
 
 export default function Home(){
   const [prefs,setPrefs]=useState(loadPreferences())
   const [aheadTick,setAheadTick]=useState(0)
-  const phase=currentLearningPhase(),scores=loadExamScores(),attempts=loadAttempts(),prep=loadPrepState(),integrity=runExamIntegrityCheck()
-  const latest=scores[0]
+  const phase=currentLearningPhase(),attempts=loadAttempts(),prep=loadPrepState(),integrity=runExamIntegrityCheck()
+  const latest=latestMainCheckExam()
   const weakLatest=latest?weakFieldsForStoredExam(prefs.target,latest,attempts):[]
   const targetStrategy=latest?strategyForStoredExam(prefs.target,latest,attempts):null
   // 弱点カードは「最新年度」ではなく、共通学習ルート上で最初に残っている未解決年度を正本にする。
@@ -32,7 +32,8 @@ export default function Home(){
   const activeRecoveryCandidates=recoveryStrategy?.candidates.filter(c=>unresolved?.remainingIds.includes(c.key)).slice(0,3)||[]
   const goalDayEstimates=useMemo(()=>buildGoalDayEstimates(),[prefs.target])
   const prepInProgress=!prep.completed&&!prep.skipped&&(prep.index>0||Object.keys(prep.answers).length>0)
-  const resume=resumeDraftAction()||(prepInProgress?{to:'/setup-check',label:`準備問題 ${prep.index+1}/5 から続ける`}:null)
+  const optionalOldDraft=optionalOldYearDraftAction()
+  const resume=coreResumeDraftAction()||(prepInProgress?{to:'/setup-check',label:`準備問題 ${prep.index+1}/5 から続ける`}:null)
   const setTarget=(target:60|70|75)=>{const next={...prefs,target};setPrefs(next);savePreferences(next)}
 
   // 次アクションはHome内でフェーズ別に再計算せず、共通学習ルートを正本にする。
@@ -50,7 +51,7 @@ export default function Home(){
   const taskList=todayTasks
   const primaryQueueTask=taskList[0]||optionalNext||progressionTask
   const latestItems=latest?storedExamItems(latest,attempts):[]
-  const q1Miss=latestItems.filter(x=>x.major===1&&x.status!=='correct'&&gradeInTarget(prefs.target,x.grade)).length
+  const q1Miss=latest&&latestItems.length?latestItems.filter(x=>x.major===1&&x.status!=='correct'&&gradeInTarget(prefs.target,x.grade)).length:'--'
 
   return <>
     <section className={`card today-hero ${integrity.ok?'':'integrity-failed'}`}>
@@ -61,7 +62,7 @@ export default function Home(){
       <div className="target-row goal-selector"><span>目標を変更</span>{([60,70,75] as const).map((t,i)=><button key={t} className={`target-chip ${prefs.target===t?'selected':''}`} onClick={()=>setTarget(t)}>{String.fromCharCode(65+i)} {t}点</button>)}</div>
       <div className="goal-eta" aria-label="学習目標ごとの残り学習量">
         {goalDayEstimates.map(estimate=><article key={estimate.target} className={prefs.target===estimate.target?'selected':''}>
-          <div><b>{estimate.label}</b><small>{estimate.includedQuestions}問を対象</small></div>
+          <div><b>{estimate.label}</b><small>必要課題 {estimate.remainingUnits}単位</small></div>
           <strong>{estimate.complete?'学習量完了':`残り学習量 約${estimate.days}日`}</strong>
         </article>)}
       </div>
@@ -89,7 +90,7 @@ export default function Home(){
     </section>
 
     <section className="grid three status-grid">
-      <article className="card stat"><b>{latest?.score??'--'}</b><span>{latest?`${latest.year}年度の現在得点`:'過去問未実施'}</span></article>
+      <article className="card stat"><b>{latest?.score??'--'}</b><span>{latest?`${latest.year}年度の現在得点`:'過去問未実施'}</span>{latest&&<small>{latest.scoreValidity==='reference'?'参考スコア（初見比較には使わない）':latest.scoreValidity==='first-look'?'初見スコア':'記録スコア'}</small>}</article>
       <article className="card stat"><b>{targetGoalLabel(prefs.target)}</b><span>現在の学習目標</span></article>
       <article className="card stat"><b>{q1Miss}</b><span>最新年度・大問1の優先失点</span></article>
     </section>
@@ -98,7 +99,7 @@ export default function Home(){
       <div className="section-head"><div><span className="eyebrow">CURRENT STATUS</span><h2>現在の到達状況</h2></div>{targetStrategy&&<b>{targetStrategy.reached?'目標到達':'あと'+targetStrategy.gap+'点'}</b>}</div>
       <p>{targetProfile(prefs.target).summary}</p>
       {targetStrategy&&<div className="target-impact"><b>{targetGoalLabel(prefs.target)}方針</b><span>{targetStrategy.summary}</span></div>}
-      <p className="muted">A＝60点、B＝70点、C＝75点。目標を変えても、これまでの得点・正誤・GuidedSolution・類題履歴は消しません。</p>
+      <p className="muted">A＝60点、B＝70点、C＝75点。目標を変えても、これまでの得点・正誤・GuidedSolution・類題履歴は消しません。</p>{latest&&latestItems.length===0&&<p className="muted">この得点は得点記録のみです。弱点や大問1の失点数を出すには、過去問をアプリで小問別に採点してください。</p>}
     </section>
 
     <section className="card weakness-direct">
@@ -110,9 +111,10 @@ export default function Home(){
     </section>
 
     <section className="card learning-route compact-route">
-      <div className="section-head"><div><span className="eyebrow">PAST PAPER CYCLE</span><h2>過去問 → 弱点 → 類題 → 別年度</h2></div><b>PHASE {phase}/6</b></div>
+      <div className="section-head"><div><span className="eyebrow">PAST PAPER CYCLE</span><h2>診断 → 元問題修正 → 類題・旧年度補強 → 改善確認 → 再補強 → 仕上がり確認</h2></div><b>PHASE {phase}/6</b></div>
       <div className="compact-phase-list">{phases.map(item=>{const done=routePhaseDone(item.n),active=item.n===phase;return <article key={item.n} className={`${done?'done':''} ${active?'active':''}`}><span>{done?'✓':item.n}</span><div><b>{item.title}</b><small>{active?'現在の推奨':done?'完了':'次の段階'}</small></div>{active&&<Link to={primaryQueueTask?.to||progression.to}>{primaryQueueTask?.title||progression.label}</Link>}</article>})}</div>
-      <p className="muted">現在の推奨・弱点カード・今日の課題・先取りは同じ学習キューを基準にします。問題ランクA/B/Cと、本番中の「今解く／後回し／最後に戻る」は別の情報です。</p>
+      <p className="muted">2019〜2023年度は必要な小問だけを弱点補強に使います。2019年度は問題構成が他年度と異なるため、年度数ではなく実際の課題単位で学習量を管理します。補強で触れた年度の通し得点は「参考スコア」として扱います。</p>
+      {optionalOldDraft&&<div className="weakness-cleared"><b>中断中の任意演習：{optionalOldDraft.label}</b><p className="muted">現在の必須学習とは別枠です。時間があるときに再開できます。</p><Link className="button" to={optionalOldDraft.to}>任意演習を再開</Link></div>}
     </section>
 
     <section className="card home-secondary"><div><h2>学習履歴・データ</h2><p className="muted">今日の課題より下に配置しています。アップデート時も既存履歴を非破壊で移行します。</p></div><div className="actions"><Link className="button" to="/report">学習履歴を見る</Link><Link className="button" to="/data">バックアップ・入出力</Link><Link className="button" to="/years">過去問一覧</Link></div></section>

@@ -4,7 +4,7 @@ import questions from '../data/questions.json'
 import { examPages, examRole, pointsFor } from '../data/examConfig'
 import ExamMarkReview from '../components/ExamMarkReview'
 import { createRecordId, loadExamScores, loadPreferences, saveAttempt, saveExamScore } from '../storage'
-import { currentLearningStep, markYearSolved, nextLearningAction } from '../learningRoute'
+import { currentLearningStep, markYearSolved, nextLearningAction, yearExposureState } from '../learningRoute'
 import { isExamAnswerCorrect } from '../data/examAnswers'
 import { cleanAnswerInput } from '../answer'
 import { runExamIntegrityCheck } from '../preflight'
@@ -17,11 +17,17 @@ const DRAFT_KEY='waseshibu-math-exam-drafts-v2'
 const BASE=import.meta.env.BASE_URL
 
 type AutoStatus='correct'|'wrong'|'unanswered'
-type Draft={answers:Record<string,string>;flags:Record<string,boolean>;causes:Record<string,string>;overrides:Record<string,'correct'|'wrong'>;seconds:number;questionSeconds?:Record<string,number>;majorIndex:number;phase:'solve'|'mark';updatedAt:string}
+type Draft={answers:Record<string,string>;flags:Record<string,boolean>;causes:Record<string,string>;overrides:Record<string,'correct'|'wrong'>;seconds:number;questionSeconds?:Record<string,number>;majorIndex:number;phase:'solve'|'mark';updatedAt:string;firstLookEligible?:boolean}
 type SavedResult={score:number;correct:number;wrong:number;unanswered:number;weak:string[];strategy:ExamTargetStrategy;wrongItems:StrategyItem[]}
 
 function readDraft(year:number):Partial<Draft>{
-  try{const all=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}'),raw=all[String(year)]||{};if(raw.answers)return raw;return {answers:raw}}catch{return {}}
+  try{
+    const all=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}'),raw=all[String(year)]
+    if(!raw)return {}
+    if(raw.answers)return raw
+    // v1互換: 年度キー直下に answers のRecordだけを保存していた旧ドラフト。
+    return {answers:raw}
+  }catch{return {}}
 }
 function writeDraft(year:number,draft:Draft){
   if(!canWriteLearningData()){notifyWriteBlocked();return}
@@ -37,6 +43,8 @@ export default function PastPapers(){
   const requested=Number(params.get('year')||2024),year=requested>=2019&&requested<=2026?requested:2024
   const majors=useMemo(()=>(questions.questions as MajorQuestion[]).filter(q=>q.year===year).sort((a,b)=>a.major-b.major),[year])
   const initial=readDraft(year),review=params.get('review')==='1'
+  const hasPriorCompleted=loadExamScores().some(x=>x.year===year&&x.completed!==false)
+  const inferredFirstLook=!hasPriorCompleted&&(initial.firstLookEligible??(Object.keys(initial).length>0||yearExposureState(year)==='untouched'))
   const majorParam=Math.max(1,Math.min(5,Number(params.get('major')||1)))
   const [phase,setPhase]=useState<'solve'|'mark'|'result'>(review?'mark':initial.phase||'solve')
   const [majorIndex,setMajorIndex]=useState(review?0:Math.max(0,Number.isInteger(initial.majorIndex)?initial.majorIndex!:majorParam-1))
@@ -46,6 +54,7 @@ export default function PastPapers(){
   const [overrides,setOverrides]=useState<Record<string,'correct'|'wrong'>>(initial.overrides||{})
   const [seconds,setSeconds]=useState(Number(initial.seconds)||0)
   const [questionSeconds,setQuestionSeconds]=useState<Record<string,number>>(initial.questionSeconds||{})
+  const [firstLookEligible]=useState(inferredFirstLook)
   const [running,setRunning]=useState(!review)
   const [focused,setFocused]=useState<string>('')
   const [answerOpen,setAnswerOpen]=useState(()=>window.innerWidth>700)
@@ -63,8 +72,8 @@ export default function PastPapers(){
   const step=currentLearningStep(),needsWarning=(year===2025&&step<5)||(year===2026&&step<7)
 
   useEffect(()=>{if(!running||phase!=='solve')return;const id=window.setInterval(()=>{setSeconds(s=>s+1);if(focused)setQuestionSeconds(v=>({...v,[focused]:(v[focused]||0)+1}))},1000);return()=>window.clearInterval(id)},[running,phase,focused])
-  useEffect(()=>{if(phase==='result')return;writeDraft(year,{answers,flags,causes:causeMap,overrides,seconds,questionSeconds,majorIndex,phase:phase==='mark'?'mark':'solve',updatedAt:new Date().toISOString()})},[year,answers,flags,causeMap,overrides,seconds,questionSeconds,majorIndex,phase])
-  useEffect(()=>{if(phase!=='solve')return;const id=`exposure-${year}`;if(sessionStorage.getItem(id))return;sessionStorage.setItem(id,'1');saveAttempt({id:createRecordId(id),questionId:id,mode:'multi',topic:`${year}年度 過去問`,status:'deferred',at:new Date().toISOString()})},[year,phase])
+  useEffect(()=>{if(phase==='result'||(needsWarning&&!warningAccepted))return;writeDraft(year,{answers,flags,causes:causeMap,overrides,seconds,questionSeconds,majorIndex,phase:phase==='mark'?'mark':'solve',updatedAt:new Date().toISOString(),firstLookEligible})},[year,answers,flags,causeMap,overrides,seconds,questionSeconds,majorIndex,phase,firstLookEligible,needsWarning,warningAccepted])
+  useEffect(()=>{if(phase!=='solve'||(needsWarning&&!warningAccepted))return;const id=`exposure-${year}`;if(sessionStorage.getItem(id))return;sessionStorage.setItem(id,'1');saveAttempt({id:createRecordId(id),questionId:id,mode:'multi',topic:`${year}年度 過去問`,status:'deferred',at:new Date().toISOString()})},[year,phase,needsWarning,warningAccepted])
 
   const insert=(text:string)=>{
     const key=focused||keyFor(q,q.subquestions[0].no),input=inputs.current[key],value=answers[key]||'',start=input?.selectionStart??value.length,end=input?.selectionEnd??value.length
@@ -83,7 +92,7 @@ export default function PastPapers(){
     const wrongItems=items.filter(x=>x.status!=='correct')
     const result:SavedResult={score,correct:graded.filter(x=>x.status==='correct').length,wrong:graded.filter(x=>x.status==='wrong').length,unanswered:graded.filter(x=>x.status==='unanswered').length,weak,strategy,wrongItems}
     const now=new Date().toISOString(),prior=loadExamScores().some(x=>x.year===year&&x.completed!==false)
-    saveExamScore({id:createRecordId(`exam-${year}`),year,score:result.score,correctCount:result.correct,wrongCount:result.wrong,unansweredCount:result.unanswered,completed:true,attemptKind:prior?'retake':'first',weakFields:weak,at:now})
+    saveExamScore({id:createRecordId(`exam-${year}`),year,score:result.score,correctCount:result.correct,wrongCount:result.wrong,unansweredCount:result.unanswered,completed:true,attemptKind:prior?'retake':'first',scoreValidity:!prior&&firstLookEligible?'first-look':'reference',weakFields:weak,at:now})
     graded.forEach(x=>{
       const cause=causeMap[x.key]||''
       const diagnosis=x.status==='correct'?'correct':cause==='時間不足'?'time':cause==='現時点では難しい'?'difficult':cause?'recoverable':undefined
@@ -101,7 +110,7 @@ export default function PastPapers(){
 
   if(phase==='result'&&savedResult){const strategy=savedResult.strategy,priorityWrong=savedResult.wrongItems.filter(item=>gradeInTarget(strategy.target,item.grade)),deferredWrong=savedResult.wrongItems.filter(item=>!gradeInTarget(strategy.target,item.grade));return <>
     <div className="page-head"><div><span className="eyebrow">AUTO SCORING COMPLETE</span><h1>{year}年度の自動採点結果</h1></div></div>
-    <section className="grid four result-scores"><article className="card stat"><b>{savedResult.score}</b><span>自動採点</span></article><article className="card stat"><b>{savedResult.correct}</b><span>正解</span></article><article className="card stat"><b>{savedResult.wrong}</b><span>不正解</span></article><article className="card stat"><b>{savedResult.unanswered}</b><span>未回答</span></article></section>
+    <section className="grid four result-scores"><article className="card stat"><b>{savedResult.score}</b><span>自動採点</span><small>{loadExamScores().find(x=>x.year===year)?.scoreValidity==='reference'?'参考スコア':'初見スコア'}</small></article><article className="card stat"><b>{savedResult.correct}</b><span>正解</span></article><article className="card stat"><b>{savedResult.wrong}</b><span>不正解</span></article><article className="card stat"><b>{savedResult.unanswered}</b><span>未回答</span></article></section>
     {priorityWrong.length>0&&<section className="card result-wrong-first"><div className="section-head"><div><span className="eyebrow">FIX THESE FIRST · TARGET {strategy.target}</span><h2>今直す問題</h2></div><b>{priorityWrong.length}問</b></div><p className="muted">{strategy.target}点目標に含まれる問題だけを先に表示します。解説画面では、その小問とその小問の正答だけを表示します。</p><div className="guided-question-list">{priorityWrong.map(item=><article key={item.key}><div><b>大問{item.major}（{item.subNo}）</b><span>{item.topic}</span><small>{item.status==='unanswered'?'未回答':'不正解'}・問題ランク{item.grade}{item.cause?` ／ ${item.cause}`:''}</small></div><Link className="button primary" to={`/guided-review?q=${encodeURIComponent(item.key)}`}>この1問を直す</Link></article>)}</div></section>}
     {deferredWrong.length>0&&strategy.target<75&&<details className="card deferred-mistakes"><summary>今は後回しの問題 {deferredWrong.length}問</summary><p className="muted">現在の{strategy.target}点目標には含めません。必要な場合だけ開いて確認できます。</p><div className="guided-question-list">{deferredWrong.map(item=><article key={item.key}><div><b>大問{item.major}（{item.subNo}）</b><span>{item.topic}</span><small>問題ランク{item.grade}・今は後回し</small></div><Link className="button" to={`/guided-review?q=${encodeURIComponent(item.key)}`}>任意で確認</Link></article>)}</div></details>}
     <section className={`card target-result ${strategy.reached?'reached':''}`}><div className="section-head"><div><span className="eyebrow">TARGET {strategy.target}</span><h2>{strategy.reached?`${strategy.target}点目標に到達`:`目標まであと${strategy.gap}点`}</h2></div><b className="target-projection">回収目安 約{strategy.projectedScore}点</b></div><p>{strategy.summary}</p>{strategy.candidates.length>0&&<div className="recovery-list">{strategy.candidates.map((item,i)=><article key={item.key}><strong>{i+1}</strong><div><b>{item.label}</b><small>優先度{item.grade}・約{item.points}点　{item.reason}</small></div></article>)}</div>}<div className="time-plan"><b>目標別の時間配分</b><div>{strategy.timePlan.map(item=><span key={item.label} style={{flex:item.percent}}>{item.label}<small>{item.percent}%</small></span>)}</div></div><p className="muted">時間配分と回収点は学習上の目安です。正誤判定と実得点は目標設定によって変わりません。</p></section>

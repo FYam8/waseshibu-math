@@ -54,6 +54,7 @@ export type ExamScore = {
   unansweredCount?: number
   completed?: boolean
   attemptKind?: 'first' | 'retake'
+  scoreValidity?: 'first-look' | 'reference'
   weakFields?: string[]
   at: string
 }

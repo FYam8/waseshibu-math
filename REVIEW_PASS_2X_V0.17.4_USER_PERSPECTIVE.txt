@@ -1,0 +1,30 @@
+v0.17.4 ユーザー視点 最終精査結果
+
+精査ループ中の修正:
+- 年度を開いた履歴が露出判定へ入らない問題
+- 旧年度を通しで見た後も各小問が未使用補強候補になる問題
+- 上記修正後、同一の初見受験まで参考スコアになる問題
+- ドラフト未存在時の初見資格推定問題
+- version整合チェックの更新漏れ
+
+最終修正後の連続精査:
+1回目: 全12テスト PASS / 修正事項0件
+2回目: 全12テスト PASS / 修正事項0件
+
+実行テスト:
+syntax-check
+self-check
+test:today
+test:v017
+test:migration
+test:mastery
+test:eta
+test:eta:runtime
+audit:remediation
+test:year-role
+test:user-scenarios
+test:user-perspective
+
+注記:
+完全なVite buildは、この実行環境にReact等のnode_modules一式がないため未完了。
+公開前に npm ci → npm run build を実行すること。

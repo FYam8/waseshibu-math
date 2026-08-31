@@ -18,7 +18,7 @@ class MemoryStorage{
   removeItem(k){this.map.delete(k)}
 }
 const questions=JSON.parse(fs.readFileSync(path.join(root,'src/data/questions.json'),'utf8'))
-const ids=questions.questions.flatMap(m=>m.subquestions.map(s=>`${m.id}-${s.no}`)).slice(0,12)
+const ids=questions.questions.filter(m=>m.year===2024).flatMap(m=>m.subquestions.map(s=>`${m.id}-${s.no}`)).slice(0,12)
 const attempts=ids.map((qid,i)=>({id:`w${i}`,deviceId:'d',resetVersion:0,questionId:`exam-${qid}`,mode:'q1',topic:'確認',status:'wrong',at:`2026-08-31T00:${String(59-i).padStart(2,'0')}:00.000Z`}))
 global.localStorage=new MemoryStorage({
   'waseshibu-math-attempts':JSON.stringify(attempts),

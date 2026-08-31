@@ -4,6 +4,7 @@ import { classifyRemediationField } from './data/remediation'
 import { loadAttempts, loadExamScores, loadPreferences } from './storage'
 import { loadGuidedProgressState } from './guidedReview'
 import { gradeInTarget, type TargetScore } from './targetStrategy'
+import { isMainCheckYear } from './learningRoute'
 
 export type TodayTaskKind='review'|'practice'|'past-paper'
 export type TodayTask={
@@ -48,7 +49,9 @@ export function buildTodayTaskCandidates(target:TargetScore, now=new Date()):Tod
   const tasks:TodayTask[]=[]
   for(const [qid,attempt] of latestByQuestion){
     const meta=questionMap.get(qid)
-    if(!meta||attempt.status==='correct'||!gradeInTarget(target,meta.grade))continue
+    // 2019〜2023年度の任意通し演習は履歴には残すが、必須10課題へ自動昇格させない。
+    // 旧年度を正式な補強に使う場合は Reinforcement の学習ルートから扱う。
+    if(!meta||!isMainCheckYear(meta.year)||attempt.status==='correct'||!gradeInTarget(target,meta.grade))continue
     const p=progress[qid]
     // 過去の「克服済み」より新しい過去問誤答があれば、弱点を再開する。
     const progressIsCurrent=!!p&&p.updatedAt>=attempt.at
@@ -79,7 +82,7 @@ export function buildTodayTaskCandidates(target:TargetScore, now=new Date()):Tod
   const stale=Object.values(progress).filter(p=>{
     if(!['independent','consolidated'].includes(p.mastery))return false
     const meta=questionMap.get(p.questionId)
-    if(!meta||!gradeInTarget(target,meta.grade))return false
+    if(!meta||!isMainCheckYear(meta.year)||!gradeInTarget(target,meta.grade))return false
     const age=now.getTime()-Date.parse(p.updatedAt||'')
     return Number.isFinite(age)&&age>=7*24*60*60*1000
   }).sort((a,b)=>a.updatedAt.localeCompare(b.updatedAt))[0]
@@ -166,10 +169,10 @@ function reconcileDailyPlan(target:TargetScore,now=new Date(),fallbackTask?:Toda
 
   // v0.17.1以前に別ロジックで固定された当日計画は、共通キュー順へ一度だけ再整列する。
   // 完了済み件数は保持し、学習履歴そのものは変更しない。
-  if(plan.queueVersion!==2){
+  if(plan.queueVersion!==3){
     const completed=new Set(plan.completedIds)
     const slots=Math.max(0,10-plan.completedIds.length)
-    plan={...plan,pendingIds:targetCandidates.filter(task=>!completed.has(task.id)).slice(0,slots).map(task=>task.id),fallbackTask:undefined,queueVersion:2}
+    plan={...plan,pendingIds:targetCandidates.filter(task=>!completed.has(task.id)).slice(0,slots).map(task=>task.id),fallbackTask:undefined,queueVersion:3}
   }
 
   // 過去問開始など候補外の1件を今日の必須にした場合、次回来訪時に進行先が変われば完了扱い。
@@ -200,7 +203,7 @@ function reconcileDailyPlan(target:TargetScore,now=new Date(),fallbackTask?:Toda
     pendingIds=targetCandidates.slice(0,10).map(task=>task.id)
   }
 
-  const next:DailyRequiredPlan={date,target,pendingIds,completedIds,queueVersion:2,...(storedFallback?{fallbackTask:storedFallback}:{})}
+  const next:DailyRequiredPlan={date,target,pendingIds,completedIds,queueVersion:3,...(storedFallback?{fallbackTask:storedFallback}:{})}
   saveDailyRequiredPlan(next)
   return {plan:next,targetCandidates}
 }
@@ -236,10 +239,10 @@ function reconcileStudyAheadPlan(target:TargetScore,now=new Date(),fallbackTask?
   const allCandidates=buildLearningQueue(75,nextDate,fallbackTask)
   const allCandidateIds=new Set(allCandidates.map(task=>task.id))
 
-  if(plan.queueVersion!==2){
+  if(plan.queueVersion!==3){
     const completed=new Set(plan.completedIds)
     const slots=Math.max(0,10-plan.completedIds.length)
-    plan={...plan,pendingIds:targetCandidates.filter(task=>!completed.has(task.id)).slice(0,slots).map(task=>task.id),fallbackTask:undefined,queueVersion:2}
+    plan={...plan,pendingIds:targetCandidates.filter(task=>!completed.has(task.id)).slice(0,slots).map(task=>task.id),fallbackTask:undefined,queueVersion:3}
   }
 
   let storedFallback=plan.fallbackTask
@@ -266,7 +269,7 @@ function reconcileStudyAheadPlan(target:TargetScore,now=new Date(),fallbackTask?
     pendingIds=targetCandidates.slice(0,10).map(task=>task.id)
   }
 
-  const next:StudyAheadPlan={date,target,pendingIds,completedIds,queueVersion:2,...(storedFallback?{fallbackTask:storedFallback}:{})}
+  const next:StudyAheadPlan={date,target,pendingIds,completedIds,queueVersion:3,...(storedFallback?{fallbackTask:storedFallback}:{})}
   saveStudyAheadPlan(next)
   return {plan:next,targetCandidates}
 }

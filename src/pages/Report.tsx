@@ -4,6 +4,7 @@ import {
   loadPreferences, saveExamScore
 } from '../storage'
 import { strategyForStoredExam, targetGoalLabel, targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
+import { latestMainCheckExam } from '../learningRoute'
 
 export default function Report() {
   const [version,setVersion]=useState(0)
@@ -42,7 +43,7 @@ export default function Report() {
     .sort((a,b)=>b[1]-a[1])
     .slice(0,3)
 
-  const latest=examScores[0]??null
+  const latest=latestMainCheckExam()??null
   const targetWeak=latest?weakFieldsForStoredExam(prefs.target,latest,attempts):[]
   const todoTopics:[string,number][]=targetWeak.length?targetWeak.map(x=>[x,1]):topicRanking.length?topicRanking:[['2024年度の診断',1]]
   const latestScore=latest?.score ?? null
@@ -89,7 +90,7 @@ export default function Report() {
       <section className="card score-entry">
         <div>
           <h2>実際に解いた過去問の得点を記録</h2>
-          <p className="muted">この記録だけを100点満点の「現在段階」判定に使います。</p>
+          <p className="muted">2024〜2026年度は「現在段階」の参考に使います。2019〜2023年度は補強・任意演習の履歴として保存し、現在段階を上書きしません。</p>
         </div>
         <div className="score-form">
           <select value={year} onChange={e=>setYear(Number(e.target.value))}>
@@ -101,7 +102,7 @@ export default function Report() {
       </section>
 
       <section className="grid four">
-        <article className="card stat"><b>{latestScore ?? '--'}</b><span>最新の過去問得点</span></article>
+        <article className="card stat"><b>{latestScore ?? '--'}</b><span>{latest?`${latest.year}年度の主確認得点`:'主確認年度は未記録'}</span>{latest&&<small>{latest.scoreValidity==='reference'?'参考スコア':latest.scoreValidity==='first-look'?'初見スコア':'記録スコア'}</small>}</article>
         <article className="card stat"><b>{latest?.correctCount ?? '--'}</b><span>自動採点の正解数</span></article>
         <article className="card stat"><b>{latest?.wrongCount ?? '--'}</b><span>不正解数</span></article>
         <article className="card stat"><b>{latest?.unansweredCount ?? '--'}</b><span>未回答数</span></article>
@@ -157,7 +158,7 @@ export default function Report() {
         </div>
         {examScores.length===0?<p className="muted">まだ記録がありません。</p>:(
           <div className="history-list">
-            {examScores.slice(0,10).map(x=><div key={x.id}><span>{x.year}年度　{x.attemptKind==='retake'?'再受験':'初回・記録'}</span><b>{x.score}/100{x.correctCount!==undefined?`　正解 ${x.correctCount}問`:''}</b></div>)}
+            {examScores.slice(0,10).map(x=><div key={x.id}><span>{x.year}年度　{x.attemptKind==='retake'?'再受験':x.attemptKind==='first'?'初回':'記録'}　{x.scoreValidity==='first-look'?'初見スコア':x.scoreValidity==='reference'?'参考スコア':x.year<=2023?'任意・補強記録':'記録スコア'}</span><b>{x.score}/100{x.correctCount!==undefined?`　正解 ${x.correctCount}問`:''}</b></div>)}
           </div>
         )}
       </section>
