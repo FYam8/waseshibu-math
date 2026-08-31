@@ -57,12 +57,21 @@ jobs:
           if old not in s:
               raise SystemExit('expected old 2024 Q2 preflight values not found')
           p.write_text(s.replace(old,new))
+
+          p=Path('src/pages/GuidedReview.tsx')
+          s=p.read_text()
+          old='guidedOutcomeLabel,guidedQuestion,loadGuidedProgress,loadGuidedReview,recordGuidedFinal,'
+          new='assessGuidedStep,guidedOutcomeLabel,guidedQuestion,loadGuidedProgress,loadGuidedReview,recordGuidedFinal,'
+          if old not in s:
+              raise SystemExit('GuidedReview import anchor not found')
+          p.write_text(s.replace(old,new,1))
           PY
           node -e "const p=require('./package.json'); if(p.version!=='0.17.0') process.exit(1)"
           grep -q '"appVersion": "0.17.0"' public/version.json
           grep -q "APP_VERSION,'0.17.0'" scripts/verify-critical.mjs
           grep -q 'pkg.data\[key\]??null' scripts/verify-critical.mjs
           grep -q "'2024-Q2-2':'(2,4)','2024-Q2-3':'3+√13'" src/preflight.ts
+          grep -q 'assessGuidedStep,guidedOutcomeLabel' src/pages/GuidedReview.tsx
 
       - name: Setup Node
         uses: actions/setup-node@v4
