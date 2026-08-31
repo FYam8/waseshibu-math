@@ -41,6 +41,7 @@ jobs:
           tar -xzf /tmp/supplement.tar.gz -C .
           python - <<'PY'
           from pathlib import Path
+
           p=Path('scripts/verify-critical.mjs')
           s=p.read_text()
           s=s.replace("assert.equal(version.APP_VERSION,'0.16.6')", "assert.equal(version.APP_VERSION,'0.17.0')")
@@ -48,11 +49,20 @@ jobs:
           s=s.replace("for(const key of backup.BACKUP_KEYS)assert.deepEqual(JSON.parse(restored.getItem(key)),pkg.data[key],`round trip: ${key}`)", "for(const key of backup.BACKUP_KEYS)assert.deepEqual(JSON.parse(restored.getItem(key)),pkg.data[key]??null,`round trip: ${key}`)")
           s=s.replace('v0.15.1, data v4, 160 GuidedSolutions', 'v0.17.0, data v5, 160 GuidedSolutions')
           p.write_text(s)
+
+          p=Path('src/preflight.ts')
+          s=p.read_text()
+          old="'2024-Q2-1':'1/4','2024-Q2-2':'(-2,-4)','2024-Q2-3':'3±√13'"
+          new="'2024-Q2-1':'1/4','2024-Q2-2':'(2,4)','2024-Q2-3':'3+√13'"
+          if old not in s:
+              raise SystemExit('expected old 2024 Q2 preflight values not found')
+          p.write_text(s.replace(old,new))
           PY
           node -e "const p=require('./package.json'); if(p.version!=='0.17.0') process.exit(1)"
           grep -q '"appVersion": "0.17.0"' public/version.json
           grep -q "APP_VERSION,'0.17.0'" scripts/verify-critical.mjs
           grep -q 'pkg.data\[key\]??null' scripts/verify-critical.mjs
+          grep -q "'2024-Q2-2':'(2,4)','2024-Q2-3':'3+√13'" src/preflight.ts
 
       - name: Setup Node
         uses: actions/setup-node@v4
