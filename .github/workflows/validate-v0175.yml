@@ -1,0 +1,108 @@
+name: Validate v0.17.5 release
+
+on:
+  push:
+    branches: ["publish-v0.17.5"]
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout staging branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct and verify delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .publish_payload/v0175-part-* > /tmp/v0175.b64
+          base64 --decode /tmp/v0175.b64 > /tmp/v0175-delta.tar.gz
+          echo "3a7ab42653989fd7adc23f868ce1cd0e59770fbcd86db8915f3a5c673252012b  /tmp/v0175-delta.tar.gz" | sha256sum -c -
+          tar -tzf /tmp/v0175-delta.tar.gz | sort -u > /tmp/payload-files.txt
+
+      - name: Apply delta to latest main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout -B validated-work origin/main
+          tar -xzf /tmp/v0175-delta.tar.gz -C .
+          python - <<'PY'
+          from pathlib import Path
+
+          # Keep publication fixes made after the original v0.17.1 ZIP.
+          p=Path('scripts/verify-critical.mjs')
+          s=p.read_text()
+          for old in ["assert.equal(version.APP_VERSION,'0.17.1')", "assert.equal(version.APP_VERSION,'0.17.0')"]:
+              if old in s:
+                  s=s.replace(old, "assert.equal(version.APP_VERSION,'0.17.5')", 1)
+                  break
+          else:
+              raise SystemExit('verified APP_VERSION assertion not found')
+          if 'pkg.data[key]??null' not in s:
+              raise SystemExit('backup round-trip no-loss fix would be lost')
+          p.write_text(s)
+
+          preflight=Path('src/preflight.ts').read_text()
+          if "'2024-Q2-2':'(2,4)','2024-Q2-3':'3+√13'" not in preflight:
+              raise SystemExit('2024 Q2 official-answer preflight fix would be lost')
+
+          guided='\n'.join(Path('src/pages/GuidedReview.tsx').read_text().splitlines()[:20])
+          if 'assessGuidedStep' not in guided:
+              raise SystemExit('GuidedReview assessGuidedStep import fix would be lost')
+          PY
+          node -e "const p=require('./package.json'); if(p.version!=='0.17.5') process.exit(1)"
+          grep -q '"appVersion": "0.17.5"' public/version.json
+          grep -q '"dataVersion": 5' public/version.json
+          grep -q "APP_VERSION='0.17.5'" src/version.ts
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run release checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run syntax-check
+          npm run self-check
+          npm run verify-critical
+          npm run test:migration
+          npm run test:mastery
+          npm run test:today
+          npm run test:eta
+          npm run test:eta:runtime
+          npm run audit:remediation
+          npm run test:v017
+          npm run test:year-role
+          npm run test:user-scenarios
+          npm run test:user-perspective
+          node scripts/test-daily-freeze.mjs
+          node scripts/test-daily-cap-continue.mjs
+          node scripts/test-study-ahead.mjs
+          npm run build
+
+      - name: Commit validated release branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git diff --cached --quiet && { echo "No release changes staged"; exit 1; }
+          { cat /tmp/payload-files.txt; echo scripts/verify-critical.mjs; } | sort -u > /tmp/expected-staged.txt
+          git diff --cached --name-only | sort -u > /tmp/staged.txt
+          diff -u /tmp/expected-staged.txt /tmp/staged.txt
+          git commit -m "Publish v0.17.5 user perspective 2-pass review"
+          git push origin HEAD:refs/heads/validated-v0.17.5
