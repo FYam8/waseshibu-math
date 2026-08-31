@@ -17,7 +17,7 @@ if(guided.includes('GUIDED SOLUTION')&&guided.includes('ほかの小問・ほか
 if(reinforcement.includes('この小問の正答だけ見る')&&reinforcement.includes('別小問や公式解答ページ全体は表示しません')&&!reinforcement.includes('answerPages')&&!reinforcement.includes('answerImage(')&&!reinforcement.includes('exam-images'))ok('弱点補強も1小問・1正答だけ');else fail('弱点補強に旧全体表示が残っている')
 if(home.includes('今日やること')&&home.includes('MAX 10 TASKS')&&home.includes('buildTodayTasks')&&home.includes('この1問を直す')&&home.includes('A＝60点、B＝70点、C＝75点'))ok('今日やること・弱点直結・A60/B70/C75ホームUX');else fail('ホーム共通UX')
 if(route.includes('currentLearningPhase')&&route.includes('routePhaseDone')&&route.includes('sourceMistakeProgress')&&route.includes('requiresSourceReview')&&route.includes('旧方式の補強を完了'))ok('6フェーズ進捗・元誤答先行・旧完了者保護');else fail('新学習フェーズ進捗')
-if(reinforcement.includes('まず')&&reinforcement.includes('元の間違いを直す')&&reinforcement.includes('sourceMistakeProgress')&&reinforcement.includes('SOURCE QUESTION FIRST'))ok('補強前に元の誤答を再現');else fail('元誤答→補強の順序')
+if(reinforcement.includes('まず')&&reinforcement.includes('元の未解決問題を直す')&&reinforcement.includes('sourceMistakeProgress')&&reinforcement.includes('SOURCE QUESTION FIRST'))ok('補強前に元の誤答を再現');else fail('元誤答→補強の順序')
 if(mistake.includes('gradeInTarget(prefs.target,meta.grade)')&&mistake.includes('weakFieldsForStoredExam(prefs.target,latestExam,attempts)')&&mistake.includes('QUESTION BY QUESTION · TARGET ONLY')&&mistake.includes('今は後回しの問題'))ok('間違い直しを60=A / 70=A+B / 75=A+B+Cに限定');else fail('間違い直しの目標点フィルタ')
 if(paper.includes('今直す問題')&&paper.includes('gradeInTarget(strategy.target,item.grade)')&&paper.includes('今は後回しの問題')&&paper.includes('nextLearningAction(strategy.target)'))ok('採点直後も共通次アクションで目標範囲を先に直す');else fail('採点直後の目標点フィルタ')
 
@@ -35,7 +35,7 @@ const answerData=read('src/data/examAnswers.ts'),answerIds=[...answerData.matchA
 if(answerIds.length===160&&questionIds.every(id=>answerIds.includes(id))&&new Set(answerIds).size===160)ok('全160小問の正答データ');else fail(`正答データ ${answerIds.length}/160`)
 
 const backup=read('src/dataBackup.ts'),migration=read('src/dataMigration.ts'),version=read('src/version.ts'),publicVersion=read('public/version.json')
-if(migration.includes('CURRENT_DATA_VERSION=5')&&backup.includes('GUIDED_PROGRESS_STORAGE_KEY')&&migration.includes('MIGRATION_BACKUP_STORAGE_KEY')&&migration.includes('更新前バックアップ')&&version.includes("APP_VERSION='0.17.0'")&&publicVersion.includes('"appVersion": "0.17.0"')&&publicVersion.includes('"dataVersion": 5'))ok('v0.17.0・data v5・migration前バックアップ');else fail('版・データ形式整合')
+if(migration.includes('CURRENT_DATA_VERSION=5')&&backup.includes('GUIDED_PROGRESS_STORAGE_KEY')&&migration.includes('MIGRATION_BACKUP_STORAGE_KEY')&&migration.includes('更新前バックアップ')&&version.includes("APP_VERSION='0.17.1'")&&publicVersion.includes('"appVersion": "0.17.1"')&&publicVersion.includes('"dataVersion": 5'))ok('v0.17.1・data v5・migration前バックアップ');else fail('版・データ形式整合')
 
 const guidedData=JSON.parse(read('src/data/guidedSolutions.json')),guidedIds=Object.keys(guidedData.solutions||{})
 if(guidedData.count===160&&guidedIds.length===160&&questionIds.every(id=>guidedIds.includes(id))&&guidedIds.every(id=>Array.isArray(guidedData.solutions[id].steps)&&guidedData.solutions[id].steps.length>=2))ok('160小問すべてに問題専用GuidedSolution');else fail(`GuidedSolution ${guidedIds.length}/160`)

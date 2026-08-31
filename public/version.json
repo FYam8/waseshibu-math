@@ -1,7 +1,7 @@
 {
-  "appVersion": "0.17.0",
+  "appVersion": "0.17.1",
   "dataVersion": 5,
   "releasedAt": "2026-08-31",
-  "release": "runtime-bugfix-learning-flow",
-  "version": "0.17.0"
+  "release": "learning-queue-consistency",
+  "version": "0.17.1"
 }

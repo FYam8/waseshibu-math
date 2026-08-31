@@ -35,7 +35,7 @@ const localDateKey=(d=new Date())=>{
 }
 export const todayDateKey=localDateKey
 
-function buildTodayTaskCandidates(target:TargetScore, now=new Date()):TodayTask[]{
+export function buildTodayTaskCandidates(target:TargetScore, now=new Date()):TodayTask[]{
   const attempts=loadAttempts(),scores=loadExamScores(),progress=loadGuidedProgressState()
   const latest=scores.find(x=>x.completed!==false)
   const latestByQuestion=new Map<string,(typeof attempts)[number]>()
@@ -104,8 +104,40 @@ function buildTodayTaskCandidates(target:TargetScore, now=new Date()):TodayTask[
   return unique
 }
 
+export function buildLearningQueue(target:TargetScore,now=new Date(),nextActionTask?:TodayTask):TodayTask[]{
+  const base=buildTodayTaskCandidates(target,now)
+  if(!nextActionTask)return base
+
+  // 途中の採点・過去問・準備問題は、弱点候補よりも先に「今続けるべき作業」として扱う。
+  const isResume=/\/past-papers\?year=\d+(?:&review=1)?$/.test(nextActionTask.to)||nextActionTask.to==='/setup-check'
+  if(isResume){
+    return [nextActionTask,...base.filter(task=>task.id!==nextActionTask.id)]
+  }
+
+  // 未解決問題の一覧を指す場合は、その年度の具体的な1問を先頭に並べる。
+  const mistakeYear=nextActionTask.to.match(/^\/mistakes\?year=(\d{4})$/)?.[1]
+  if(mistakeYear){
+    const year=Number(mistakeYear)
+    const same=base.filter(task=>task.questionId&&questionMap.get(task.questionId)?.year===year)
+    const rest=base.filter(task=>!same.some(x=>x.id===task.id))
+    return same.length?[...same,...rest]:[nextActionTask,...rest]
+  }
+
+  // 類題・旧年度補強では、その出典年度に紐づくpractice課題を先頭にする。
+  const reinforceYear=nextActionTask.to.match(/^\/reinforce\?source=(\d{4})$/)?.[1]
+  if(reinforceYear){
+    const token=`source=${reinforceYear}`
+    const same=base.filter(task=>task.kind==='practice'&&task.to.includes(token))
+    const rest=base.filter(task=>!same.some(x=>x.id===task.id))
+    return same.length?[...same,...rest]:[nextActionTask,...rest]
+  }
+
+  // 新しい過去問・仕上げなど具体候補に置き換えられない行動は共通キューの先頭に置く。
+  return [nextActionTask,...base.filter(task=>task.id!==nextActionTask.id)]
+}
+
 const DAILY_REQUIRED_PLAN_KEY='waseshibu-math-daily-required-plan-v2'
-type DailyRequiredPlan={date:string;target:TargetScore;pendingIds:string[];completedIds:string[];fallbackTask?:TodayTask}
+type DailyRequiredPlan={date:string;target:TargetScore;pendingIds:string[];completedIds:string[];fallbackTask?:TodayTask;queueVersion?:number}
 function loadDailyRequiredPlan(date:string,target:TargetScore):DailyRequiredPlan{
   try{
     const parsed=JSON.parse(localStorage.getItem(DAILY_REQUIRED_PLAN_KEY)||'null') as DailyRequiredPlan|null
@@ -128,9 +160,17 @@ function reconcileDailyPlan(target:TargetScore,now=new Date(),fallbackTask?:Toda
   if(!plan.pendingIds.length&&!plan.completedIds.length&&!plan.fallbackTask&&ahead?.date===date){
     plan={date,target:ahead.target,pendingIds:[...ahead.pendingIds],completedIds:[...ahead.completedIds],...(ahead.fallbackTask?{fallbackTask:ahead.fallbackTask}:{})}
   }
-  const targetCandidates=buildTodayTaskCandidates(target,now)
-  const allCandidates=buildTodayTaskCandidates(75,now)
+  const targetCandidates=buildLearningQueue(target,now,fallbackTask)
+  const allCandidates=buildLearningQueue(75,now,fallbackTask)
   const allCandidateIds=new Set(allCandidates.map(task=>task.id))
+
+  // v0.17.1以前に別ロジックで固定された当日計画は、共通キュー順へ一度だけ再整列する。
+  // 完了済み件数は保持し、学習履歴そのものは変更しない。
+  if(plan.queueVersion!==2){
+    const completed=new Set(plan.completedIds)
+    const slots=Math.max(0,10-plan.completedIds.length)
+    plan={...plan,pendingIds:targetCandidates.filter(task=>!completed.has(task.id)).slice(0,slots).map(task=>task.id),fallbackTask:undefined,queueVersion:2}
+  }
 
   // 過去問開始など候補外の1件を今日の必須にした場合、次回来訪時に進行先が変われば完了扱い。
   let storedFallback=plan.fallbackTask
@@ -158,17 +198,16 @@ function reconcileDailyPlan(target:TargetScore,now=new Date(),fallbackTask?:Toda
   // 完了後は同日に次フェーズを11件目として自動補充しない。
   if(!pendingIds.length&&!completedIds.length&&!storedFallback){
     pendingIds=targetCandidates.slice(0,10).map(task=>task.id)
-    if(!pendingIds.length&&fallbackTask)storedFallback=fallbackTask
   }
 
-  const next:DailyRequiredPlan={date,target,pendingIds,completedIds,...(storedFallback?{fallbackTask:storedFallback}:{})}
+  const next:DailyRequiredPlan={date,target,pendingIds,completedIds,queueVersion:2,...(storedFallback?{fallbackTask:storedFallback}:{})}
   saveDailyRequiredPlan(next)
   return {plan:next,targetCandidates}
 }
 
 
 const STUDY_AHEAD_PLAN_KEY='waseshibu-math-study-ahead-plan-v1'
-type StudyAheadPlan={date:string;target:TargetScore;pendingIds:string[];completedIds:string[];fallbackTask?:TodayTask}
+type StudyAheadPlan={date:string;target:TargetScore;pendingIds:string[];completedIds:string[];fallbackTask?:TodayTask;queueVersion?:number}
 
 function addLocalDays(now:Date,days:number){
   const d=new Date(now)
@@ -193,9 +232,15 @@ function reconcileStudyAheadPlan(target:TargetScore,now=new Date(),fallbackTask?
     if(!create)return {plan:null as StudyAheadPlan|null,targetCandidates:[] as TodayTask[]}
     plan={date,target,pendingIds:[],completedIds:[]}
   }
-  const targetCandidates=buildTodayTaskCandidates(target,nextDate)
-  const allCandidates=buildTodayTaskCandidates(75,nextDate)
+  const targetCandidates=buildLearningQueue(target,nextDate,fallbackTask)
+  const allCandidates=buildLearningQueue(75,nextDate,fallbackTask)
   const allCandidateIds=new Set(allCandidates.map(task=>task.id))
+
+  if(plan.queueVersion!==2){
+    const completed=new Set(plan.completedIds)
+    const slots=Math.max(0,10-plan.completedIds.length)
+    plan={...plan,pendingIds:targetCandidates.filter(task=>!completed.has(task.id)).slice(0,slots).map(task=>task.id),fallbackTask:undefined,queueVersion:2}
+  }
 
   let storedFallback=plan.fallbackTask
   const fallbackCompleted=!!storedFallback&&(!fallbackTask||fallbackTask.id!==storedFallback.id)
@@ -219,10 +264,9 @@ function reconcileStudyAheadPlan(target:TargetScore,now=new Date(),fallbackTask?
   // 「次の日の分」は開始時に最大10件を固定し、途中で新しい11件目を補充しない。
   if(create&&!pendingIds.length&&!completedIds.length&&!storedFallback){
     pendingIds=targetCandidates.slice(0,10).map(task=>task.id)
-    if(!pendingIds.length&&fallbackTask)storedFallback=fallbackTask
   }
 
-  const next:StudyAheadPlan={date,target,pendingIds,completedIds,...(storedFallback?{fallbackTask:storedFallback}:{})}
+  const next:StudyAheadPlan={date,target,pendingIds,completedIds,queueVersion:2,...(storedFallback?{fallbackTask:storedFallback}:{})}
   saveStudyAheadPlan(next)
   return {plan:next,targetCandidates}
 }
@@ -265,10 +309,8 @@ export function buildOptionalNextTask(target:TargetScore,now=new Date(),fallback
   const {plan,targetCandidates}=reconcileDailyPlan(target,now,fallbackTask)
   // 必須が残っている間は追加演習へ誘導しない。
   if(plan.pendingIds.length>0)return null
-  // 必須課題を終えた後は、残っている同種課題を機械的に11件目として出すのではなく、
-  // 学習サイクルが示す「次のアクション」を最優先する。
-  // 例: 元の誤答直し → 類題・旧年度で補強 → 別年度確認。
-  if(fallbackTask)return fallbackTask
+  // 必須課題を終えた後も、今日・先取りと同じ共通キューの先頭を1件だけ返す。
+  // これにより「次のアクション」と「次の日の先取り」の先頭が食い違わない。
   const completed=new Set(plan.completedIds)
   return targetCandidates.find(task=>!completed.has(task.id))||null
 }

@@ -80,6 +80,37 @@ export function sourceMistakeProgress(year:number,target:TargetScore=loadPrefere
   return {requiredIds,completedIds,remainingIds,complete:remainingIds.length===0}
 }
 
+export type UnresolvedSourceSummary={
+  year:number
+  total:number
+  wrong:number
+  unanswered:number
+  remainingIds:string[]
+}
+
+export function unresolvedSourceSummary(year:number,target:TargetScore=loadPreferences().target):UnresolvedSourceSummary|null{
+  const exam=latestExam(year)
+  if(!exam)return null
+  const attempts=loadAttempts(),source=sourceMistakeProgress(year,target),remaining=new Set(source.remainingIds)
+  const items=storedExamItems(exam,attempts).filter(item=>remaining.has(item.key))
+  return {
+    year,
+    total:items.length,
+    wrong:items.filter(item=>item.status==='wrong').length,
+    unanswered:items.filter(item=>item.status==='unanswered').length,
+    remainingIds:source.remainingIds
+  }
+}
+
+export function firstUnresolvedSource(target:TargetScore=loadPreferences().target):UnresolvedSourceSummary|null{
+  for(const year of [2024,2025,2026]){
+    const summary=unresolvedSourceSummary(year,target)
+    if(summary&&summary.total>0)return summary
+  }
+  return null
+}
+
+
 function practicePlanComplete(exam:ExamScore,target:TargetScore,plan:ReinforcementPlan|undefined,attempts=loadAttempts(),fields=weakFieldsForStoredExam(target,exam,attempts)){
   if(!fields.length)return true
   if(!plan||plan.examId!==exam.id||plan.target!==target)return false
@@ -181,12 +212,27 @@ export function currentLearningPhase(){
 }
 
 export type LearningAction={to:string;label:string}
+
+type ExamDraftLike={phase?:'solve'|'mark';answers?:Record<string,string>;seconds?:number}
+export function resumeDraftAction():LearningAction|null{
+  try{
+    const drafts=JSON.parse(localStorage.getItem('waseshibu-math-exam-drafts-v2')||'{}') as Record<string,ExamDraftLike>
+    const entries=Object.entries(drafts)
+    const marking=entries.find(([,draft])=>draft?.phase==='mark')
+    if(marking)return {to:`/past-papers?year=${marking[0]}&review=1`,label:`${marking[0]}年度の採点を続ける`}
+    const solving=entries.find(([,draft])=>draft?.phase==='solve'&&(Number(draft.seconds)>0||Object.values(draft.answers||{}).some(Boolean)))
+    if(solving)return {to:`/past-papers?year=${solving[0]}`,label:`${solving[0]}年度の続きから`}
+  }catch{/* broken draft must not block the learning route */}
+  return null
+}
 export function nextLearningAction(target:TargetScore=loadPreferences().target):LearningAction{
+  const draft=resumeDraftAction()
+  if(draft)return draft
   for(const year of [2024,2025,2026]){
     const exam=latestExam(year)
     if(!exam)return {to:`/past-papers?year=${year}`,label:`${year}年度を解く`}
     const source=sourceMistakeProgress(year,target)
-    if(source.remainingIds.length)return {to:`/mistakes?year=${year}`,label:`${year}年度の元の誤答 ${source.remainingIds.length}問を直す`}
+    if(source.remainingIds.length)return {to:`/mistakes?year=${year}`,label:`${year}年度の未解決問題 ${source.remainingIds.length}問を直す`}
     if(!reinforcementComplete(year))return {to:`/reinforce?source=${year}`,label:`${year}年度の類題・旧年度で補強する`}
   }
   return {to:'/years',label:'仕上げ・任意演習へ進む'}
