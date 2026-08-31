@@ -1,0 +1,136 @@
+name: Validate v0.17.1 release
+
+on:
+  push:
+    branches: ["publish-v0.17.1"]
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout staging branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 --decode .publish_payload/v0171.b64 > /tmp/v0171.tar.gz
+          echo "62b27ade7354300741965d174ee53b67b7a42d919c0222830f8f4e43a1cbcdac  /tmp/v0171.tar.gz" | sha256sum -c -
+          tar -tzf /tmp/v0171.tar.gz | sort > /tmp/payload-files.txt
+          cat > /tmp/expected-payload.txt <<'EOF'
+          V0.17.1_LEARNING_QUEUE_CONSISTENCY_AUDIT.md
+          package-lock.json
+          package.json
+          public/version.json
+          scripts/self-check.mjs
+          scripts/test-daily-cap-continue.mjs
+          scripts/test-learning-queue-consistency.mjs
+          src/dailyPlan.ts
+          src/learningRoute.ts
+          src/pages/Home.tsx
+          src/pages/Reinforcement.tsx
+          src/version.ts
+          EOF
+          sort -o /tmp/expected-payload.txt /tmp/expected-payload.txt
+          diff -u /tmp/expected-payload.txt /tmp/payload-files.txt
+
+      - name: Apply delta to latest main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout -B validated-work origin/main
+          tar -xzf /tmp/v0171.tar.gz -C .
+          python - <<'PY'
+          from pathlib import Path
+
+          # Keep the v0.17.0 publication fixes and only advance the critical verifier version.
+          p=Path('scripts/verify-critical.mjs')
+          s=p.read_text()
+          old="assert.equal(version.APP_VERSION,'0.17.0')"
+          new="assert.equal(version.APP_VERSION,'0.17.1')"
+          if old not in s:
+              raise SystemExit('current verified v0.17.0 version assertion not found')
+          s=s.replace(old,new,1)
+          if 'pkg.data[key]??null' not in s:
+              raise SystemExit('v0.17 backup round-trip fix would be lost')
+          p.write_text(s)
+
+          preflight=Path('src/preflight.ts').read_text()
+          if "'2024-Q2-2':'(2,4)','2024-Q2-3':'3+√13'" not in preflight:
+              raise SystemExit('2024 Q2 official-answer preflight fix would be lost')
+
+          guided='\n'.join(Path('src/pages/GuidedReview.tsx').read_text().splitlines()[:15])
+          if 'assessGuidedStep' not in guided:
+              raise SystemExit('GuidedReview assessGuidedStep import fix would be lost')
+          PY
+          node -e "const p=require('./package.json'); if(p.version!=='0.17.1') process.exit(1)"
+          grep -q '"appVersion": "0.17.1"' public/version.json
+          grep -q "APP_VERSION='0.17.1'" src/version.ts
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run release checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run syntax-check
+          npm run self-check
+          npm run verify-critical
+          node scripts/test-learning-queue-consistency.mjs
+          node scripts/test-daily-cap-continue.mjs
+          node scripts/test-study-ahead.mjs
+          npm run test:migration
+          npm run test:mastery
+          npm run test:today
+          npm run test:eta
+          npm run test:eta:runtime
+          npm run audit:remediation
+          npm run test:v017
+          npm run build
+
+      - name: Commit validated release branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add V0.17.1_LEARNING_QUEUE_CONSISTENCY_AUDIT.md package.json package-lock.json public/version.json \
+            scripts/self-check.mjs scripts/verify-critical.mjs scripts/test-daily-cap-continue.mjs \
+            scripts/test-learning-queue-consistency.mjs src/dailyPlan.ts src/learningRoute.ts \
+            src/pages/Home.tsx src/pages/Reinforcement.tsx src/version.ts
+          git diff --cached --check
+          git diff --cached --quiet && { echo "No release changes staged"; exit 1; }
+          git diff --cached --name-only | sort > /tmp/staged.txt
+          cat > /tmp/expected-staged.txt <<'EOF'
+          V0.17.1_LEARNING_QUEUE_CONSISTENCY_AUDIT.md
+          package-lock.json
+          package.json
+          public/version.json
+          scripts/self-check.mjs
+          scripts/test-daily-cap-continue.mjs
+          scripts/test-learning-queue-consistency.mjs
+          scripts/verify-critical.mjs
+          src/dailyPlan.ts
+          src/learningRoute.ts
+          src/pages/Home.tsx
+          src/pages/Reinforcement.tsx
+          src/version.ts
+          EOF
+          sort -o /tmp/expected-staged.txt /tmp/expected-staged.txt
+          diff -u /tmp/expected-staged.txt /tmp/staged.txt
+          git commit -m "Publish v0.17.1 learning queue consistency"
+          git push origin HEAD:refs/heads/validated-v0.17.1
