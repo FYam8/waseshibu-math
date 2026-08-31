@@ -1,0 +1,98 @@
+name: Publish v0.17.0 runtime
+
+on:
+  push:
+    branches: ["publish-v0.17.0-runtime"]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout staging branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct and verify payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .publish_payload/r8-* > /tmp/runtime.b64
+          base64 --decode /tmp/runtime.b64 > /tmp/runtime.tar.gz
+          echo "a98830dca9c1f51b70b0d8f8d2f8d1d2e49f8b120b12e847fcc4c2153dd81ed2  /tmp/runtime.tar.gz" | sha256sum -c -
+          tar -tzf /tmp/runtime.tar.gz > /tmp/runtime-files.txt
+          cat > /tmp/expected-files.txt <<'EOF'
+          package.json
+          public/version.json
+          src/answer.ts
+          src/dailyPlan.ts
+          src/dataBackup.ts
+          src/guidedReview.ts
+          src/homeRoute.css
+          src/learningRoute.ts
+          src/preflight.ts
+          src/styles.css
+          src/version.ts
+          src/components/ExamMarkReview.tsx
+          src/pages/GuidedReview.tsx
+          src/pages/Home.tsx
+          src/pages/PastPapers.tsx
+          src/pages/Practice.tsx
+          src/pages/Reinforcement.tsx
+          src/pages/Remediation.tsx
+          scripts/test-v017-regressions.mjs
+          V0.17.0_RUNTIME_BUGFIX_AUDIT.md
+          EOF
+          diff -u /tmp/expected-files.txt /tmp/runtime-files.txt
+
+      - name: Apply to latest main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout -B publish-work origin/main
+          tar -xzf /tmp/runtime.tar.gz -C .
+          node -e "const p=require('./package.json'); if(p.version!=='0.17.0') process.exit(1)"
+          grep -q '"appVersion": "0.17.0"' public/version.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run release checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run self-check
+          npm run verify-critical
+          npm run test:v017
+          npm run test:migration
+          npm run test:today
+          npm run test:eta
+          npm run build
+
+      - name: Commit and publish main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json public/version.json \
+            src/answer.ts src/dailyPlan.ts src/dataBackup.ts src/guidedReview.ts \
+            src/homeRoute.css src/learningRoute.ts src/preflight.ts src/styles.css src/version.ts \
+            src/components/ExamMarkReview.tsx \
+            src/pages/GuidedReview.tsx src/pages/Home.tsx src/pages/PastPapers.tsx \
+            src/pages/Practice.tsx src/pages/Reinforcement.tsx src/pages/Remediation.tsx \
+            scripts/test-v017-regressions.mjs V0.17.0_RUNTIME_BUGFIX_AUDIT.md
+          git diff --cached --check
+          git diff --cached --quiet && { echo "No staged changes"; exit 1; }
+          git commit -m "Publish v0.17.0 runtime bugfix"
+          git push origin HEAD:main
