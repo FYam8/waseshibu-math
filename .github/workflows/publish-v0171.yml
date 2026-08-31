@@ -20,7 +20,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          base64 --decode .publish_payload/v0171.b64 > /tmp/v0171.tar.gz
+          cat .publish_payload/v0171-0*.b64 | base64 --decode > /tmp/v0171.tar.gz
           echo "62b27ade7354300741965d174ee53b67b7a42d919c0222830f8f4e43a1cbcdac  /tmp/v0171.tar.gz" | sha256sum -c -
           tar -tzf /tmp/v0171.tar.gz | sort > /tmp/payload-files.txt
           cat > /tmp/expected-payload.txt <<'EOF'
