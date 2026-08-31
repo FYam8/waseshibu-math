@@ -39,8 +39,18 @@ jobs:
           git checkout -B publish-work origin/main
           tar -xzf /tmp/runtime.tar.gz -C .
           tar -xzf /tmp/supplement.tar.gz -C .
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/verify-critical.mjs')
+          s=p.read_text()
+          s=s.replace("assert.equal(version.APP_VERSION,'0.16.6')", "assert.equal(version.APP_VERSION,'0.17.0')")
+          s=s.replace("assert.equal(version.APP_VERSION,'0.16.0')", "assert.equal(version.APP_VERSION,'0.17.0')")
+          s=s.replace('v0.15.1, data v4, 160 GuidedSolutions', 'v0.17.0, data v5, 160 GuidedSolutions')
+          p.write_text(s)
+          PY
           node -e "const p=require('./package.json'); if(p.version!=='0.17.0') process.exit(1)"
           grep -q '"appVersion": "0.17.0"' public/version.json
+          grep -q "APP_VERSION,'0.17.0'" scripts/verify-critical.mjs
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -75,7 +85,7 @@ jobs:
             src/components/ExamMarkReview.tsx \
             src/pages/GuidedReview.tsx src/pages/Home.tsx src/pages/PastPapers.tsx \
             src/pages/Practice.tsx src/pages/Reinforcement.tsx src/pages/Remediation.tsx \
-            scripts/self-check.mjs scripts/test-daily-cap-continue.mjs scripts/test-goal-eta.mjs \
+            scripts/self-check.mjs scripts/verify-critical.mjs scripts/test-daily-cap-continue.mjs scripts/test-goal-eta.mjs \
             scripts/test-study-ahead.mjs scripts/test-v017-regressions.mjs \
             V0.17.0_RUNTIME_BUGFIX_AUDIT.md V0.16.6_NEXT_DAY_STUDY_AHEAD_AUDIT.md \
             V0.16.5_HOME_FLOW_CONSISTENCY_AUDIT.md
