@@ -19,7 +19,7 @@ if(home.includes('今日やること')&&home.includes('MAX 10 TASKS')&&home.incl
 if(route.includes('currentLearningPhase')&&route.includes('routePhaseDone')&&route.includes('sourceMistakeProgress')&&route.includes('requiresSourceReview')&&route.includes('旧方式の補強を完了'))ok('6フェーズ進捗・元誤答先行・旧完了者保護');else fail('新学習フェーズ進捗')
 if(reinforcement.includes('まず')&&reinforcement.includes('元の間違いを直す')&&reinforcement.includes('sourceMistakeProgress')&&reinforcement.includes('SOURCE QUESTION FIRST'))ok('補強前に元の誤答を再現');else fail('元誤答→補強の順序')
 if(mistake.includes('gradeInTarget(prefs.target,meta.grade)')&&mistake.includes('weakFieldsForStoredExam(prefs.target,latestExam,attempts)')&&mistake.includes('QUESTION BY QUESTION · TARGET ONLY')&&mistake.includes('今は後回しの問題'))ok('間違い直しを60=A / 70=A+B / 75=A+B+Cに限定');else fail('間違い直しの目標点フィルタ')
-if(paper.includes('今直す問題')&&paper.includes('gradeInTarget(strategy.target,item.grade)')&&paper.includes('今は後回しの問題')&&paper.includes('/mistakes?year=${year}'))ok('採点直後も目標範囲だけを先に直す');else fail('採点直後の目標点フィルタ')
+if(paper.includes('今直す問題')&&paper.includes('gradeInTarget(strategy.target,item.grade)')&&paper.includes('今は後回しの問題')&&paper.includes('nextLearningAction(strategy.target)'))ok('採点直後も共通次アクションで目標範囲を先に直す');else fail('採点直後の目標点フィルタ')
 
 const manifestIds=[...manifest.matchAll(/'(\d{4}-Q[^']+)':/g)].map(x=>x[1])
 if(manifestIds.length===160&&new Set(manifestIds).size===160&&questionIds.every(id=>manifestIds.includes(id)))ok('全160小問に固定表示マップ');else fail(`固定表示マップ ${manifestIds.length}/160`)
@@ -35,7 +35,7 @@ const answerData=read('src/data/examAnswers.ts'),answerIds=[...answerData.matchA
 if(answerIds.length===160&&questionIds.every(id=>answerIds.includes(id))&&new Set(answerIds).size===160)ok('全160小問の正答データ');else fail(`正答データ ${answerIds.length}/160`)
 
 const backup=read('src/dataBackup.ts'),migration=read('src/dataMigration.ts'),version=read('src/version.ts'),publicVersion=read('public/version.json')
-if(migration.includes('CURRENT_DATA_VERSION=5')&&backup.includes('GUIDED_PROGRESS_STORAGE_KEY')&&migration.includes('MIGRATION_BACKUP_STORAGE_KEY')&&migration.includes('更新前バックアップ')&&version.includes("APP_VERSION='0.16.6'")&&publicVersion.includes('"appVersion": "0.16.6"')&&publicVersion.includes('"dataVersion": 5'))ok('v0.16.6・data v5・migration前バックアップ');else fail('版・データ形式整合')
+if(migration.includes('CURRENT_DATA_VERSION=5')&&backup.includes('GUIDED_PROGRESS_STORAGE_KEY')&&migration.includes('MIGRATION_BACKUP_STORAGE_KEY')&&migration.includes('更新前バックアップ')&&version.includes("APP_VERSION='0.17.0'")&&publicVersion.includes('"appVersion": "0.17.0"')&&publicVersion.includes('"dataVersion": 5'))ok('v0.17.0・data v5・migration前バックアップ');else fail('版・データ形式整合')
 
 const guidedData=JSON.parse(read('src/data/guidedSolutions.json')),guidedIds=Object.keys(guidedData.solutions||{})
 if(guidedData.count===160&&guidedIds.length===160&&questionIds.every(id=>guidedIds.includes(id))&&guidedIds.every(id=>Array.isArray(guidedData.solutions[id].steps)&&guidedData.solutions[id].steps.length>=2))ok('160小問すべてに問題専用GuidedSolution');else fail(`GuidedSolution ${guidedIds.length}/160`)

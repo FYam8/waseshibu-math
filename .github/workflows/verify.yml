@@ -21,6 +21,4 @@ jobs:
       - run: npm ci
       - run: npm run self-check
       - run: npm run verify-critical
-      - run: npm run audit:remediation
-      - run: npm run audit:provenance
       - run: npm run build

@@ -1,5 +1,5 @@
 import questions from './data/questions.json'
-import type { ExamScore, Grade, MajorQuestion } from './types'
+import type { ExamScore, MajorQuestion } from './types'
 import { classifyRemediationField } from './data/remediation'
 import { loadAttempts, loadExamScores, loadPreferences } from './storage'
 import { canWriteLearningData, notifyWriteBlocked } from './version'
@@ -54,11 +54,11 @@ export function markYearSolved(year:number){
   saveLearningRoute({...state,solvedYears:[...state.solvedYears,year]})
 }
 
-export type OldQuestionItem={id:string,year:number,major:number,subNo:string,topic:string,title:string,field:string,grade:Grade}
+export type OldQuestionItem={id:string,year:number,major:number,subNo:string,topic:string,title:string,field:string}
 
 export function oldQuestionBank():OldQuestionItem[]{
   return (questions.questions as MajorQuestion[]).filter(q=>q.year>=2019&&q.year<=2023).flatMap(q=>q.subquestions.map(s=>({
-    id:`${q.id}-${s.no}`,year:q.year,major:q.major,subNo:s.no,topic:s.topic,title:q.title,field:classifyRemediationField(s.topic).title,grade:s.grade
+    id:`${q.id}-${s.no}`,year:q.year,major:q.major,subNo:s.no,topic:s.topic,title:q.title,field:classifyRemediationField(s.topic).title
   })))
 }
 
@@ -93,7 +93,7 @@ function practicePlanComplete(exam:ExamScore,target:TargetScore,plan:Reinforceme
 
 export function ensureReinforcementPlan(exam:ExamScore,target:TargetScore=loadPreferences().target):ReinforcementPlan{
   const state=loadLearningRoute(),key=String(exam.year),existing=state.reinforcement[key],attempts=loadAttempts()
-  const desired=exam.weakFields||[],sameFields=existing&&Object.keys(existing.fields).length===desired.length&&desired.every(field=>field in existing.fields)
+  const desired=weakFieldsForStoredExam(target,exam,attempts),sameFields=existing&&Object.keys(existing.fields).length===desired.length&&desired.every(field=>field in existing.fields)
   if(existing?.examId===exam.id&&existing.target===target&&sameFields){
     if(existing.requiresSourceReview!==undefined)return existing
     const legacyDone=practicePlanComplete(exam,target,existing,attempts,desired)
@@ -180,12 +180,25 @@ export function currentLearningPhase(){
   return 6
 }
 
+export type LearningAction={to:string;label:string}
+export function nextLearningAction(target:TargetScore=loadPreferences().target):LearningAction{
+  for(const year of [2024,2025,2026]){
+    const exam=latestExam(year)
+    if(!exam)return {to:`/past-papers?year=${year}`,label:`${year}年度を解く`}
+    const source=sourceMistakeProgress(year,target)
+    if(source.remainingIds.length)return {to:`/mistakes?year=${year}`,label:`${year}年度の元の誤答 ${source.remainingIds.length}問を直す`}
+    if(!reinforcementComplete(year))return {to:`/reinforce?source=${year}`,label:`${year}年度の類題・旧年度で補強する`}
+  }
+  return {to:'/years',label:'仕上げ・任意演習へ進む'}
+}
+
 export function routePhaseDone(phase:number){
   if(phase===1)return !!latestExam(2024)
   if(phase===2)return reinforcementComplete(2024)
   if(phase===3)return !!latestExam(2025)
   if(phase===4)return reinforcementComplete(2025)
   if(phase===5)return !!latestExam(2026)
+  if(phase===6)return !!latestExam(2026)&&reinforcementComplete(2026)
   return false
 }
 

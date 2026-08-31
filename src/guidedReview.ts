@@ -13,7 +13,7 @@ export type GuidedReviewRecord={questionId:string;step1:string;step2:string;fina
 export type GuidedReviewState=Record<string,GuidedReviewRecord>
 
 export type MasteryState='unseen'|'attempted'|'exposed'|'guided'|'reproduced'|'independent'|'consolidated'
-export type StepProgress={stepId:string;answer:string;tries:number;hintLevelUsed:0|1|2|3;completed:boolean}
+export type StepProgress={stepId:string;answer:string;tries:number;hintLevelUsed:0|1|2|3;completed:boolean;selfAssessment?:'matched'|'guided'|'unclear'}
 export type GuidedProgressRecord={
   questionId:string
   currentStepId?:string
@@ -118,9 +118,18 @@ export function updateGuidedProgress(questionId:string,patch:Partial<GuidedProgr
 }
 export function recordGuidedStep(questionId:string,stepId:string,answer:string,hintLevelUsed:0|1|2|3,completed:boolean,storage:Pick<Storage,'getItem'|'setItem'>=localStorage){
   const current=loadGuidedProgress(questionId,storage),old=current.stepProgress[stepId]
-  const item:StepProgress={stepId,answer,tries:(old?.tries||0)+1,hintLevelUsed:Math.max(old?.hintLevelUsed||0,hintLevelUsed) as 0|1|2|3,completed:old?.completed||completed}
+  const changed=!old||old.answer!==answer
+  const item:StepProgress={stepId,answer,tries:(old?.tries||0)+(changed?1:0),hintLevelUsed:Math.max(old?.hintLevelUsed||0,hintLevelUsed) as 0|1|2|3,completed:old?.completed||completed,selfAssessment:old?.selfAssessment}
   const used=Math.max(...Object.values({...current.stepProgress,[stepId]:item}).map(x=>x.hintLevelUsed),0)
   const mastery:MasteryState=current.finalAnswerSeen?'exposed':used>0?'guided':current.mastery==='unseen'?'attempted':current.mastery
+  return updateGuidedProgress(questionId,{currentStepId:stepId,stepProgress:{...current.stepProgress,[stepId]:item},mastery},storage)
+}
+
+export function assessGuidedStep(questionId:string,stepId:string,selfAssessment:'matched'|'guided'|'unclear',storage:Pick<Storage,'getItem'|'setItem'>=localStorage){
+  const current=loadGuidedProgress(questionId,storage),old=current.stepProgress[stepId]
+  if(!old)return current
+  const item:StepProgress={...old,selfAssessment,completed:selfAssessment!=='unclear'}
+  const mastery:MasteryState=selfAssessment==='matched'&&old.hintLevelUsed===0?current.mastery:(current.mastery==='consolidated'?current.mastery:'guided')
   return updateGuidedProgress(questionId,{currentStepId:stepId,stepProgress:{...current.stepProgress,[stepId]:item},mastery},storage)
 }
 export function revealGuidedFinalAnswer(questionId:string,storage:Pick<Storage,'getItem'|'setItem'>=localStorage){

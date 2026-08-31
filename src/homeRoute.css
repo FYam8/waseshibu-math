@@ -3,3 +3,6 @@
 
 .goal-eta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.goal-eta article{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid #dfe6eb;border-radius:13px;background:#fff}.goal-eta article.selected{border-color:#17202a;box-shadow:0 0 0 1px #17202a}.goal-eta article>div{display:grid;gap:2px}.goal-eta article b{font-size:14px}.goal-eta article small{color:#7a858d;font-size:10px}.goal-eta article strong{font-size:20px;white-space:nowrap}.goal-eta-note{margin:7px 0 0;color:#7a858d;font-size:11px}
 @media(max-width:620px){.goal-eta{grid-template-columns:1fr}.goal-eta article{padding:10px 12px}.goal-eta article strong{font-size:18px}}
+
+.study-ahead{margin-top:18px;padding-top:18px;border-top:1px solid var(--line,#d8dee6)}
+.study-ahead .section-head{margin-bottom:12px}

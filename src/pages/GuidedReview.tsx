@@ -4,12 +4,11 @@ import { Link, useSearchParams } from 'react-router-dom'
 import MathAnswerInput from '../components/MathAnswerInput'
 import FocusedQuestionView from '../components/FocusedQuestionView'
 import {
-  guidedOutcomeLabel,guidedQuestion,loadGuidedProgress,loadGuidedReview,recordGuidedFinal,
+  assessGuidedStep,guidedOutcomeLabel,guidedQuestion,loadGuidedProgress,loadGuidedReview,recordGuidedFinal,
   recordGuidedStep,revealGuidedFinalAnswer,saveGuidedReview,updateGuidedProgress,type GuidedOutcome
 } from '../guidedReview'
 import { loadPreferences } from '../storage'
 import { gradeAdvice, targetGoalLabel } from '../targetStrategy'
-import QuestionProvenance from '../components/QuestionProvenance'
 
 export default function GuidedReview(){
   const [params]=useSearchParams(),questionId=params.get('q')||''
@@ -21,6 +20,7 @@ export default function GuidedReview(){
   const [stepIndex,setStepIndex]=useState(0)
   const [responses,setResponses]=useState<Record<string,string>>(()=>initialProgress?Object.fromEntries(Object.entries(initialProgress.stepProgress).map(([id,p])=>[id,p.answer])):{})
   const [hintLevels,setHintLevels]=useState<Record<string,0|1|2|3>>(()=>initialProgress?Object.fromEntries(Object.entries(initialProgress.stepProgress).map(([id,p])=>[id,p.hintLevelUsed])):{})
+  const [stepAssessments,setStepAssessments]=useState<Record<string,'matched'|'guided'|'unclear'>>(()=>initialProgress?Object.fromEntries(Object.entries(initialProgress.stepProgress).filter(([,p])=>p.selfAssessment).map(([id,p])=>[id,p.selfAssessment!])):{})
   const [finalAnswer,setFinalAnswer]=useState(initialProgress?.finalAnswer||legacy?.finalAnswer||'')
   const [result,setResult]=useState<boolean|null>(null)
   const [mastery,setMastery]=useState(initialProgress?.mastery||'unseen')
@@ -42,9 +42,17 @@ export default function GuidedReview(){
     recordGuidedStep(q.id,current.id,responses[current.id]||'',next,false)
     if(level===3)updateGuidedProgress(q.id,{mastery:progress.mastery==='consolidated'?'consolidated':'exposed'})
   }
-  const completeStep=()=>{
+  const assessStep=(assessment:'matched'|'guided'|'unclear')=>{
     const value=responses[current.id]||''
+    recordGuidedStep(q.id,current.id,value,hintLevel,false)
+    assessGuidedStep(q.id,current.id,assessment)
+    setStepAssessments(v=>({...v,[current.id]:assessment}))
+  }
+  const completeStep=()=>{
+    const value=responses[current.id]||'',assessment=stepAssessments[current.id]
+    if(!assessment||assessment==='unclear')return
     recordGuidedStep(q.id,current.id,value,hintLevel,true)
+    assessGuidedStep(q.id,current.id,assessment)
     persistLegacy(undefined,progress.finalAnswerSeen,Object.values({...hintLevels,[current.id]:hintLevel}).some(v=>v>0))
     if(stepIndex<steps.length-1)setStepIndex(v=>v+1)
   }
@@ -60,11 +68,11 @@ export default function GuidedReview(){
     persistLegacy(undefined,true,true)
   }
   const resetForRetry=()=>{setMode('retry');setFinalAnswer('');setResult(null)}
-  const remedySource=q.year===2024||q.year===2025?`&source=${q.year}`:''
+  const remedySource=q.year===2024||q.year===2025||q.year===2026?`&source=${q.year}`:''
   const remedyLink=`/remediate?topic=${encodeURIComponent(q.topic)}${remedySource}&q=${encodeURIComponent(q.id)}`
 
   return <>
-    <div className="page-head"><div><span className="eyebrow">GUIDED SOLUTION · {targetGoalLabel(prefs.target)}</span><h1>{q.year}年度 大問{q.major}（{q.subNo}）</h1><QuestionProvenance kind="past-paper" year={q.year} major={q.major} subNo={q.subNo} grade={q.grade}/><p className="muted">{q.topic}・{gradeAdvice(prefs.target,q.grade)}</p></div><Link className="button" to="/mistakes">間違い直しへ戻る</Link></div>
+    <div className="page-head"><div><span className="eyebrow">GUIDED SOLUTION · {targetGoalLabel(prefs.target)}</span><h1>{q.year}年度 大問{q.major}（{q.subNo}）</h1><p className="muted">{q.topic}・優先度{q.grade}　{gradeAdvice(prefs.target,q.grade)}</p></div><Link className="button" to="/mistakes">間違い直しへ戻る</Link></div>
     <div className="one-question-banner"><b>今はこの1問だけ</b><span>ほかの小問・ほかの正答は表示しません。</span><em>{guidedOutcomeLabel(mastery)}</em></div>
     <div className="guided-review-grid">
       <section className="card guided-problem"><div className="section-head"><div><span className="eyebrow">FOCUSED PROBLEM</span><h2>{q.title}</h2></div><b>（{q.subNo}）</b></div><FocusedQuestionView year={q.year} major={q.major} subIndex={q.subIndex} subCount={q.subCount} subNo={q.subNo} topic={q.topic}/></section>
@@ -83,7 +91,10 @@ export default function GuidedReview(){
               {hintLevel<1&&<button className="button" onClick={()=>setHint(1)}>ヒント1</button>}
               {hintLevel>=1&&hintLevel<2&&<button className="button" onClick={()=>setHint(2)}>さらにヒント</button>}
               {hintLevel>=2&&hintLevel<3&&<button className="button" onClick={()=>setHint(3)}>STEPの答え</button>}
-              {stepIndex<steps.length-1?<button className="button primary" disabled={!(responses[current.id]||'').trim()&&hintLevel<3} onClick={completeStep}>次のSTEPへ</button>:<button className="button primary" onClick={()=>{completeStep();setMode('retry');setFinalAnswer('');setResult(null)}}>解説を閉じて自力再現へ</button>}
+              <button className={`button ${stepAssessments[current.id]==='matched'?'primary':''}`} disabled={!(responses[current.id]||'').trim()} onClick={()=>assessStep('matched')}>自分でも同じ考えになった</button>
+              <button className={`button ${stepAssessments[current.id]==='guided'?'primary':''}`} disabled={hintLevel<1} onClick={()=>assessStep('guided')}>ヒント・確認を見て分かった</button>
+              <button className={`button ${stepAssessments[current.id]==='unclear'?'primary':''}`} onClick={()=>assessStep('unclear')}>まだ分からない</button>
+              {stepIndex<steps.length-1?<button className="button primary" disabled={!stepAssessments[current.id]||stepAssessments[current.id]==='unclear'} onClick={completeStep}>次のSTEPへ</button>:<button className="button primary" disabled={!stepAssessments[current.id]||stepAssessments[current.id]==='unclear'} onClick={()=>{completeStep();setMode('retry');setFinalAnswer('');setResult(null)}}>解説を閉じて自力再現へ</button>}
               <button className="button" onClick={revealAnswer}>この1問の答えを見る</button>
             </div>
           </div>

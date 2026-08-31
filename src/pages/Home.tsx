@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
 import { useMemo, useState } from 'react'
-import { currentLearningPhase, latestExam, reinforcementComplete, routePhaseDone, sourceMistakeProgress } from '../learningRoute'
+import { currentLearningPhase, latestExam, nextLearningAction, reinforcementComplete, routePhaseDone, sourceMistakeProgress } from '../learningRoute'
 import { loadAttempts, loadExamScores, loadPreferences, savePreferences } from '../storage'
 import { loadPrepState, runExamIntegrityCheck, savePrepState } from '../preflight'
-import { buildOptionalNextTask, buildTodayTasks, todayPlanSummary } from '../dailyPlan'
+import { buildNextDayTasks, buildOptionalNextTask, buildTodayTasks, nextDayPlanSummary, startNextDayPlan, todayPlanSummary } from '../dailyPlan'
 import { gradeInTarget, storedExamItems, strategyForStoredExam, targetGoalLabel, targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
 import { buildGoalDayEstimates } from '../targetEta'
 
@@ -27,11 +27,12 @@ const phases=[
   {n:3,title:'2025年度で改善確認'},
   {n:4,title:'残った弱点を直す'},
   {n:5,title:'2026年度で仕上がり確認'},
-  {n:6,title:'仕上げ・任意演習'}
+  {n:6,title:'2026年度の弱点補強・仕上げ'}
 ]
 
 export default function Home(){
   const [prefs,setPrefs]=useState(loadPreferences())
+  const [aheadTick,setAheadTick]=useState(0)
   const phase=currentLearningPhase(),scores=loadExamScores(),attempts=loadAttempts(),prep=loadPrepState(),integrity=runExamIntegrityCheck()
   const latest=scores[0],exam24=latestExam(2024),exam25=latestExam(2025),exam26=latestExam(2026)
   const draft24=draftFor(2024),draft25=draftFor(2025),draft26=draftFor(2026)
@@ -72,14 +73,17 @@ export default function Home(){
       if(hasDraftProgress(draft26))return draft26?.phase==='mark'?{to:'/past-papers?year=2026&review=1',label:'採点を続ける'}:{to:'/past-papers?year=2026',label:'続きを解く'}
       return {to:'/past-papers?year=2026',label:exam26?'2026年度を再確認':'2026年度を解く'}
     }
-    return {to:'/years',label:'任意で残り年度を演習する'}
+    return nextLearningAction(prefs.target)
   }
 
-  const progression=resume||(!prep.completed&&!prep.skipped?{to:'/setup-check',label:'準備5問を確認する'}:phase<6?phaseAction(phase):null)
+  const progression=resume||(!prep.completed&&!prep.skipped?{to:'/setup-check',label:'準備5問を確認する'}:phaseAction(phase))
   const progressionTask=progression?{id:`progression:${progression.to}`,kind:'past-paper' as const,title:progression.label,detail:'学習サイクルの次の1ステップ',to:progression.to,priority:1}:undefined
   const todayTasks=useMemo(()=>buildTodayTasks(prefs.target,new Date(),progressionTask),[prefs.target,progressionTask?.id])
   const todaySummary=useMemo(()=>todayPlanSummary(prefs.target,new Date(),progressionTask),[prefs.target,progressionTask?.id,todayTasks.length])
   const optionalNext=useMemo(()=>buildOptionalNextTask(prefs.target,new Date(),progressionTask),[prefs.target,progressionTask?.id,todayTasks.length])
+  const nextDaySummary=useMemo(()=>nextDayPlanSummary(prefs.target,new Date(),progressionTask),[prefs.target,progressionTask?.id,todayTasks.length,aheadTick])
+  const nextDayTasks=useMemo(()=>buildNextDayTasks(prefs.target,new Date(),progressionTask),[prefs.target,progressionTask?.id,todayTasks.length,aheadTick])
+  const startAhead=()=>{startNextDayPlan(prefs.target,new Date(),progressionTask);setAheadTick(x=>x+1)}
   // 通常候補がない日も「次の学習サイクル1件」を日次計画へ固定する。完了後に次フェーズを必須補充しない。
   const taskList=todayTasks
   const latestItems=latest?storedExamItems(latest,attempts):[]
@@ -92,10 +96,10 @@ export default function Home(){
         <div className="goal-block"><span>学習目標</span><strong>{targetGoalLabel(prefs.target)}</strong><small>目標と現在得点は別に管理</small></div>
       </div>
       <div className="target-row goal-selector"><span>目標を変更</span>{([60,70,75] as const).map((t,i)=><button key={t} className={`target-chip ${prefs.target===t?'selected':''}`} onClick={()=>setTarget(t)}>{String.fromCharCode(65+i)} {t}点</button>)}</div>
-      <div className="goal-eta" aria-label="学習目標ごとの推定残り日数">
+      <div className="goal-eta" aria-label="学習目標ごとの残り学習量">
         {goalDayEstimates.map(estimate=><article key={estimate.target} className={prefs.target===estimate.target?'selected':''}>
           <div><b>{estimate.label}</b><small>{estimate.includedQuestions}問を対象</small></div>
-          <strong>{estimate.complete?'達成':`約${estimate.days}日`}</strong>
+          <strong>{estimate.complete?'学習量完了':`残り学習量 約${estimate.days}日`}</strong>
         </article>)}
       </div>
       <p className="goal-eta-note">現在の学習履歴と「1日最大10課題」から計算した学習量の目安です。新しい誤答や定着状況に応じて自動更新します。合格点到達を保証する日数ではありません。</p>
@@ -104,7 +108,21 @@ export default function Home(){
           <div className="today-list">{taskList.map((task,i)=><article key={task.id}><span>{i+1}</span><div><b>{task.title}</b><small>{task.detail}</small></div><Link className={i===0?'button primary':'button'} to={task.to}>{i===0?'今これをやる':'開く'}</Link></article>)}</div>
           <div className="today-more"><span>まず今日の必須課題を終えます。追加演習は完了後に表示します。</span></div>
         </>
-        :<div className="today-complete"><b>✓ 今日の数学は完了</b><p>必須課題は完了です。ここで終えても大丈夫です。時間があれば、学習サイクル上の「次のアクション」へ1件だけ進めます。</p><Link className="button" to={optionalNext?.to||'/years'}>{optionalNext?'時間があれば次のアクションへ':'時間があれば先へ進む'}</Link>{optionalNext&&<small>{optionalNext.title}</small>}</div>}
+        :<>
+          <div className="today-complete">
+            <b>✓ 今日の数学は完了</b>
+            <p>必須課題は完了です。ここで終えても大丈夫です。時間があれば「次のアクション」を1件だけ進めるか、次の日の分を最大10件まで先取りできます。</p>
+            <div className="actions">
+              <Link className="button" to={optionalNext?.to||'/years'}>{optionalNext?'時間があれば次のアクションへ':'時間があれば先へ進む'}</Link>
+              {!nextDaySummary.started&&<button className="button" type="button" onClick={startAhead}>次の日の分も先取りする</button>}
+            </div>
+            {optionalNext&&<small>次のアクション：{optionalNext.title}</small>}
+          </div>
+          {nextDaySummary.started&&<div className="study-ahead">
+            <div className="section-head"><div><span className="eyebrow">STUDY AHEAD · MAX 10 TASKS</span><h2>{nextDaySummary.date} の分を先取り</h2></div><b>{nextDayTasks.length?`残り ${nextDayTasks.length}件`:'完了'}</b></div>
+            {nextDayTasks.length?<div className="today-list">{nextDayTasks.map((task,i)=><article key={`ahead-${task.id}`}><span>{i+1}</span><div><b>{task.title}</b><small>{task.detail}</small></div><Link className={i===0?'button primary':'button'} to={task.to}>{i===0?'今これをやる':'開く'}</Link></article>)}</div>:<div className="today-complete"><b>✓ 次の日の分も完了</b><p>先取り分まで完了しました。ここで終了して大丈夫です。翌日は、この先取り結果を引き継いで同じ課題を重複して出しません。</p></div>}
+          </div>}
+        </>}
     </section>
 
     <section className="grid three status-grid">

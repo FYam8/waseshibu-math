@@ -4,7 +4,7 @@ import questions from '../data/questions.json'
 import { examPages, examRole, pointsFor } from '../data/examConfig'
 import ExamMarkReview from '../components/ExamMarkReview'
 import { createRecordId, loadExamScores, loadPreferences, saveAttempt, saveExamScore } from '../storage'
-import { currentLearningStep, markYearSolved } from '../learningRoute'
+import { currentLearningStep, markYearSolved, nextLearningAction } from '../learningRoute'
 import { isExamAnswerCorrect } from '../data/examAnswers'
 import { cleanAnswerInput } from '../answer'
 import { runExamIntegrityCheck } from '../preflight'
@@ -17,7 +17,7 @@ const DRAFT_KEY='waseshibu-math-exam-drafts-v2'
 const BASE=import.meta.env.BASE_URL
 
 type AutoStatus='correct'|'wrong'|'unanswered'
-type Draft={answers:Record<string,string>;flags:Record<string,boolean>;causes:Record<string,string>;overrides:Record<string,'correct'|'wrong'>;seconds:number;majorIndex:number;phase:'solve'|'mark';updatedAt:string}
+type Draft={answers:Record<string,string>;flags:Record<string,boolean>;causes:Record<string,string>;overrides:Record<string,'correct'|'wrong'>;seconds:number;questionSeconds?:Record<string,number>;majorIndex:number;phase:'solve'|'mark';updatedAt:string}
 type SavedResult={score:number;correct:number;wrong:number;unanswered:number;weak:string[];strategy:ExamTargetStrategy;wrongItems:StrategyItem[]}
 
 function readDraft(year:number):Partial<Draft>{
@@ -45,6 +45,7 @@ export default function PastPapers(){
   const [causeMap,setCauseMap]=useState<Record<string,string>>(initial.causes||{})
   const [overrides,setOverrides]=useState<Record<string,'correct'|'wrong'>>(initial.overrides||{})
   const [seconds,setSeconds]=useState(Number(initial.seconds)||0)
+  const [questionSeconds,setQuestionSeconds]=useState<Record<string,number>>(initial.questionSeconds||{})
   const [running,setRunning]=useState(!review)
   const [focused,setFocused]=useState<string>('')
   const [answerOpen,setAnswerOpen]=useState(()=>window.innerWidth>700)
@@ -61,8 +62,8 @@ export default function PastPapers(){
   }
   const step=currentLearningStep(),needsWarning=(year===2025&&step<5)||(year===2026&&step<7)
 
-  useEffect(()=>{if(!running||phase!=='solve')return;const id=window.setInterval(()=>setSeconds(s=>s+1),1000);return()=>window.clearInterval(id)},[running,phase])
-  useEffect(()=>{if(phase==='result')return;writeDraft(year,{answers,flags,causes:causeMap,overrides,seconds,majorIndex,phase:phase==='mark'?'mark':'solve',updatedAt:new Date().toISOString()})},[year,answers,flags,causeMap,overrides,seconds,majorIndex,phase])
+  useEffect(()=>{if(!running||phase!=='solve')return;const id=window.setInterval(()=>{setSeconds(s=>s+1);if(focused)setQuestionSeconds(v=>({...v,[focused]:(v[focused]||0)+1}))},1000);return()=>window.clearInterval(id)},[running,phase,focused])
+  useEffect(()=>{if(phase==='result')return;writeDraft(year,{answers,flags,causes:causeMap,overrides,seconds,questionSeconds,majorIndex,phase:phase==='mark'?'mark':'solve',updatedAt:new Date().toISOString()})},[year,answers,flags,causeMap,overrides,seconds,questionSeconds,majorIndex,phase])
   useEffect(()=>{if(phase!=='solve')return;const id=`exposure-${year}`;if(sessionStorage.getItem(id))return;sessionStorage.setItem(id,'1');saveAttempt({id:createRecordId(id),questionId:id,mode:'multi',topic:`${year}年度 過去問`,status:'deferred',at:new Date().toISOString()})},[year,phase])
 
   const insert=(text:string)=>{
@@ -83,7 +84,11 @@ export default function PastPapers(){
     const result:SavedResult={score,correct:graded.filter(x=>x.status==='correct').length,wrong:graded.filter(x=>x.status==='wrong').length,unanswered:graded.filter(x=>x.status==='unanswered').length,weak,strategy,wrongItems}
     const now=new Date().toISOString(),prior=loadExamScores().some(x=>x.year===year&&x.completed!==false)
     saveExamScore({id:createRecordId(`exam-${year}`),year,score:result.score,correctCount:result.correct,wrongCount:result.wrong,unansweredCount:result.unanswered,completed:true,attemptKind:prior?'retake':'first',weakFields:weak,at:now})
-    graded.forEach(x=>saveAttempt({id:createRecordId(`exam-${x.key}`),questionId:`exam-${x.key}`,mode:'multi',topic:x.sub.topic,status:x.status==='correct'?'correct':x.status==='unanswered'?'deferred':'wrong',mistakeTag:causeMap[x.key],diagnosis:x.status==='correct'?'correct':'recoverable',answer:answers[x.key]||'',flagged:!!flags[x.key],seconds,at:now}))
+    graded.forEach(x=>{
+      const cause=causeMap[x.key]||''
+      const diagnosis=x.status==='correct'?'correct':cause==='時間不足'?'time':cause==='現時点では難しい'?'difficult':cause?'recoverable':undefined
+      saveAttempt({id:createRecordId(`exam-${x.key}`),questionId:`exam-${x.key}`,mode:'multi',topic:x.sub.topic,status:x.status==='correct'?'correct':x.status==='unanswered'?'deferred':'wrong',mistakeTag:cause||undefined,diagnosis,answer:answers[x.key]||'',flagged:!!flags[x.key],seconds:questionSeconds[x.key],at:now})
+    })
     try{const all=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');delete all[String(year)];localStorage.setItem(DRAFT_KEY,JSON.stringify(all))}catch{/* no-op */}
     void createRestorePoint('exam_complete').catch(()=>{/* saved result remains */})
     setSavedResult(result);setPhase('result');window.scrollTo({top:0,behavior:'smooth'})
@@ -100,7 +105,7 @@ export default function PastPapers(){
     {priorityWrong.length>0&&<section className="card result-wrong-first"><div className="section-head"><div><span className="eyebrow">FIX THESE FIRST · TARGET {strategy.target}</span><h2>今直す問題</h2></div><b>{priorityWrong.length}問</b></div><p className="muted">{strategy.target}点目標に含まれる問題だけを先に表示します。解説画面では、その小問とその小問の正答だけを表示します。</p><div className="guided-question-list">{priorityWrong.map(item=><article key={item.key}><div><b>大問{item.major}（{item.subNo}）</b><span>{item.topic}</span><small>{item.status==='unanswered'?'未回答':'不正解'}・問題ランク{item.grade}{item.cause?` ／ ${item.cause}`:''}</small></div><Link className="button primary" to={`/guided-review?q=${encodeURIComponent(item.key)}`}>この1問を直す</Link></article>)}</div></section>}
     {deferredWrong.length>0&&strategy.target<75&&<details className="card deferred-mistakes"><summary>今は後回しの問題 {deferredWrong.length}問</summary><p className="muted">現在の{strategy.target}点目標には含めません。必要な場合だけ開いて確認できます。</p><div className="guided-question-list">{deferredWrong.map(item=><article key={item.key}><div><b>大問{item.major}（{item.subNo}）</b><span>{item.topic}</span><small>問題ランク{item.grade}・今は後回し</small></div><Link className="button" to={`/guided-review?q=${encodeURIComponent(item.key)}`}>任意で確認</Link></article>)}</div></details>}
     <section className={`card target-result ${strategy.reached?'reached':''}`}><div className="section-head"><div><span className="eyebrow">TARGET {strategy.target}</span><h2>{strategy.reached?`${strategy.target}点目標に到達`:`目標まであと${strategy.gap}点`}</h2></div><b className="target-projection">回収目安 約{strategy.projectedScore}点</b></div><p>{strategy.summary}</p>{strategy.candidates.length>0&&<div className="recovery-list">{strategy.candidates.map((item,i)=><article key={item.key}><strong>{i+1}</strong><div><b>{item.label}</b><small>優先度{item.grade}・約{item.points}点　{item.reason}</small></div></article>)}</div>}<div className="time-plan"><b>目標別の時間配分</b><div>{strategy.timePlan.map(item=><span key={item.label} style={{flex:item.percent}}>{item.label}<small>{item.percent}%</small></span>)}</div></div><p className="muted">時間配分と回収点は学習上の目安です。正誤判定と実得点は目標設定によって変わりません。</p></section>
-    <section className="card"><span className="eyebrow">TOP 3 WEAKNESSES · TARGET {strategy.target}</span><h2>目標に直結する弱点3分野</h2>{savedResult.weak.length?<div className="weak-three">{savedResult.weak.map((x,i)=><article key={x}><strong>{i+1}</strong><div><b>{x}</b><p>上の目標範囲の小問を直してから、旧年度問題・類題4問で定着させます。</p></div></article>)}</div>:<p>目標範囲の失点分野はありませんでした。</p>}<div className="actions">{year===2024||year===2025?<Link className="button primary" to={priorityWrong.length?`/mistakes?year=${year}`:`/reinforce?source=${year}`}>{priorityWrong.length?'間違い直しを始める':'弱点補強を始める'}</Link>:<Link className="button primary" to="/years">残りの年度演習へ</Link>}<Link className="button" to="/">ホームへ</Link></div></section>
+    <section className="card"><span className="eyebrow">TOP 3 WEAKNESSES · TARGET {strategy.target}</span><h2>目標に直結する弱点3分野</h2>{savedResult.weak.length?<div className="weak-three">{savedResult.weak.map((x,i)=><article key={x}><strong>{i+1}</strong><div><b>{x}</b><p>上の目標範囲の小問を直してから、旧年度問題・類題4問で定着させます。</p></div></article>)}</div>:<p>目標範囲の失点分野はありませんでした。</p>}<div className="actions">{(()=>{const next=nextLearningAction(strategy.target);return <Link className="button primary" to={next.to}>{next.label}</Link>})()}<Link className="button" to="/">ホームへ</Link></div></section>
   </>}
 
   return <>
@@ -108,7 +113,7 @@ export default function PastPapers(){
     <div className="major-tabs" aria-label="大問選択">{majors.map((m,i)=><button key={m.id} className={i===majorIndex?'active':''} onClick={()=>changeMajor(i)}>大問{m.major}<small>{m.subquestions.length}小問</small></button>)}</div>
     <div className={`exam-workspace ${answerOpen?'answer-open':''}`}>
       <section className="problem-pane card"><div className="section-head"><div><span className="eyebrow">PROBLEM · EXAM MODE</span><h2>大問 {q.major}　{q.title}</h2></div><b>{q.major===1?(year===2019?45:40):year===2019&&q.major===2?10:15}点</b></div><p className="muted">本番演習中は、実際の試験と同じように問題ページ全体を表示します。</p><div className="exam-images">{(examPages[year]?.[q.major-1]||[]).map(page=><img key={page} src={paperImage(year,page)} alt={`${year}年度 大問${q.major} 問題ページ${page}`} loading="eager" />)}</div></section>
-      <aside className={`answer-dock card ${answerOpen?'open':'closed'}`}><button className="answer-dock-toggle" onClick={()=>setAnswerOpen(v=>!v)} aria-expanded={answerOpen}>解答欄 {q.subquestions.filter(s=>(answers[keyFor(q,s.no)]||'').trim()).length}/{q.subquestions.length}<span>{answerOpen?'閉じる':'開く'}</span></button>{answerOpen&&<><div className="dock-scroll">{q.subquestions.map(s=>{const key=keyFor(q,s.no);return <div className="dock-question" key={key}><div className="dock-qhead"><b>({s.no})</b><span>{s.topic}</span><button className={flags[key]?'flagged':''} onClick={()=>setFlags(v=>({...v,[key]:!v[key]}))}>△ 迷い</button></div><input ref={el=>{inputs.current[key]=el}} value={answers[key]||''} maxLength={120} onFocus={()=>setFocused(key)} onChange={e=>setAnswers(v=>({...v,[key]:cleanAnswerInput(e.target.value)}))} placeholder="答えを入力（全角可）" autoCapitalize="off" autoCorrect="off" spellCheck={false}/></div>})}</div><div className="shared-keypad" aria-label="数式入力補助">{[['分数','/'],['√','√()'],['x²','^2'],['( )','()'],['−','-'],['±','±'],['π','π'],['比',':'],[',',',']].map(([label,text])=><button key={label} onClick={()=>insert(text)}>{label}</button>)}</div><div className="major-nav"><button className="button" disabled={majorIndex===0} onClick={()=>changeMajor(majorIndex-1)}>← 前</button>{majorIndex<majors.length-1?<button className="button primary" onClick={()=>changeMajor(majorIndex+1)}>次の大問 →</button>:<button className="button primary" onClick={beginMarking}>解答を終了して自動採点</button>}</div></>}</aside>
+      <aside className={`answer-dock card ${answerOpen?'open':'closed'}`}><button className="answer-dock-toggle" onClick={()=>setAnswerOpen(v=>!v)} aria-expanded={answerOpen}>解答欄 {q.subquestions.filter(s=>(answers[keyFor(q,s.no)]||'').trim()).length}/{q.subquestions.length}<span>{answerOpen?'閉じる':'開く'}</span></button>{answerOpen&&<><div className="dock-scroll">{q.subquestions.map(s=>{const key=keyFor(q,s.no);return <div className="dock-question" key={key}><div className="dock-qhead"><b>({s.no})</b><span>{s.topic}</span><button className={flags[key]?'flagged':''} onClick={()=>setFlags(v=>({...v,[key]:!v[key]}))}>△ 迷い</button></div><input ref={el=>{inputs.current[key]=el}} value={answers[key]||''} maxLength={120} onFocus={()=>setFocused(key)} onBlur={()=>setFocused(v=>v===key?'':v)} onChange={e=>setAnswers(v=>({...v,[key]:cleanAnswerInput(e.target.value)}))} placeholder="答えを入力（全角可）" autoCapitalize="off" autoCorrect="off" spellCheck={false}/></div>})}</div><div className="shared-keypad" aria-label="数式入力補助">{[['分数','/'],['√','√()'],['x²','^2'],['( )','()'],['−','-'],['±','±'],['π','π'],['比',':'],[',',',']].map(([label,text])=><button key={label} onClick={()=>insert(text)}>{label}</button>)}</div><div className="major-nav"><button className="button" disabled={majorIndex===0} onClick={()=>changeMajor(majorIndex-1)}>← 前</button>{majorIndex<majors.length-1?<button className="button primary" onClick={()=>changeMajor(majorIndex+1)}>次の大問 →</button>:<button className="button primary" onClick={beginMarking}>解答を終了して自動採点</button>}</div></>}</aside>
     </div>
     <div className="floating-timer" aria-label="試験タイマー"><b>{formatTime(seconds)}</b><button onClick={()=>setRunning(v=>!v)}>{running?'停止':'再開'}</button></div>
   </>

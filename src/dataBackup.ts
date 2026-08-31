@@ -2,7 +2,7 @@ import { CURRENT_DATA_VERSION, DATA_VERSION_KEY, GUIDED_REVIEW_STORAGE_KEY, GUID
 
 export const BACKUP_KEYS=[
   'waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily',
-  'waseshibu-math-exam-scores','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1',GUIDED_REVIEW_STORAGE_KEY,GUIDED_PROGRESS_STORAGE_KEY,'waseshibu-math-data-version'
+  'waseshibu-math-exam-scores','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1','waseshibu-math-daily-required-plan-v2','waseshibu-math-study-ahead-plan-v1',GUIDED_REVIEW_STORAGE_KEY,GUIDED_PROGRESS_STORAGE_KEY,'waseshibu-math-data-version'
 ] as const
 
 export type BackupKey=typeof BACKUP_KEYS[number]
@@ -32,7 +32,7 @@ export function validateBackup(value:unknown):BackupPackage{
   for(const key of Object.keys(data))if(!BACKUP_KEYS.includes(key as BackupKey)&&key!==LEGACY_DRAFT_KEY)throw new Error(`未対応のデータ項目が含まれています：${key}`)
   const arrays:BackupKey[]=['waseshibu-math-attempts','waseshibu-math-exam-scores']
   for(const key of arrays)if(key in data&&!Array.isArray(data[key]))throw new Error(`${key} の形式が壊れています`)
-  const objects:BackupKey[]=['waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1',GUIDED_REVIEW_STORAGE_KEY,GUIDED_PROGRESS_STORAGE_KEY]
+  const objects:BackupKey[]=['waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1','waseshibu-math-daily-required-plan-v2','waseshibu-math-study-ahead-plan-v1',GUIDED_REVIEW_STORAGE_KEY,GUIDED_PROGRESS_STORAGE_KEY]
   for(const key of objects)if(key in data&&data[key]!==null&&!isObject(data[key]))throw new Error(`${key} の形式が壊れています`)
   const filtered:Partial<Record<BackupKey,unknown>>={}
   BACKUP_KEYS.forEach(key=>{if(key in data)filtered[key]=data[key]})
@@ -51,7 +51,7 @@ function uniqueById(local:unknown,incoming:unknown){
 
 export function mergeBackupValue(key:BackupKey,local:unknown,incoming:unknown){
   if(key.endsWith('attempts')||key.endsWith('exam-scores'))return uniqueById(local,incoming)
-  if(key.endsWith('exam-drafts-v2')||key===GUIDED_REVIEW_STORAGE_KEY||key===GUIDED_PROGRESS_STORAGE_KEY)return {...(isObject(local)?local:{}),...(isObject(incoming)?incoming:{})}
+  if(key.endsWith('exam-drafts-v2')||key.endsWith('daily-required-plan-v2')||key.endsWith('study-ahead-plan-v1')||key===GUIDED_REVIEW_STORAGE_KEY||key===GUIDED_PROGRESS_STORAGE_KEY)return {...(isObject(local)?local:{}),...(isObject(incoming)?incoming:{})}
   if(key.endsWith('learning-route-v1')){
     const a:any=isObject(local)?local:{},b:any=isObject(incoming)?incoming:{},reinforcement={...(a.reinforcement||{})}
     for(const [planKey,incomingPlan] of Object.entries(b.reinforcement||{})){

@@ -23,7 +23,7 @@ const focus=await loadModule('src/data/questionFocus.ts')
 const targetStrategy=await loadModule('src/targetStrategy.ts')
 const version=await loadModule('src/version.ts')
 
-assert.equal(version.APP_VERSION,'0.16.6')
+assert.equal(version.APP_VERSION,'0.17.0')
 assert.equal(migration.CURRENT_DATA_VERSION,5)
 assert.equal(guided.GUIDED_REVIEW_KEY,'waseshibu-math-guided-review-v1')
 assert.equal(guided.GUIDED_PROGRESS_KEY,'waseshibu-math-guided-progress-v2')
@@ -44,7 +44,7 @@ const sample={
 const source=new MemoryStorage(Object.fromEntries(Object.entries(sample).map(([key,value])=>[key,JSON.stringify(value)])))
 const pkg=backup.collectBackup(source),parsed=backup.parseBackup(JSON.stringify(pkg)),restored=new MemoryStorage()
 backup.restoreBackup(restored,parsed,'replace')
-for(const key of backup.BACKUP_KEYS)assert.deepEqual(JSON.parse(restored.getItem(key)),pkg.data[key],`round trip: ${key}`)
+for(const key of backup.BACKUP_KEYS)assert.deepEqual(JSON.parse(restored.getItem(key)),pkg.data[key]??null,`round trip: ${key}`)
 
 const v2Seed={
   'waseshibu-math-attempts':JSON.stringify([{id:'keep',questionId:'exam-2024-Q1-1',status:'wrong',at:'2026-01-01'}]),
@@ -144,4 +144,4 @@ assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTar
 for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100)
 
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`v0.15.1, data v4, 160 GuidedSolutions, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK, integrity: 160/160`)
+console.log(`v0.17.0, data v5, 160 GuidedSolutions, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK, integrity: 160/160`)

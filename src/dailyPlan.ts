@@ -120,7 +120,14 @@ function saveDailyRequiredPlan(plan:DailyRequiredPlan){
 }
 
 function reconcileDailyPlan(target:TargetScore,now=new Date(),fallbackTask?:TodayTask){
-  const date=localDateKey(now),plan=loadDailyRequiredPlan(date,target)
+  const date=localDateKey(now)
+  let plan=loadDailyRequiredPlan(date,target)
+  // 前日に「次の日の分」として先取りした計画は、その日になったらそのまま今日の計画として引き継ぐ。
+  // 先取り済みの課題を翌日にもう一度10件課すことを防ぐ。
+  const ahead=loadStudyAheadPlan()
+  if(!plan.pendingIds.length&&!plan.completedIds.length&&!plan.fallbackTask&&ahead?.date===date){
+    plan={date,target:ahead.target,pendingIds:[...ahead.pendingIds],completedIds:[...ahead.completedIds],...(ahead.fallbackTask?{fallbackTask:ahead.fallbackTask}:{})}
+  }
   const targetCandidates=buildTodayTaskCandidates(target,now)
   const allCandidates=buildTodayTaskCandidates(75,now)
   const allCandidateIds=new Set(allCandidates.map(task=>task.id))
@@ -157,6 +164,93 @@ function reconcileDailyPlan(target:TargetScore,now=new Date(),fallbackTask?:Toda
   const next:DailyRequiredPlan={date,target,pendingIds,completedIds,...(storedFallback?{fallbackTask:storedFallback}:{})}
   saveDailyRequiredPlan(next)
   return {plan:next,targetCandidates}
+}
+
+
+const STUDY_AHEAD_PLAN_KEY='waseshibu-math-study-ahead-plan-v1'
+type StudyAheadPlan={date:string;target:TargetScore;pendingIds:string[];completedIds:string[];fallbackTask?:TodayTask}
+
+function addLocalDays(now:Date,days:number){
+  const d=new Date(now)
+  d.setDate(d.getDate()+days)
+  return d
+}
+function loadStudyAheadPlan():StudyAheadPlan|null{
+  try{
+    const parsed=JSON.parse(localStorage.getItem(STUDY_AHEAD_PLAN_KEY)||'null') as StudyAheadPlan|null
+    if(parsed&&typeof parsed.date==='string'&&Array.isArray(parsed.pendingIds)&&Array.isArray(parsed.completedIds))return parsed
+  }catch{/* ignore broken optional plan */}
+  return null
+}
+function saveStudyAheadPlan(plan:StudyAheadPlan){
+  try{localStorage.setItem(STUDY_AHEAD_PLAN_KEY,JSON.stringify(plan))}catch{/* optional study-ahead must not block learning */}
+}
+
+function reconcileStudyAheadPlan(target:TargetScore,now=new Date(),fallbackTask?:TodayTask,create=false){
+  const nextDate=addLocalDays(now,1),date=localDateKey(nextDate)
+  let plan=loadStudyAheadPlan()
+  if(!plan||plan.date!==date){
+    if(!create)return {plan:null as StudyAheadPlan|null,targetCandidates:[] as TodayTask[]}
+    plan={date,target,pendingIds:[],completedIds:[]}
+  }
+  const targetCandidates=buildTodayTaskCandidates(target,nextDate)
+  const allCandidates=buildTodayTaskCandidates(75,nextDate)
+  const allCandidateIds=new Set(allCandidates.map(task=>task.id))
+
+  let storedFallback=plan.fallbackTask
+  const fallbackCompleted=!!storedFallback&&(!fallbackTask||fallbackTask.id!==storedFallback.id)
+  const fallbackCompletedIds=fallbackCompleted&&storedFallback?[`fallback:${storedFallback.id}`]:[]
+  if(fallbackCompleted)storedFallback=undefined
+
+  const newlyCompleted=plan.pendingIds.filter(id=>!allCandidateIds.has(id))
+  const completedIds=[...new Set([...plan.completedIds,...newlyCompleted,...fallbackCompletedIds])].slice(0,10)
+  const targetIds=new Set(targetCandidates.map(task=>task.id))
+  let pendingIds=plan.pendingIds.filter(id=>allCandidateIds.has(id)&&targetIds.has(id))
+
+  // 先取り開始後にA/B/C目標を変更しても、完了済みを保持しつつ現在目標の最大10件へ再調整する。
+  // 今日の必須課題と同様、目標外になった未完了課題は枠を消費しない。
+  const remainingSlots=Math.max(0,10-completedIds.length)
+  if(plan.target!==target){
+    const keep=new Set(pendingIds)
+    const fill=targetCandidates.filter(task=>!keep.has(task.id)).slice(0,Math.max(0,remainingSlots-pendingIds.length)).map(task=>task.id)
+    pendingIds=[...pendingIds,...fill].slice(0,remainingSlots)
+  }
+
+  // 「次の日の分」は開始時に最大10件を固定し、途中で新しい11件目を補充しない。
+  if(create&&!pendingIds.length&&!completedIds.length&&!storedFallback){
+    pendingIds=targetCandidates.slice(0,10).map(task=>task.id)
+    if(!pendingIds.length&&fallbackTask)storedFallback=fallbackTask
+  }
+
+  const next:StudyAheadPlan={date,target,pendingIds,completedIds,...(storedFallback?{fallbackTask:storedFallback}:{})}
+  saveStudyAheadPlan(next)
+  return {plan:next,targetCandidates}
+}
+
+export function startNextDayPlan(target:TargetScore,now=new Date(),fallbackTask?:TodayTask){
+  return reconcileStudyAheadPlan(target,now,fallbackTask,true).plan
+}
+
+export function buildNextDayTasks(target:TargetScore,now=new Date(),fallbackTask?:TodayTask):TodayTask[]{
+  const {plan,targetCandidates}=reconcileStudyAheadPlan(target,now,fallbackTask,false)
+  if(!plan)return []
+  const assigned=new Set(plan.pendingIds)
+  const tasks=targetCandidates.filter(task=>assigned.has(task.id))
+  if(plan.fallbackTask)tasks.push(plan.fallbackTask)
+  return tasks
+}
+
+export function nextDayPlanSummary(target:TargetScore,now=new Date(),fallbackTask?:TodayTask){
+  const {plan}=reconcileStudyAheadPlan(target,now,fallbackTask,false)
+  const tasks=buildNextDayTasks(target,now,fallbackTask)
+  return {
+    started:!!plan,
+    date:plan?.date||localDateKey(addLocalDays(now,1)),
+    tasks,
+    complete:!!plan&&(plan.pendingIds.length+Number(!!plan.fallbackTask)>0?tasks.length===0:plan.completedIds.length>0),
+    completedCount:plan?.completedIds.length||0,
+    limit:10
+  }
 }
 
 export function buildTodayTasks(target:TargetScore, now=new Date(),fallbackTask?:TodayTask):TodayTask[]{
