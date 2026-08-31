@@ -20,7 +20,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .publish_payload/v0175-part-* > /tmp/v0175.b64
+          cat .publish_payload/v0175-chunk-* > /tmp/v0175.b64
+          test "$(wc -c < /tmp/v0175.b64)" -eq 77240
           base64 --decode /tmp/v0175.b64 > /tmp/v0175-delta.tar.gz
           echo "3a7ab42653989fd7adc23f868ce1cd0e59770fbcd86db8915f3a5c673252012b  /tmp/v0175-delta.tar.gz" | sha256sum -c -
           tar -tzf /tmp/v0175-delta.tar.gz | sort -u > /tmp/payload-files.txt
