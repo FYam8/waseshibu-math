@@ -38,6 +38,10 @@ export default function Home(){
   const source24=exam24?sourceMistakeProgress(2024,prefs.target):null,source25=exam25?sourceMistakeProgress(2025,prefs.target):null
   const weakLatest=latest?weakFieldsForStoredExam(prefs.target,latest,attempts):[]
   const targetStrategy=latest?strategyForStoredExam(prefs.target,latest,attempts):null
+  // 「いま直す弱点」は過去問の生の誤答ではなく、現在も未修正の元問題だけを表示する。
+  // GuidedSolutionで自力再現できた問題を残し続けると、今日の完了表示・学習フェーズと矛盾して見えるため。
+  const currentSourceProgress=latest?sourceMistakeProgress(latest.year,prefs.target):null
+  const activeRecoveryCandidates=targetStrategy?.candidates.filter(c=>currentSourceProgress?.remainingIds.includes(c.key))||[]
   const goalDayEstimates=useMemo(()=>buildGoalDayEstimates(),[prefs.target])
   const prepInProgress=!prep.completed&&!prep.skipped&&(prep.index>0||Object.keys(prep.answers).length>0)
   const resume=draftResume()||(prepInProgress?{to:'/setup-check',label:`準備問題 ${prep.index+1}/5 から続ける`}:null)
@@ -100,7 +104,7 @@ export default function Home(){
           <div className="today-list">{taskList.map((task,i)=><article key={task.id}><span>{i+1}</span><div><b>{task.title}</b><small>{task.detail}</small></div><Link className={i===0?'button primary':'button'} to={task.to}>{i===0?'今これをやる':'開く'}</Link></article>)}</div>
           <div className="today-more"><span>まず今日の必須課題を終えます。追加演習は完了後に表示します。</span></div>
         </>
-        :<div className="today-complete"><b>✓ 今日の数学は完了</b><p>必須課題は完了です。ここで終えても大丈夫です。時間があれば、アプリが次の1件を選んで任意で先へ進めます。</p><Link className="button" to={optionalNext?.to||'/years'}>{optionalNext?'時間があれば次の1件へ':'時間があれば先へ進む'}</Link>{optionalNext&&<small>{optionalNext.title}</small>}</div>}
+        :<div className="today-complete"><b>✓ 今日の数学は完了</b><p>必須課題は完了です。ここで終えても大丈夫です。時間があれば、学習サイクル上の「次のアクション」へ1件だけ進めます。</p><Link className="button" to={optionalNext?.to||'/years'}>{optionalNext?'時間があれば次のアクションへ':'時間があれば先へ進む'}</Link>{optionalNext&&<small>{optionalNext.title}</small>}</div>}
     </section>
 
     <section className="grid three status-grid">
@@ -118,7 +122,7 @@ export default function Home(){
 
     <section className="card weakness-direct">
       <div className="section-head"><div><span className="eyebrow">WEAKNESS → ACTION</span><h2>いま直す弱点</h2></div><Link to="/mistakes">すべて見る</Link></div>
-      {targetStrategy?.candidates.length?<div className="weak-action-grid">{targetStrategy.candidates.map(c=><article key={c.key}><div><span className={`grade grade-${c.grade}`}>{c.grade}</span><b>{c.label}</b><small>{c.reason}・約{c.points}点</small></div><Link className="button primary" to={`/guided-review?q=${encodeURIComponent(c.key)}`}>この1問を直す</Link></article>)}</div>:weakLatest.length?<div className="weak-action-grid">{weakLatest.map(field=><article key={field}><div><b>{field}</b><small>最新過去問から抽出した目標範囲の弱点</small></div><Link className="button primary" to={`/remediate?topic=${encodeURIComponent(field)}`}>克服問題へ</Link></article>)}</div>:<p className="muted">目標範囲の優先弱点はまだありません。過去問を採点するとここに直接表示します。</p>}
+      {activeRecoveryCandidates.length?<div className="weak-action-grid">{activeRecoveryCandidates.map(c=><article key={c.key}><div><span className={`grade grade-${c.grade}`}>{c.grade}</span><b>{c.label}</b><small>{c.reason}・約{c.points}点</small></div><Link className="button primary" to={`/guided-review?q=${encodeURIComponent(c.key)}`}>この1問を直す</Link></article>)}</div>:targetStrategy?.candidates.length?<div className="weakness-cleared"><b>元の誤答は直せています</b><p className="muted">同じ誤答カードは残しません。現在の推奨は「{phaseAction(phase).label}」です。</p><Link className="button primary" to={phaseAction(phase).to}>次のアクションへ</Link></div>:weakLatest.length?<div className="weak-action-grid">{weakLatest.map(field=><article key={field}><div><b>{field}</b><small>最新過去問から抽出した目標範囲の弱点</small></div><Link className="button primary" to={`/remediate?topic=${encodeURIComponent(field)}`}>克服問題へ</Link></article>)}</div>:<p className="muted">目標範囲の優先弱点はまだありません。過去問を採点するとここに直接表示します。</p>}
     </section>
 
     <section className="card learning-route compact-route">

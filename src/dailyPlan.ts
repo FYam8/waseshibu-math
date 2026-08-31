@@ -171,8 +171,12 @@ export function buildOptionalNextTask(target:TargetScore,now=new Date(),fallback
   const {plan,targetCandidates}=reconcileDailyPlan(target,now,fallbackTask)
   // 必須が残っている間は追加演習へ誘導しない。
   if(plan.pendingIds.length>0)return null
+  // 必須課題を終えた後は、残っている同種課題を機械的に11件目として出すのではなく、
+  // 学習サイクルが示す「次のアクション」を最優先する。
+  // 例: 元の誤答直し → 類題・旧年度で補強 → 別年度確認。
+  if(fallbackTask)return fallbackTask
   const completed=new Set(plan.completedIds)
-  return targetCandidates.find(task=>!completed.has(task.id))||fallbackTask||null
+  return targetCandidates.find(task=>!completed.has(task.id))||null
 }
 
 export function todayPlanSummary(target:TargetScore,now=new Date(),fallbackTask?:TodayTask){

@@ -1,7 +1,7 @@
 {
-  "appVersion": "0.16.5",
+  "appVersion": "0.16.6",
   "dataVersion": 5,
   "releasedAt": "2026-08-31",
-  "release": "reinforcement-question-provenance",
-  "version": "0.16.5"
+  "release": "home-flow-consistency-and-question-provenance",
+  "version": "0.16.6"
 }
