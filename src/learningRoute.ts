@@ -1,5 +1,5 @@
 import questions from './data/questions.json'
-import type { ExamScore, MajorQuestion } from './types'
+import type { ExamScore, Grade, MajorQuestion } from './types'
 import { classifyRemediationField } from './data/remediation'
 import { loadAttempts, loadExamScores, loadPreferences } from './storage'
 import { canWriteLearningData, notifyWriteBlocked } from './version'
@@ -54,11 +54,11 @@ export function markYearSolved(year:number){
   saveLearningRoute({...state,solvedYears:[...state.solvedYears,year]})
 }
 
-export type OldQuestionItem={id:string,year:number,major:number,subNo:string,topic:string,title:string,field:string}
+export type OldQuestionItem={id:string,year:number,major:number,subNo:string,topic:string,title:string,field:string,grade:Grade}
 
 export function oldQuestionBank():OldQuestionItem[]{
   return (questions.questions as MajorQuestion[]).filter(q=>q.year>=2019&&q.year<=2023).flatMap(q=>q.subquestions.map(s=>({
-    id:`${q.id}-${s.no}`,year:q.year,major:q.major,subNo:s.no,topic:s.topic,title:q.title,field:classifyRemediationField(s.topic).title
+    id:`${q.id}-${s.no}`,year:q.year,major:q.major,subNo:s.no,topic:s.topic,title:q.title,field:classifyRemediationField(s.topic).title,grade:s.grade
   })))
 }
 

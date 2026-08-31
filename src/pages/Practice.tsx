@@ -4,6 +4,7 @@ import { classifyRemediationField, remediationFields } from '../data/remediation
 import { createRecordId, loadAttempts, loadDaily, saveAttempt, saveDaily } from '../storage'
 import { isAcceptedAnswer } from '../answer'
 import MathAnswerInput from '../components/MathAnswerInput'
+import QuestionProvenance from '../components/QuestionProvenance'
 
 const mistakeTags = ['知識不足','解法未習得','読み落とし','計算ミス','符号ミス','場合分け不足','時間不足','答え方の不備']
 
@@ -263,6 +264,7 @@ export default function Practice() {
       <div className="progress-track"><i style={{width:`${settled/8*100}%`}} /></div>
 
       <article className="card practice-card">
+        <QuestionProvenance kind="original" grade="A" label="オリジナル基礎問題"/>
         <div className="qtop">
           <div className="chips">
             <span>{q.topic}</span>

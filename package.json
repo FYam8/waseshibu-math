@@ -1,7 +1,7 @@
 {
   "name": "waseshibu-math-github-sync-final-reviewed",
   "private": true,
-  "version": "0.16.4",
+  "version": "0.16.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,7 +15,8 @@
     "test:today": "node scripts/test-today-plan.mjs",
     "test:eta": "node scripts/test-goal-eta.mjs",
     "test:eta:runtime": "node scripts/test-goal-eta-runtime.mjs",
-    "audit:remediation": "node scripts/audit-remediation-difficulty.mjs"
+    "audit:remediation": "node scripts/audit-remediation-difficulty.mjs",
+    "audit:provenance": "node scripts/audit-question-provenance.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",
