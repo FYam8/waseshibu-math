@@ -145,3 +145,4 @@ export function buildGoalDayEstimates(
     const days=remainingUnits===0?0:Math.ceil(remainingUnits/Math.max(1,item.dailyCapacity))
     return {...item,remainingUnits,days,complete:remainingUnits===0}
   })
+}
