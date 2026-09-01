@@ -1,59 +1,42 @@
-# v0.17.9 build / verification status
+# BUILD STATUS — v0.17.9
 
-- App version: 0.17.9
-- Data version: 6（schema変更なし）
-- Required route: 2024 → 2023 → 2022 → 2025 → 2026
+## Release identity
+- App version: **0.17.9**
+- Data version: **6**（schema変更なし・既存学習履歴を非破壊で維持）
+- Required route: **2024 → 2023 → 2022 → 2025 → 2026**
 - 2019〜2021: optional reinforcement / optional full-year practice
 
-# BUILD STATUS — v0.17.8
+## GitHub clean-environment verification
+2026-09-01 UTC、GitHub Actions のクリーン環境で実施。
 
-## Source / automated verification
-- `npm run test:v0178:all` : PASS
-- 21 non-build commands PASS
-- `self-check` : PASS
-- `verify-critical` : PASS
-- migration preservation : PASS
-- core-skill audit : 160/160 PASS
-- remediation content : 160 banks / 640 questions PASS
-- required regression 1–20 : PASS
-- completeness supplements : PASS
+- `npm ci`: **PASS**（0 vulnerabilities）
+- `npm run syntax-check`: **PASS**（48 TS/TSX files）
+- `npm run test:v0178:all`: **PASS**（22 non-build commands）
+- `npm run self-check`: **PASS**
+- `npm run verify-critical`: **PASS**
+- migration preservation: **PASS**
+- core-skill audit: **160/160 PASS**
+- remediation content audit: **160 banks / 640 questions PASS**
+- required five-year flow regression: **PASS**
+- `npm run build` (`tsc -b && vite build`): **PASS**
 
-## Additional completeness checks added
-- app/package/package-lock version consistency
-- remediation progress export/import validation
-- migration backup + rollback guards
-- A/B/C target switching does not delete learning history
-- first-look/reference continuity and warning-only exposure guard
-- 2025/2026 untouched checkpoint role
-- 2019–2023 optional-year separation from required route/ETA
-- 2019/2020 scope guard (no Pythagorean theorem as learning content)
-- critical official-answer guards
-- `未解決` terminology guard
+## Pre-publication fixes found by the clean build gate
+1. 転送時に `src/targetEta.ts` の末尾 `}` が1文字欠けた状態を検出し、ZIP原本と照合して修正。
+2. ZIP原本に存在した `GuidedReview.tsx` の `assessGuidedStep` import漏れをproduction buildが検出。既存exportをimportするだけの最小修正を行い、全回帰テストを再実行。
 
-## Build
-`npm run build` was executed in this environment and is currently BLOCKED by the local dependency installation, not by an application TypeScript diagnostic.
+修正後は、22本の非build回帰テストをすべて通過したうえでproduction buildが成功している。
 
-Missing/empty type packages reported:
-- @types/babel__core
-- @types/babel__generator
-- @types/babel__template
-- @types/babel__traverse
-- @types/estree
-- @types/prop-types
-- @types/react
-- @types/react-dom
-
-The local `node_modules` package directories are present but empty. A clean dependency install is required before final production build verification.
+## Data safety
+- `dataVersion` は6のまま。
+- attempts / preferences / daily / exam scores / exam drafts / learning route / Guided Review / Guided Progress / remediation progress / prep / daily plans を削除しない。
+- migration前バックアップとbest-effort rollbackを維持。
+- A/B/C目標変更では学習履歴を削除しない。
 
 ## Publication gate
-Do not call this release production-complete until:
-1. clean `npm ci`
-2. `npm run build` PASS
-3. actual-browser user-perspective test pass #1 = 0 issues
-4. actual-browser user-perspective test pass #2 = 0 issues without code/data/test-condition changes
-5. GitHub Pages confirms v0.17.8 is the served build
+GitHub source/build verification: **PASS**
 
+残る公開確認:
+- GitHub Pages deploy success
+- 配信中 `version.json` が `0.17.9` であること
 
-## 精査ループ
-- 非buildテスト21コマンドは修正後に2回連続PASS確認対象。
-- `npm run build` は依存パッケージ欠損環境では完了判定しない。
+実ブラウザのユーザー視点2周は、ソース自動監査とは別工程として扱う。
