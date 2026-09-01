@@ -1,10 +1,14 @@
 # BUILD STATUS — v0.17.9
 
-## Release identity
+## Final status
 - App version: **0.17.9**
 - Data version: **6**（schema変更なし・既存学習履歴を非破壊で維持）
 - Required route: **2024 → 2023 → 2022 → 2025 → 2026**
 - 2019〜2021: optional reinforcement / optional full-year practice
+- GitHub source verification: **PASS**
+- Production build: **PASS**
+- GitHub Pages deploy: **PASS**
+- Publication status: **PUBLISHED**
 
 ## GitHub clean-environment verification
 2026-09-01 UTC、GitHub Actions のクリーン環境で実施。
@@ -32,11 +36,8 @@
 - migration前バックアップとbest-effort rollbackを維持。
 - A/B/C目標変更では学習履歴を削除しない。
 
-## Publication gate
-GitHub source/build verification: **PASS**
+## Publication verification
+GitHub Pages workflow run #123: **SUCCESS**
+`public/version.json`: **0.17.9**
 
-残る公開確認:
-- GitHub Pages deploy success
-- 配信中 `version.json` が `0.17.9` であること
-
-実ブラウザのユーザー視点2周は、ソース自動監査とは別工程として扱う。
+実ブラウザのユーザー視点2周は、ソース自動監査・公開確認とは別工程として扱う。
