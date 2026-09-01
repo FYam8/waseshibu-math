@@ -1,0 +1,42 @@
+name: Apply v0.17.9 release payload
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/v0179-payload/**"
+      - ".github/workflows/apply-v0179.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Apply exact reviewed release files
+        shell: bash
+        run: |
+          cat .github/v0179-payload/chunk-* | base64 --decode > /tmp/v0179-payload.tar.gz
+          tar -xzf /tmp/v0179-payload.tar.gz
+          rm -rf .github/v0179-payload
+          rm -f .github/workflows/apply-v0179.yml
+      - run: npm ci
+      - run: npm run syntax-check
+      - run: npm run test:v0178:all
+      - run: npm run build
+      - name: Commit reviewed v0.17.9 release
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Publish v0.17.9 required five-year learning route"
+          git push origin HEAD:main
