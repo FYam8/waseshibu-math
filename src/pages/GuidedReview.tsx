@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import MathAnswerInput from '../components/MathAnswerInput'
 import FocusedQuestionView from '../components/FocusedQuestionView'
 import {
-  guidedOutcomeLabel,guidedQuestion,loadGuidedProgress,loadGuidedReview,recordGuidedFinal,
+  assessGuidedStep,guidedOutcomeLabel,guidedQuestion,loadGuidedProgress,loadGuidedReview,recordGuidedFinal,
   recordGuidedStep,revealGuidedFinalAnswer,saveGuidedReview,updateGuidedProgress,validateGuidedStepResponse,type GuidedOutcome
 } from '../guidedReview'
 import { loadPreferences } from '../storage'
