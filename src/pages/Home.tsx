@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useMemo, useState } from 'react'
-import { currentLearningPhase, firstUnresolvedSource, latestExam, latestMainCheckExam, nextLearningAction, coreResumeDraftAction, optionalOldYearDraftAction, routePhaseDone } from '../learningRoute'
+import { currentLearningPhase, firstUnresolvedSource, latestExam, latestMainCheckExam, nextLearningAction, optionalOldYearDraftAction, routePhaseDone } from '../learningRoute'
 import { loadAttempts, loadPreferences, savePreferences } from '../storage'
 import { loadPrepState, runExamIntegrityCheck, savePrepState } from '../preflight'
 import { buildNextDayTasks, buildOptionalNextTask, buildTodayTasks, nextDayPlanSummary, startNextDayPlan, todayPlanSummary } from '../dailyPlan'
@@ -33,7 +33,7 @@ export default function Home(){
   const goalDayEstimates=useMemo(()=>buildGoalDayEstimates(),[prefs.target])
   const prepInProgress=!prep.completed&&!prep.skipped&&(prep.index>0||Object.keys(prep.answers).length>0)
   const optionalOldDraft=optionalOldYearDraftAction()
-  const resume=coreResumeDraftAction()||(prepInProgress?{to:'/setup-check',label:`準備問題 ${prep.index+1}/5 から続ける`}:null)
+  const resume=prepInProgress?{to:'/setup-check',label:`準備問題 ${prep.index+1}/5 から続ける`}:null
   const setTarget=(target:60|70|75)=>{const next={...prefs,target};setPrefs(next);savePreferences(next)}
 
   // 次アクションはHome内でフェーズ別に再計算せず、共通学習ルートを正本にする。

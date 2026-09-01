@@ -1,20 +1,19 @@
-
 import fs from 'node:fs'
 
 const remediation=fs.readFileSync('src/pages/Remediation.tsx','utf8')
-const guided=fs.readFileSync('src/guidedReview.ts','utf8')
+const progress=fs.readFileSync('src/remediationProgress.ts','utf8')
 
-// A newer source-paper attempt must invalidate an older 3/4 streak.
-if(!remediation.includes('latestSourceAttemptAt'))throw new Error('latest source attempt is not considered by remediation')
-if(!remediation.includes('effectivePracticeStreak(sourceQuestion,latestSourceAttemptAt)'))throw new Error('stale practice streak can still initialize the remediation run')
-if(!remediation.includes('resetPracticeIfSourceAttemptIsNewer(sourceQuestion,latestSourceAttemptAt)'))throw new Error('persisted stale streak is not reset before recording a new practice result')
-if(!guided.includes("if(latestSourceAttemptAt&&current.updatedAt<latestSourceAttemptAt)return 0"))throw new Error('effective streak does not reset when the exam attempt is newer')
-if(!guided.includes("practiceStreak:0,mastery:'attempted'"))throw new Error('newer source mistake does not reopen mastery')
-
-// The progress label should tell the learner how many consecutive correct answers remain,
-// not which question-array index happens to be displayed.
-if(remediation.includes('類題 {index+1}/4'))throw new Error('misleading question-index progress is still shown')
+// v0.17.8: progress is persisted per source question, including the question index.
+for(const token of ['ensureRemediationProgress','recordRemediationAttempt','currentIndex','correctQuestionIdsInCurrentStreak']){
+  if(!remediation.includes(token)&&!progress.includes(token))throw new Error(`missing remediation persistence token: ${token}`)
+}
+if(!progress.includes("latestSourceAttemptAt&&(!existing.sourceAttemptAt||existing.sourceAttemptAt<latestSourceAttemptAt)"))throw new Error('newer unresolved source-paper attempt does not reset old remediation progress')
+if(!remediation.includes("a.status!=='correct'"))throw new Error('correct source-paper attempts must not reset remediation progress')
+if(!progress.includes("status:'in-progress'"))throw new Error('fresh remediation state is not reopened')
+if(!progress.includes("currentIndex:0,streak:0"))throw new Error('fresh source mistake does not restart from 0/4')
+if(!progress.includes("current.correctQuestionIdsInCurrentStreak.includes(questionId)"))throw new Error('duplicate remediation question can still advance streak')
 if(!remediation.includes('連続正解チャレンジ {Math.min(streak+1,4)}/4'))throw new Error('consecutive-correct progress label is missing')
+if(remediation.includes('useState(0),[answer'))throw new Error('remediation index still hard-resets from React state only')
 
-console.log('PASS: stale 3/4 streak is invalidated by a newer source-paper attempt')
-console.log('PASS: remediation progress label reflects the 4-consecutive-correct rule')
+console.log('PASS: stale streak resets for a newer unresolved source-paper attempt; newer correct attempts do not reset it')
+console.log('PASS: currentIndex + distinct-question streak are persisted per source question')

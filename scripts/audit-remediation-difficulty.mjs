@@ -62,7 +62,7 @@ for (const q of subquestions) {
 }
 
 if (!remediationPage.includes('getRemediationForSource(topic,sourceQuestion)')) throw new Error('source-linked calibrated remediation not used')
-if (!remediationPage.includes('remedy-${field.id}-${difficulty}-${index}')) throw new Error('difficulty not separated in remediation attempt ids')
+if (!remediationPage.includes('remedy-${sourceQuestion||field.id}-${difficulty}-${index}')) throw new Error('source question/difficulty not separated in remediation attempt ids')
 if (!practicePage.includes("grade:'A'")) throw new Error('foundation bank is not explicitly A')
 if (practicePage.includes("index<2?'A':'B'")) throw new Error('arbitrary A/B difficulty labelling remains')
 if (!practicePage.includes('過去問と同程度の類題は各問題の弱点補強から出題します')) throw new Error('practice/remediation role distinction missing')

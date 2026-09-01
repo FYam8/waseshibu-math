@@ -1,7 +1,7 @@
 {
-  "appVersion": "0.17.7",
-  "dataVersion": 5,
+  "appVersion": "0.17.8",
+  "dataVersion": 6,
   "releasedAt": "2026-09-01",
-  "release": "reinforcement-user-flow-2pass",
-  "version": "0.17.7"
+  "release": "remediation-progress-core-skill-fixes",
+  "version": "0.17.8"
 }

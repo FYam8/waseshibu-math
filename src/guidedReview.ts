@@ -39,6 +39,29 @@ export type GuidedStep={
   reveal:string
   response:{type:'self-check'|'text'}
 }
+
+const STEP_RESPONSE_BANNED=new Set(['あ','い','う','適当','てきとう','わからない','分からない','不明','?','？','123','abc','aaa','test'])
+const normalizeStepText=(value:string)=>value.normalize('NFKC').replace(/\s+/g,'').toLowerCase()
+const meaningfulTokens=(text:string)=>{
+  const normalized=normalizeStepText(text)
+  const raw=normalized.match(/[a-z]\^?\d*|[-+]?\d+(?:\/\d+)?|√\d+|[ぁ-んァ-ヶ一-龠]{2,}/g)||[]
+  return [...new Set(raw.filter(token=>token.length>0))]
+}
+export function validateGuidedStepResponse(step:GuidedStep,value:string){
+  const answer=normalizeStepText(value)
+  if(!answer||STEP_RESPONSE_BANNED.has(answer))return false
+  const expected=meaningfulTokens(`${step.title} ${step.prompt} ${step.reveal}`)
+  // 数字1個でも、そのSTEPで本当に必要な値なら許可する（例：2）。無関係な123は通さない。
+  if(expected.some(token=>token===answer||answer.includes(token)))return true
+  // 同値式や自然な途中式を完全一致で落とさない。最低限、式として意味のある構造を要求する。
+  if(/[=<>:]/.test(answer)&&/[0-9a-z√]/.test(answer))return true
+  if(/[+\-*/×÷]/.test(answer)&&/[0-9a-z√]/.test(answer)&&answer.length>=3)return true
+  // 日本語説明は短すぎる相づちを除き、STEPの語彙と1語以上重なることを求める。
+  const words=meaningfulTokens(value).filter(x=>/[ぁ-んァ-ヶ一-龠]/.test(x))
+  const expectedWords=expected.filter(x=>/[ぁ-んァ-ヶ一-龠]/.test(x))
+  return answer.length>=4&&words.some(word=>expectedWords.some(exp=>exp.includes(word)||word.includes(exp)))
+}
+
 export type GuidedSolution={
   schemaVersion:1
   questionId:string

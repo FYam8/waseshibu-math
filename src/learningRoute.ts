@@ -362,12 +362,17 @@ export function optionalOldYearDraftAction():LearningAction|null{
 }
 
 export function nextLearningAction(target:TargetScore=loadPreferences().target):LearningAction{
-  const draft=coreResumeDraftAction()
-  if(draft)return draft
+  const drafts=draftEntries()
+  const draftFor=(year:number)=>{
+    const entry=drafts.find(([y])=>Number(y)===year)
+    return entry?actionForDraft(entry):null
+  }
 
   const exam24=latestExam(2024)
-  if(!exam24)return {to:'/past-papers?year=2024',label:'2024年度を解く',purpose:'診断'}
+  if(!exam24)return draftFor(2024)||{to:'/past-papers?year=2024',label:'2024年度を解く',purpose:'診断'}
+
   const source24=sourceMistakeProgress(2024,target)
+  // 必須の元問題修正は、あとから開いた2025/2026ドラフトより常に優先する。
   if(source24.remainingIds.length)return {to:'/mistakes?year=2024',label:`2024年度の未解決問題 ${source24.remainingIds.length}問を直す`,purpose:'元問題修正'}
   if(!reinforcementComplete(2024))return {to:'/reinforce?source=2024',label:'2024年度の類題・2019〜2023年度で補強する',purpose:'類題・旧年度補強'}
 
@@ -381,6 +386,8 @@ export function nextLearningAction(target:TargetScore=loadPreferences().target):
 
   const next=nextCheckpointYear()
   if(next){
+    const matchingDraft=draftFor(next)
+    if(matchingDraft)return matchingDraft
     const exposure=yearExposureState(next)
     const isFirst=completed.length===0
     return {
@@ -389,7 +396,9 @@ export function nextLearningAction(target:TargetScore=loadPreferences().target):
       purpose:exposure==='untouched'?(isFirst?'改善確認':'仕上がり確認'):'参考確認'
     }
   }
-  return {to:'/years',label:'仕上げ・任意演習へ進む'}
+  // 主サイクル完了後だけ、未完了の2024〜2026ドラフトを通常の再開候補に戻す。
+  const coreDraft=drafts.find(([year])=>Number(year)>=2024)
+  return coreDraft?actionForDraft(coreDraft):{to:'/years',label:'仕上げ・任意演習へ進む'}
 }
 
 export function routePhaseDone(phase:number){

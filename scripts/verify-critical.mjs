@@ -1,9 +1,25 @@
 import assert from 'node:assert/strict'
-import { build } from 'esbuild'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import {spawnSync} from 'node:child_process'
+import {createRequire} from 'node:module'
 
-async function loadModule(entry){
-  const result=await build({entryPoints:[entry],bundle:true,platform:'node',format:'esm',write:false})
-  return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString('base64')}`)
+const root=process.cwd()
+const temp=fs.mkdtempSync(path.join(os.tmpdir(),'waseshibu-critical-'))
+const out=path.join(temp,'out')
+const emptyTypes=path.join(temp,'types'); fs.mkdirSync(emptyTypes)
+const entries=[
+  'src/dataBackup.ts','src/answer.ts','src/data/examAnswers.ts','src/data/examConfig.ts',
+  'src/preflight.ts','src/dataMigration.ts','src/guidedReview.ts','src/data/questionFocus.ts',
+  'src/targetStrategy.ts','src/version.ts'
+]
+const compiled=spawnSync('tsc',[...entries,'--outDir',out,'--module','commonjs','--target','ES2022','--lib','ES2022,DOM','--resolveJsonModule','--esModuleInterop','--typeRoots',emptyTypes,'--skipLibCheck','--strict'],{cwd:root,encoding:'utf8'})
+if(compiled.status!==0)throw new Error(`critical modules compile failed\n${compiled.stdout}\n${compiled.stderr}`)
+const require=createRequire(import.meta.url)
+function loadModule(entry){
+  const rel=entry.replace(/^src\//,'').replace(/\.ts$/,'.js')
+  return require(path.join(out,rel))
 }
 class MemoryStorage{
   constructor(seed={},failOnWrite=Infinity){this.map=new Map(Object.entries(seed));this.writes=0;this.failOnWrite=failOnWrite}
@@ -23,8 +39,8 @@ const focus=await loadModule('src/data/questionFocus.ts')
 const targetStrategy=await loadModule('src/targetStrategy.ts')
 const version=await loadModule('src/version.ts')
 
-assert.equal(version.APP_VERSION,'0.17.7')
-assert.equal(migration.CURRENT_DATA_VERSION,5)
+assert.equal(version.APP_VERSION,'0.17.8')
+assert.equal(migration.CURRENT_DATA_VERSION,6)
 assert.equal(guided.GUIDED_REVIEW_KEY,'waseshibu-math-guided-review-v1')
 assert.equal(guided.GUIDED_PROGRESS_KEY,'waseshibu-math-guided-progress-v2')
 assert.equal(guided.guidedSolutionCount(),160)
@@ -44,7 +60,11 @@ const sample={
 const source=new MemoryStorage(Object.fromEntries(Object.entries(sample).map(([key,value])=>[key,JSON.stringify(value)])))
 const pkg=backup.collectBackup(source),parsed=backup.parseBackup(JSON.stringify(pkg)),restored=new MemoryStorage()
 backup.restoreBackup(restored,parsed,'replace')
-for(const key of backup.BACKUP_KEYS)assert.deepEqual(JSON.parse(restored.getItem(key)),pkg.data[key]??null,`round trip: ${key}`)
+for(const key of backup.BACKUP_KEYS){
+  const raw=restored.getItem(key)
+  if(Object.prototype.hasOwnProperty.call(pkg.data,key))assert.deepEqual(JSON.parse(raw),pkg.data[key],`round trip: ${key}`)
+  else assert.equal(raw,null,`round trip absent key: ${key}`)
+}
 
 const v2Seed={
   'waseshibu-math-attempts':JSON.stringify([{id:'keep',questionId:'exam-2024-Q1-1',status:'wrong',at:'2026-01-01'}]),
@@ -53,7 +73,7 @@ const v2Seed={
 }
 const v2=new MemoryStorage(v2Seed),migrated=migration.runDataMigrations(v2)
 assert.equal(migrated.ok,true)
-assert.equal(v2.getItem('waseshibu-math-data-version'),'5')
+assert.equal(v2.getItem('waseshibu-math-data-version'),'6')
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-attempts')),JSON.parse(v2Seed['waseshibu-math-attempts']))
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-exam-scores')),JSON.parse(v2Seed['waseshibu-math-exam-scores']))
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-guided-review-v1')),{})
@@ -92,7 +112,7 @@ assert.equal(reproduced.mastery,'reproduced')
 for(let i=0;i<4;i++)guided.recordPracticeStreak('2024-Q1-1',true,guideStore)
 assert.equal(guided.loadGuidedProgress('2024-Q1-1',guideStore).mastery,'consolidated')
 
-const questions=(await import('../src/data/questions.json',{with:{type:'json'}})).default.questions
+const questions=JSON.parse(fs.readFileSync(path.join(out,'data/questions.json'),'utf8')).questions
 const questionIds=questions.flatMap(major=>major.subquestions.map(sub=>`${major.id}-${sub.no}`))
 assert.equal(questionIds.length,160)
 assert.equal(Object.keys(focus.questionFocusManifest).length,160)
@@ -144,4 +164,4 @@ assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTar
 for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100)
 
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`v0.17.7, data v5, 160 GuidedSolutions, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK, integrity: 160/160`)
+console.log(`v0.17.8, data v6, 160 GuidedSolutions, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK, integrity: 160/160`)

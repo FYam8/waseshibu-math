@@ -2,6 +2,7 @@ import questions from './data/questions.json'
 import type { MajorQuestion } from './types'
 import { loadAttempts } from './storage'
 import { loadGuidedProgressState, type GuidedProgressState } from './guidedReview'
+import { loadRemediationProgressState } from './remediationProgress'
 import { classifyRemediationField } from './data/remediation'
 import { latestExam, loadLearningRoute } from './learningRoute'
 import { gradeInTarget, storedExamItems, targetGoalLabel, weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
@@ -66,10 +67,11 @@ export function buildGoalDayEstimates(
   dailyCapacity=DEFAULT_DAILY_TASK_CAPACITY,
 ):GoalDayEstimate[]{
   const progress=loadGuidedProgressState()
+  const remediationProgress=loadRemediationProgressState()
   const {attempts,latestByQuestion}=latestExamAttempts()
   const route=loadLearningRoute()
 
-  return ([60,70,75] as TargetScore[]).map(target=>{
+  const raw=([60,70,75] as TargetScore[]).map(target=>{
     let remainingUnits=0
     let includedQuestions=0
 
@@ -115,7 +117,7 @@ export function buildGoalDayEstimates(
             .filter(item=>item.status!=='correct'&&gradeInTarget(target,item.grade))
             .filter(item=>classifyRemediationField(item.topic).title===field)
             .map(item=>item.key)
-          const streak=Math.max(0,...sourceIds.map(id=>progress[id]?.practiceStreak||0))
+          const streak=Math.max(0,...sourceIds.map(id=>remediationProgress[id]?.streak??progress[id]?.practiceStreak??0))
           remainingUnits+=Math.max(0,4-Math.min(4,streak))
         }
       }
@@ -132,5 +134,15 @@ export function buildGoalDayEstimates(
       includedQuestions,
       dailyCapacity:cap
     }
+  })
+
+  // 目標を上げたのに残り学習量が減る表示は、任意演習やtarget別plan差による混乱を生む。
+  // 学習履歴は変えず、表示用見積もりだけ A≦B≦C を保証する。
+  let floor=0
+  return raw.map(item=>{
+    const remainingUnits=Math.max(floor,item.remainingUnits)
+    floor=remainingUnits
+    const days=remainingUnits===0?0:Math.ceil(remainingUnits/Math.max(1,item.dailyCapacity))
+    return {...item,remainingUnits,days,complete:remainingUnits===0}
   })
 }

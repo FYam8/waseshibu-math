@@ -5,7 +5,7 @@ import MathAnswerInput from '../components/MathAnswerInput'
 import FocusedQuestionView from '../components/FocusedQuestionView'
 import {
   assessGuidedStep,guidedOutcomeLabel,guidedQuestion,loadGuidedProgress,loadGuidedReview,recordGuidedFinal,
-  recordGuidedStep,revealGuidedFinalAnswer,saveGuidedReview,updateGuidedProgress,type GuidedOutcome
+  recordGuidedStep,revealGuidedFinalAnswer,saveGuidedReview,updateGuidedProgress,validateGuidedStepResponse,type GuidedOutcome
 } from '../guidedReview'
 import { loadPreferences } from '../storage'
 import { gradeAdvice, targetGoalLabel } from '../targetStrategy'
@@ -29,6 +29,7 @@ export default function GuidedReview(){
 
   if(!q||!solution)return <section className="card warning-card"><h1>問題専用解説を特定できませんでした</h1><p>間違い直し一覧から開き直してください。</p><Link className="button primary" to="/mistakes">間違い直しへ</Link></section>
   const steps=solution.steps,current=steps[Math.min(stepIndex,steps.length-1)],hintLevel=hintLevels[current?.id]||0
+  const currentResponse=responses[current?.id]||'',currentResponseValid=!!current&&validateGuidedStepResponse(current,currentResponse)
   const progress=loadGuidedProgress(q.id)
   const dependencies=solution.context.dependsOn||[]
 
@@ -44,6 +45,8 @@ export default function GuidedReview(){
   }
   const assessStep=(assessment:'matched'|'guided'|'unclear')=>{
     const value=responses[current.id]||''
+    if(assessment==='matched'&&!validateGuidedStepResponse(current,value))return
+    if(assessment==='guided'&&hintLevel<1)return
     recordGuidedStep(q.id,current.id,value,hintLevel,false)
     assessGuidedStep(q.id,current.id,assessment)
     setStepAssessments(v=>({...v,[current.id]:assessment}))
@@ -51,6 +54,8 @@ export default function GuidedReview(){
   const completeStep=()=>{
     const value=responses[current.id]||'',assessment=stepAssessments[current.id]
     if(!assessment||assessment==='unclear')return
+    if(assessment==='matched'&&!validateGuidedStepResponse(current,value))return
+    if(assessment==='guided'&&hintLevel<3&&!validateGuidedStepResponse(current,value))return
     recordGuidedStep(q.id,current.id,value,hintLevel,true)
     assessGuidedStep(q.id,current.id,assessment)
     persistLegacy(undefined,progress.finalAnswerSeen,Object.values({...hintLevels,[current.id]:hintLevel}).some(v=>v>0))
@@ -83,7 +88,7 @@ export default function GuidedReview(){
           {dependencies.length>0&&<div className="notice-box dependency-box"><b>前問の結果を使う場合</b><p>自分の前問の値で続けるか、正答値を使ってこの小問の考え方だけ確認するか選べます。</p><div className="actions"><button className={`button ${dependencyMode==='own'?'primary':''}`} onClick={()=>{setDependencyMode('own');updateGuidedProgress(q.id,{dependencyMode:'own'})}}>自分の前問の答えを使う</button><button className={`button ${dependencyMode==='official'?'primary':''}`} onClick={()=>{setDependencyMode('official');updateGuidedProgress(q.id,{dependencyMode:'official'})}}>正答値を使う</button></div>{dependencyMode==='official'&&dependencies.map(d=><p key={d.questionId}><b>{d.questionId}</b> の正答値：<strong>{d.officialValue}</strong></p>)}</div>}
           <div className="guided-step">
             <span className="eyebrow">STEP {stepIndex+1} / {steps.length}</span><h2>{current.title}</h2><p>{current.prompt}</p>
-            <textarea value={responses[current.id]||''} onChange={e=>setResponses(v=>({...v,[current.id]:e.target.value}))} placeholder="自分の途中式・考え方を入力" rows={5}/>
+            <textarea value={responses[current.id]||''} onChange={e=>setResponses(v=>({...v,[current.id]:e.target.value}))} placeholder="自分の途中式・考え方を入力" rows={5}/>{currentResponse&&!currentResponseValid&&<p className="muted">このSTEPで必要な数値・式・着眼点をもう少し具体的に入力してください。</p>}
             {hintLevel>=1&&<div className="notice-box"><b>ヒント1</b><p>{current.hint1}</p></div>}
             {hintLevel>=2&&<div className="notice-box"><b>さらにヒント</b><p>{current.hint2}</p></div>}
             {hintLevel>=3&&<div className="answer-reveal compact"><span>このSTEPの確認</span><strong>{current.reveal}</strong></div>}
@@ -91,10 +96,10 @@ export default function GuidedReview(){
               {hintLevel<1&&<button className="button" onClick={()=>setHint(1)}>ヒント1</button>}
               {hintLevel>=1&&hintLevel<2&&<button className="button" onClick={()=>setHint(2)}>さらにヒント</button>}
               {hintLevel>=2&&hintLevel<3&&<button className="button" onClick={()=>setHint(3)}>STEPの答え</button>}
-              <button className={`button ${stepAssessments[current.id]==='matched'?'primary':''}`} disabled={!(responses[current.id]||'').trim()} onClick={()=>assessStep('matched')}>自分でも同じ考えになった</button>
-              <button className={`button ${stepAssessments[current.id]==='guided'?'primary':''}`} disabled={hintLevel<1} onClick={()=>assessStep('guided')}>ヒント・確認を見て分かった</button>
+              <button className={`button ${stepAssessments[current.id]==='matched'?'primary':''}`} disabled={!currentResponseValid} onClick={()=>assessStep('matched')}>自分でも同じ考えになった</button>
+              <button className={`button ${stepAssessments[current.id]==='guided'?'primary':''}`} disabled={hintLevel<1||(!currentResponseValid&&hintLevel<3)} onClick={()=>assessStep('guided')}>ヒント・確認を見て分かった</button>
               <button className={`button ${stepAssessments[current.id]==='unclear'?'primary':''}`} onClick={()=>assessStep('unclear')}>まだ分からない</button>
-              {stepIndex<steps.length-1?<button className="button primary" disabled={!stepAssessments[current.id]||stepAssessments[current.id]==='unclear'} onClick={completeStep}>次のSTEPへ</button>:<button className="button primary" disabled={!stepAssessments[current.id]||stepAssessments[current.id]==='unclear'} onClick={()=>{completeStep();setMode('retry');setFinalAnswer('');setResult(null)}}>解説を閉じて自力再現へ</button>}
+              {stepIndex<steps.length-1?<button className="button primary" disabled={!stepAssessments[current.id]||stepAssessments[current.id]==='unclear'||(stepAssessments[current.id]==='matched'&&!currentResponseValid)||(stepAssessments[current.id]==='guided'&&hintLevel<3&&!currentResponseValid)} onClick={completeStep}>次のSTEPへ</button>:<button className="button primary" disabled={!stepAssessments[current.id]||stepAssessments[current.id]==='unclear'||(stepAssessments[current.id]==='matched'&&!currentResponseValid)||(stepAssessments[current.id]==='guided'&&hintLevel<3&&!currentResponseValid)} onClick={()=>{completeStep();setMode('retry');setFinalAnswer('');setResult(null)}}>解説を閉じて自力再現へ</button>}
               <button className="button" onClick={revealAnswer}>この1問の答えを見る</button>
             </div>
           </div>

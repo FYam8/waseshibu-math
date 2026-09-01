@@ -38,16 +38,32 @@ const seed={
 const storage=new MemoryStorage(seed)
 const before=Object.fromEntries([...storage.map.entries()].map(([k,v])=>[k,JSON.parse(v)]))
 const result=migration.runDataMigrations(storage)
-if(!result.ok||result.fromVersion!==3||result.toVersion!==5)throw new Error('v3→v5 migration result is invalid')
+if(!result.ok||result.fromVersion!==3||result.toVersion!==6)throw new Error('v3→v6 migration result is invalid')
 for(const [key,value] of Object.entries(before)){
   if(key==='waseshibu-math-data-version')continue
   const after=JSON.parse(storage.getItem(key))
   if(JSON.stringify(after)!==JSON.stringify(value))throw new Error(`既存データが変化しました: ${key}`)
 }
-if(storage.getItem('waseshibu-math-data-version')!=='5')throw new Error('dataVersion is not 5')
+if(storage.getItem('waseshibu-math-data-version')!=='6')throw new Error('dataVersion is not 6')
 const migrationBackup=JSON.parse(storage.getItem('waseshibu-math-migration-backup-v1'))
 if(migrationBackup.fromVersion!==3||!migrationBackup.raw['waseshibu-math-attempts'])throw new Error('migration前バックアップが保存されていません')
 const progress=JSON.parse(storage.getItem('waseshibu-math-guided-progress-v2'))
 if(progress['2024-Q1-1'].mastery!=='guided')throw new Error('guided history migration failed')
 if(progress['2025-Q1-1'].mastery!=='reproduced'||progress['2025-Q1-1'].finalAnswerSeen!==true)throw new Error('reproduced history migration failed')
-console.log('PASS: エクスポートなしのv3 localStorageをv5へ非破壊移行し、全旧キーとGuided Review履歴を保持')
+
+// v5 practiceStreak は旧不具合で同一類題の再正解を含む可能性がある。
+// Guided履歴は保持するが、v6 mastery の「異なる4問」証拠としては信用しない。
+const v5Storage=new MemoryStorage({
+  'waseshibu-math-data-version':'5',
+  'waseshibu-math-guided-progress-v2':JSON.stringify({
+    '2024-Q1-2':{questionId:'2024-Q1-2',practiceStreak:4,mastery:'consolidated',updatedAt:'2026-08-31T00:00:00.000Z'}
+  })
+})
+const v5Result=migration.runDataMigrations(v5Storage)
+if(!v5Result.ok||v5Result.toVersion!==6)throw new Error('v5→v6 migration result is invalid')
+const v5Guided=JSON.parse(v5Storage.getItem('waseshibu-math-guided-progress-v2'))
+if(v5Guided['2024-Q1-2'].practiceStreak!==4)throw new Error('legacy Guided practiceStreak should be preserved as history')
+const v6Remediation=JSON.parse(v5Storage.getItem('waseshibu-math-remediation-progress-v1'))
+if(Object.keys(v6Remediation).length!==0)throw new Error('legacy practiceStreak must not certify v6 distinct-question remediation mastery')
+
+console.log('PASS: エクスポートなしのv3 localStorageをv6へ非破壊移行し、全旧キーとGuided Review履歴を保持。v5旧streakは履歴保持のみでv6 masteryへは流用しない')

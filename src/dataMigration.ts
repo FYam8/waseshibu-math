@@ -1,12 +1,13 @@
 
 export const DATA_VERSION_KEY='waseshibu-math-data-version'
-export const CURRENT_DATA_VERSION=5
+export const CURRENT_DATA_VERSION=6
 export const LEGACY_DRAFT_KEY='waseshibu-math-exam-drafts'
 export const CURRENT_DRAFT_KEY='waseshibu-math-exam-drafts-v2'
 export const PREP_STORAGE_KEY='waseshibu-math-prep-check-v1'
 export const GUIDED_REVIEW_STORAGE_KEY='waseshibu-math-guided-review-v1'
 export const GUIDED_PROGRESS_STORAGE_KEY='waseshibu-math-guided-progress-v2'
 export const MIGRATION_BACKUP_STORAGE_KEY='waseshibu-math-migration-backup-v1'
+export const REMEDIATION_PROGRESS_STORAGE_KEY='waseshibu-math-remediation-progress-v1'
 
 export type MigrationStorage=Pick<Storage,'getItem'|'setItem'|'removeItem'>
 const isObject=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)
@@ -88,6 +89,15 @@ export function migrateDataRecord(input:Record<string,unknown>,fromVersion:numbe
     // v5はUX・目標ロジックの更新。学習履歴の意味は変更せず、そのまま保持する。
     version=5
   }
+  if(version<6){
+    // v6は類題の「問題位置＋連続正解」を元問題ID単位で永続化する。
+    // v5以前の practiceStreak には「4つの異なる類題を順に正解した」証拠がない。
+    // 旧不具合で同じ類題の再正解が連続数に混ざった可能性があるため、
+    // Guided履歴そのものは保持するが、新しい mastery 判定へは引き継がない。
+    // 類題を次に開いた時点から、安全側の 0/4 で新形式の進捗を開始する。
+    if(!(REMEDIATION_PROGRESS_STORAGE_KEY in data))data[REMEDIATION_PROGRESS_STORAGE_KEY]={}
+    version=6
+  }
   data[DATA_VERSION_KEY]=CURRENT_DATA_VERSION
   return {data,version}
 }
@@ -96,7 +106,7 @@ export function runDataMigrations(storage:MigrationStorage=localStorage){
   const storedVersion=Number(storage.getItem(DATA_VERSION_KEY)||'0')
   if(storedVersion>CURRENT_DATA_VERSION)return {ok:false,fromVersion:storedVersion,toVersion:storedVersion,error:'新しいデータ形式です'}
   if(storedVersion===CURRENT_DATA_VERSION)return {ok:true,fromVersion:storedVersion,toVersion:CURRENT_DATA_VERSION}
-  const keys=['waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-scores',CURRENT_DRAFT_KEY,'waseshibu-math-learning-route-v1',PREP_STORAGE_KEY,GUIDED_REVIEW_STORAGE_KEY,GUIDED_PROGRESS_STORAGE_KEY,LEGACY_DRAFT_KEY]
+  const keys=['waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-scores',CURRENT_DRAFT_KEY,'waseshibu-math-learning-route-v1',PREP_STORAGE_KEY,GUIDED_REVIEW_STORAGE_KEY,GUIDED_PROGRESS_STORAGE_KEY,REMEDIATION_PROGRESS_STORAGE_KEY,LEGACY_DRAFT_KEY]
   const source:Record<string,unknown>={}
   for(const key of keys){const raw=storage.getItem(key);if(raw===null)continue;try{source[key]=JSON.parse(raw)}catch{source[key]=raw}}
   const managedKeys=[...keys,DATA_VERSION_KEY],before=new Map(managedKeys.map(key=>[key,storage.getItem(key)]))

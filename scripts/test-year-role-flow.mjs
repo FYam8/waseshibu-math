@@ -8,7 +8,7 @@ const checks=[
  ['2019 different structure',route.includes("if(year===2019)return 'different-structure'")],
  ['2020-23 reinforcement pool',route.includes("year>=2020&&year<=2023")],
  ['old draft optional',route.includes('optionalOldYearDraftAction')&&home.includes('中断中の任意演習')],
- ['core draft 2024+',route.includes('coreResumeDraftAction')&&home.includes('coreResumeDraftAction')],
+ ['core draft 2024+',route.includes('const coreDraft=drafts.find(([year])=>Number(year)>=2024)')&&home.includes('nextLearningAction')],
  ['cycle wording',home.includes('診断 → 元問題修正 → 類題・旧年度補強 → 改善確認 → 再補強 → 仕上がり確認')],
  ['selective old-year note',home.includes('2019〜2023年度は必要な小問だけを弱点補強に使います')],
  ['2019 UI label',reinforce.includes('構成が異なる年度')],
