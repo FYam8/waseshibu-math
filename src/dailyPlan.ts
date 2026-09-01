@@ -50,7 +50,7 @@ export function buildTodayTaskCandidates(target:TargetScore, now=new Date()):Tod
   const tasks:TodayTask[]=[]
   for(const [qid,attempt] of latestByQuestion){
     const meta=questionMap.get(qid)
-    // 2019〜2023年度の任意通し演習は履歴には残すが、必須10課題へ自動昇格させない。
+    // 2019〜2021年度の任意通し演習は履歴には残すが、必須10課題へ自動昇格させない。
     // 旧年度を正式な補強に使う場合は Reinforcement の学習ルートから扱う。
     if(!meta||!isMainCheckYear(meta.year)||attempt.status==='correct'||!gradeInTarget(target,meta.grade))continue
     const p=progress[qid]

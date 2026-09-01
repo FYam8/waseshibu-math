@@ -34,12 +34,12 @@ export default function Years() {
       </div>
 
       <div className="notice-box">
-        診断用の2024〜2026年度と、補強・年度演習用の2019〜2023年度をすべて収録しています。現在は<b>{target}点方針</b>：{targetProfile(target).summary} A/B/Cは学校公式ではなく学習上の優先度です。
+        必須学習用の2022〜2026年度5年分と、追加補強・任意演習用の2019〜2021年度をすべて収録しています。現在は<b>{target}点方針</b>：{targetProfile(target).summary} A/B/Cは学校公式ではなく学習上の優先度です。
       </div>
 
       <div className="year-summary card">
         <strong>{year}年度</strong>
-        <span>{year>=2019&&year<=2023
+        <span>{year>=2019&&year<=2021
           ?`${yearRole(year)==='different-structure'?'構成が異なる年度・':''} 補強予約 ${reserved}問 / 補強完了 ${completed}問 / 任意演習などで露出 ${exposed}問`
           :'得点確認の主軸年度'}</span>
       </div>

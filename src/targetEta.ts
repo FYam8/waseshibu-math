@@ -4,7 +4,7 @@ import { loadAttempts } from './storage'
 import { loadGuidedProgressState, type GuidedProgressState } from './guidedReview'
 import { loadRemediationProgressState } from './remediationProgress'
 import { classifyRemediationField } from './data/remediation'
-import { latestExam, loadLearningRoute } from './learningRoute'
+import { REQUIRED_MAIN_YEAR_SEQUENCE, latestExam, loadLearningRoute } from './learningRoute'
 import { gradeInTarget, storedExamItems, targetGoalLabel, weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
 
 export type GoalDayEstimate={
@@ -75,9 +75,9 @@ export function buildGoalDayEstimates(
     let remainingUnits=0
     let includedQuestions=0
 
-    // 得点確認の主軸は2024〜2026。未実施年度はその年度の対象小問数を実学習量として数える。
+    // 必須の得点確認は2022〜2026の5年度。未実施年度はその年度の対象小問数を実学習量として数える。
     // 実施済み年度は、正解済みを除き「解き直し・定着」に必要な分だけ数える。
-    for(const year of [2024,2025,2026]){
+    for(const year of REQUIRED_MAIN_YEAR_SEQUENCE){
       const exam=latestExam(year)
       const targetQuestions=questionMeta.filter(q=>q.year===year&&gradeInTarget(target,q.grade))
       if(!exam){
@@ -95,9 +95,9 @@ export function buildGoalDayEstimates(
       }
     }
 
-    // 2019〜2023年度は「全問題」を数えない。現在の補強計画に実際に選ばれた問題だけを数える。
+    // 2019〜2021年度は「全問題」を数えない。現在の補強計画に実際に選ばれた問題だけを数える。
     // さらに、各弱点分野の類題4問も未完了なら学習単位として加える。
-    for(const sourceYear of [2024,2025,2026]){
+    for(const sourceYear of REQUIRED_MAIN_YEAR_SEQUENCE){
       const exam=latestExam(sourceYear)
       if(!exam)continue
       const plan=route.reinforcement[String(sourceYear)]
@@ -145,4 +145,3 @@ export function buildGoalDayEstimates(
     const days=remainingUnits===0?0:Math.ceil(remainingUnits/Math.max(1,item.dailyCapacity))
     return {...item,remainingUnits,days,complete:remainingUnits===0}
   })
-}

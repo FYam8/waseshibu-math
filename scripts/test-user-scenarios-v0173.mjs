@@ -37,7 +37,7 @@ const reset=(seed={})=>{
   })
 }
 
-// 1) 2019〜2023の任意通し演習の誤答は、今日の必須10課題へ入らない。
+// 1) 2019〜2021の任意通し演習の誤答は、今日の必須10課題へ入らない。
 reset({
   'waseshibu-math-attempts':JSON.stringify([
     {id:'old',deviceId:'d',resetVersion:0,questionId:'exam-2019-Q1-1',mode:'multi',topic:'数式計算',status:'wrong',at:'2026-08-31T02:00:00.000Z'},
@@ -67,16 +67,16 @@ reset({
     '2025-Q1-1':{questionId:'2025-Q1-1',stepProgress:{},finalAnswer:'',finalAnswerSeen:false,reproductionAttempts:0,reproductionSucceeded:false,independentSucceeded:false,practiceStreak:0,mastery:'exposed',updatedAt:'2026-08-25T00:00:00.000Z'}
   })
 })
-if(route.nextCheckpointYear()!==2026)throw new Error(`expected 2026 untouched checkpoint, got ${route.nextCheckpointYear()}`)
-if(!route.nextLearningAction(60).to.includes('year=2026'))throw new Error(`route did not choose untouched 2026: ${JSON.stringify(route.nextLearningAction(60))}`)
+if(route.nextCheckpointYear()!==2023)throw new Error(`expected required 2023 checkpoint, got ${route.nextCheckpointYear()}`)
+if(!route.nextLearningAction(60).to.includes('year=2023'))throw new Error(`route did not enforce required 2023: ${JSON.stringify(route.nextLearningAction(60))}`)
 console.log('PASS: untouched checkpoint year is preferred')
 
 // 4) 両方未露出なら標準ルート2025を維持。
 reset({
   'waseshibu-math-exam-scores':JSON.stringify([{id:'e24',deviceId:'d',resetVersion:0,year:2024,score:100,correctCount:20,wrongCount:0,unansweredCount:0,completed:true,scoreValidity:'first-look',at:'2026-08-20T00:00:00.000Z'}])
 })
-if(route.nextCheckpointYear()!==2025)throw new Error('standard 2025 checkpoint order was not preserved')
-console.log('PASS: standard 2024→2025→2026 order remains when untouched')
+if(route.nextCheckpointYear()!==2023)throw new Error('required 2023 checkpoint order was not preserved')
+console.log('PASS: required 2024→2023→2022→2025→2026 order begins with 2023 after diagnosis')
 
 // 5) 任意演習で露出済みの旧年度小問は、弱点補強の「未使用問題」として再予約しない。
 reset()
@@ -111,7 +111,7 @@ console.log('PASS: reserved / completed assignment states are distinct')
 // 7) Home表示が旧年度の最新スコアに引っ張られないことを静的にも固定。
 const home=fs.readFileSync('src/pages/Home.tsx','utf8')
 if(!home.includes('const latest=latestMainCheckExam()'))throw new Error('Home does not use latest main-check score')
-if(!home.includes('改善確認 → 再補強 → 仕上がり確認'))throw new Error('Home six-phase heading mismatch')
+if(!home.includes('2024診断 → 2023改善確認① → 2022改善確認② → 2025実戦確認 → 2026最終確認'))throw new Error('Home six-phase heading mismatch')
 console.log('PASS: Home uses main-check score and six-phase wording')
 
 console.log('PASS: user-perspective scenario suite')

@@ -36,7 +36,7 @@ if(!paper.includes('seconds:questionSeconds[x.key]'))fail('per-question seconds 
 if(paper.includes("diagnosis:x.status==='correct'?'correct':'recoverable'"))fail('all misses still forced recoverable')
 for(const token of ["cause==='時間不足'?'time'","cause==='現時点では難しい'?'difficult'","nextLearningAction(strategy.target)"])if(!paper.includes(token))fail(`PastPapers missing ${token}`)
 if(!review.includes('const [reviewOrder,setReviewOrder]=useState(makeOrder)')||review.includes('const wrongFirst='))fail('marking order is not frozen')
-if(!route.includes('nextLearningAction')||!route.includes('for(const year of [2024,2025,2026])')||!route.includes('reinforcementComplete(year)'))fail('common next action does not cover 2026 remediation')
+if(!route.includes('nextLearningAction')||!route.includes('for(const year of REQUIRED_MAIN_YEAR_SEQUENCE)')||!route.includes('reinforcementComplete(year,target)'))fail('common next action does not cover required five-year remediation')
 if(!route.includes('const desired=weakFieldsForStoredExam(target,exam,attempts)'))fail('reinforcement plan still depends on stale stored weakFields')
 if(!guided.includes("assessStep('matched')")||!guided.includes("assessStep('guided')")||!guided.includes("assessStep('unclear')"))fail('guided step self-check UI missing')
 if(!guidedCore.includes("selfAssessment?:'matched'|'guided'|'unclear'"))fail('guided self assessment not persisted')

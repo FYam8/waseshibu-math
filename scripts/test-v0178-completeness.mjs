@@ -20,10 +20,10 @@ const preflight=read('src/preflight.ts')
 const fail=(message)=>{throw new Error(message)}
 
 // Version consistency.
-assert.equal(pkg.version,'0.17.8','package.json version')
-assert.equal(lock.version,'0.17.8','package-lock top version')
-assert.equal(lock.packages?.['']?.version,'0.17.8','package-lock root package version')
-assert.match(version,/APP_VERSION='0\.17\.8'/,'APP_VERSION')
+assert.equal(pkg.version,'0.17.9','package.json version')
+assert.equal(lock.version,'0.17.9','package-lock top version')
+assert.equal(lock.packages?.['']?.version,'0.17.9','package-lock root package version')
+assert.match(version,/APP_VERSION='0\.17\.9'/,'APP_VERSION')
 
 // Migration/data protection.
 assert.match(migration,/CURRENT_DATA_VERSION=6/,'dataVersion 6')
@@ -50,12 +50,12 @@ assert.match(past,/scoreValidity:!prior&&firstLookEligible\?'first-look':'refere
 assert.match(past,/if\(phase!=='solve'\|\|\(needsWarning&&!warningAccepted\)\)return;const id=`exposure-\$\{year\}`/,'warning-only exposure guard changed')
 
 // Year roles / required-vs-optional routing.
-assert.ok(route.includes("return untouched??remaining[0]"),'untouched 2025/2026 checkpoint preference missing')
-assert.ok(route.includes("Number(year)>=2019&&Number(year)<=2023"),'optional old-year draft separation missing')
-assert.ok(route.includes('必須の元問題修正は、あとから開いた2025/2026ドラフトより常に優先する。'),'required task precedence missing')
+assert.ok(route.includes('REQUIRED_MAIN_YEAR_SEQUENCE=[2024,2023,2022,2025,2026]'),'required five-year sequence missing')
+assert.ok(route.includes("Number(year)>=2019&&Number(year)<=2021"),'optional old-year draft separation missing')
+assert.ok(route.includes('後の年度を先に開いたドラフトがあっても、手前の必須年度・未解決・補強を飛ばさない。'),'required task precedence missing')
 
 // ETA monotonicity and old-year exclusion.
-assert.ok(eta.includes('2019〜2023年度は「全問題」を数えない。'),'optional old-year ETA exclusion missing')
+assert.ok(eta.includes('2019〜2021年度は「全問題」を数えない。'),'optional old-year ETA exclusion missing')
 assert.ok(eta.includes('Math.max(floor,item.remainingUnits)'),'A<=B<=C monotonic ETA guard missing')
 
 // 2019/2020 scope: no Pythagorean theorem as primary remedy/guided method.
@@ -82,5 +82,5 @@ assert.ok(answers.includes("'2022-Q2-2'")&&answers.includes('3t')&&answers.inclu
 assert.ok(home.includes('未解決'),'Home should use 未解決 terminology')
 assert.ok(!home.includes('元の誤答'),'Home contains misleading 元の誤答 wording')
 
-console.log('PASS: v0.17.8 completeness supplements')
+console.log('PASS: v0.17.9 completeness supplements')
 console.log('version / migration+backup / goal-switch preservation / first-look-reference / year-role / ETA / 2019-2020 scope / critical answers / terminology')

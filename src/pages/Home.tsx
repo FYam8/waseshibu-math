@@ -11,11 +11,11 @@ import { buildGoalDayEstimates } from '../targetEta'
 
 const phases=[
   {n:1,title:'2024年度で診断'},
-  {n:2,title:'元問題を直す'},
-  {n:3,title:'類題・旧年度で補強'},
-  {n:4,title:'未使用年度で改善確認'},
-  {n:5,title:'残った弱点を再補強'},
-  {n:6,title:'仕上がり確認'}
+  {n:2,title:'2024年度の弱点を修正・補強'},
+  {n:3,title:'2023年度で改善確認①'},
+  {n:4,title:'2022年度で改善確認②'},
+  {n:5,title:'2025年度で実戦確認'},
+  {n:6,title:'2026年度で最終確認'}
 ]
 
 export default function Home(){
@@ -111,9 +111,9 @@ export default function Home(){
     </section>
 
     <section className="card learning-route compact-route">
-      <div className="section-head"><div><span className="eyebrow">PAST PAPER CYCLE</span><h2>診断 → 元問題修正 → 類題・旧年度補強 → 改善確認 → 再補強 → 仕上がり確認</h2></div><b>PHASE {phase}/6</b></div>
+      <div className="section-head"><div><span className="eyebrow">PAST PAPER CYCLE</span><h2>2024診断 → 2023改善確認① → 2022改善確認② → 2025実戦確認 → 2026最終確認</h2></div><b>PHASE {phase}/6</b></div>
       <div className="compact-phase-list">{phases.map(item=>{const done=routePhaseDone(item.n),active=item.n===phase;return <article key={item.n} className={`${done?'done':''} ${active?'active':''}`}><span>{done?'✓':item.n}</span><div><b>{item.title}</b><small>{active?'現在の推奨':done?'完了':'次の段階'}</small></div>{active&&<Link to={primaryQueueTask?.to||progression.to}>{primaryQueueTask?.title||progression.label}</Link>}</article>})}</div>
-      <p className="muted">2019〜2023年度は必要な小問だけを弱点補強に使います。2019年度は問題構成が他年度と異なるため、年度数ではなく実際の課題単位で学習量を管理します。補強で触れた年度の通し得点は「参考スコア」として扱います。</p>
+      <p className="muted">2019〜2021年度は必要な小問だけを弱点補強に使います。2019年度は問題構成が他年度と異なるため、年度数ではなく実際の課題単位で学習量を管理します。補強で触れた年度の通し得点は「参考スコア」として扱います。</p>
       {optionalOldDraft&&<div className="weakness-cleared"><b>中断中の任意演習：{optionalOldDraft.label}</b><p className="muted">現在の必須学習とは別枠です。時間があるときに再開できます。</p><Link className="button" to={optionalOldDraft.to}>任意演習を再開</Link></div>}
     </section>
 

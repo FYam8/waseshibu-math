@@ -10,7 +10,7 @@ import { targetGoalLabel, targetProfile, weakFieldsForStoredExam } from '../targ
 import { guidedQuestion } from '../guidedReview'
 
 export default function Reinforcement(){
-  const [params]=useSearchParams(),rawSource=Number(params.get('source')||2024),source=rawSource===2026?2026:rawSource===2025?2025:2024
+  const [params]=useSearchParams(),rawSource=Number(params.get('source')||2024),source=rawSource>=2022&&rawSource<=2026?rawSource:2024
   const exam=latestExam(source)
   const [version,setVersion]=useState(0)
   const [open,setOpen]=useState<string|null>(null)
@@ -44,7 +44,7 @@ export default function Reinforcement(){
 
   if(!done&&sourceReviewRequired&&!sourceProgress.complete)return <>
     <div className="page-head"><div><span className="eyebrow">SOURCE QUESTION FIRST · {targetGoalLabel(target)}</span><h1>まず{source}年度で間違えた問題を直します</h1><p className="muted">旧年度問題へ進む前に、診断で実際に間違えた目標範囲の小問を理解し、もう一度再現できる状態にします。</p></div><b className="route-status">{sourceProgress.completedIds.length}/{sourceProgress.requiredIds.length}問</b></div>
-    <section className="card source-review-gate"><h2>残り {sourceProgress.remainingIds.length}問</h2><p>{targetGoalLabel(target)}目標では、元の未解決問題を先に直してから「2019〜2023該当問題 → 類題4問」へ進みます。</p><div className="reinforce-flow four-step"><b>1　元の未解決問題を再現</b><span>→</span><b>2　旧年度の該当問題</b><span>→</span><b>3　類題4問</b><span>→</span><b>4　次年度で確認</b></div><div className="actions"><Link className="button primary" to={`/mistakes?year=${source}`}>元の未解決問題を直す</Link><Link className="button" to="/">ホームへ戻る</Link></div><p className="muted">答えを見ただけでは完了になりません。「ヒントなしで再現」または「答え確認後に再現」まで進めると、この補強が解放されます。</p></section>
+    <section className="card source-review-gate"><h2>残り {sourceProgress.remainingIds.length}問</h2><p>{targetGoalLabel(target)}目標では、元の未解決問題を先に直してから「2019〜2021該当問題 → 類題4問」へ進みます。</p><div className="reinforce-flow four-step"><b>1　元の未解決問題を再現</b><span>→</span><b>2　旧年度の該当問題</b><span>→</span><b>3　類題4問</b><span>→</span><b>4　次年度で確認</b></div><div className="actions"><Link className="button primary" to={`/mistakes?year=${source}`}>元の未解決問題を直す</Link><Link className="button" to="/">ホームへ戻る</Link></div><p className="muted">答えを見ただけでは完了になりません。「ヒントなしで再現」または「答え確認後に再現」まで進めると、この補強が解放されます。</p></section>
   </>
 
   return <>

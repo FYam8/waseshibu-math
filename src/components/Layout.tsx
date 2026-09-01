@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useEffect, useState, type PropsWithChildren } from 'react'
-import { currentLearningStep } from '../learningRoute'
+import { nextLearningAction } from '../learningRoute'
 import { loadPrepState } from '../preflight'
 import { ACTIVE_APP_VERSION_KEY, APP_VERSION, SAFE_MODE_KEY } from '../version'
 import { UPDATE_NOTICE_KEY } from '../safetyBootstrap'
@@ -24,7 +24,7 @@ export default function Layout({ children }: PropsWithChildren) {
     window.addEventListener('waseshibu-route-change',refresh);window.addEventListener('waseshibu-write-blocked',blocked);window.addEventListener('storage',storageChanged)
     return()=>{window.removeEventListener('waseshibu-route-change',refresh);window.removeEventListener('waseshibu-write-blocked',blocked);window.removeEventListener('storage',storageChanged);channel?.close()}
   },[])
-  const step=currentLearningStep(),prep=loadPrepState(),learnTo=!prep.completed&&!prep.skipped?'/setup-check':step===1?'/past-papers?year=2024':step===2?'/past-papers?year=2024&review=1':step===4?'/reinforce?source=2024':step===5?'/past-papers?year=2025':step===6?'/reinforce?source=2025':step===7?'/past-papers?year=2026':'/years'
+  const prep=loadPrepState(),learnTo=!prep.completed&&!prep.skipped?'/setup-check':nextLearningAction().to
   void routeVersion
   return (
     <div className="app-shell">

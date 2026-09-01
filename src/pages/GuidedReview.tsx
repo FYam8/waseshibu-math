@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import MathAnswerInput from '../components/MathAnswerInput'
 import FocusedQuestionView from '../components/FocusedQuestionView'
 import {
-  assessGuidedStep,guidedOutcomeLabel,guidedQuestion,loadGuidedProgress,loadGuidedReview,recordGuidedFinal,
+  guidedOutcomeLabel,guidedQuestion,loadGuidedProgress,loadGuidedReview,recordGuidedFinal,
   recordGuidedStep,revealGuidedFinalAnswer,saveGuidedReview,updateGuidedProgress,validateGuidedStepResponse,type GuidedOutcome
 } from '../guidedReview'
 import { loadPreferences } from '../storage'
@@ -73,7 +73,7 @@ export default function GuidedReview(){
     persistLegacy(undefined,true,true)
   }
   const resetForRetry=()=>{setMode('retry');setFinalAnswer('');setResult(null)}
-  const remedySource=q.year===2024||q.year===2025||q.year===2026?`&source=${q.year}`:''
+  const remedySource=q.year>=2022&&q.year<=2026?`&source=${q.year}`:''
   const remedyLink=`/remediate?topic=${encodeURIComponent(q.topic)}${remedySource}&q=${encodeURIComponent(q.id)}`
 
   return <>

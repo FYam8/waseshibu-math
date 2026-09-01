@@ -25,8 +25,8 @@ const require=createRequire(import.meta.url),eta=require(path.join(temp,'targetE
 
 const initial=eta.buildGoalDayEstimates(new Date('2026-08-31T09:00:00Z'))
 const compact=Object.fromEntries(initial.map(x=>[x.target,{days:x.days,questions:x.includedQuestions,units:x.remainingUnits}]))
-if(compact[60].questions!==36||compact[70].questions!==53||compact[75].questions!==60)throw new Error(`main-check target inclusion mismatch ${JSON.stringify(compact)}`)
-if(compact[60].days!==4||compact[70].days!==6||compact[75].days!==6)throw new Error(`initial day estimate mismatch ${JSON.stringify(compact)}`)
+if(compact[60].questions!==58||compact[70].questions!==91||compact[75].questions!==100)throw new Error(`main-check target inclusion mismatch ${JSON.stringify(compact)}`)
+if(compact[60].days!==6||compact[70].days!==10||compact[75].days!==10)throw new Error(`initial day estimate mismatch ${JSON.stringify(compact)}`)
 
 // 任意の2019年度を克服しても、補強計画に選ばれていない限り必須学習量は減らない。
 global.localStorage.setItem('waseshibu-math-guided-progress-v2',JSON.stringify({
@@ -35,4 +35,4 @@ global.localStorage.setItem('waseshibu-math-guided-progress-v2',JSON.stringify({
 const afterOldOptional=eta.buildGoalDayEstimates(new Date('2026-08-31T09:00:00Z'))
 for(const x of afterOldOptional)if(x.remainingUnits!==compact[x.target].units)throw new Error(`optional old-year work incorrectly changed ${x.target} ETA units`)
 
-console.log('PASS: goal ETA runtime counts 2024-2026 checkpoints + selected reinforcement only; unrelated old-year work is excluded')
+console.log('PASS: goal ETA runtime counts 2022-2026 required five-year checkpoints + selected reinforcement only; unrelated old-year work is excluded')

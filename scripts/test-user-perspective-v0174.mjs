@@ -36,7 +36,7 @@ reset({
  'waseshibu-math-attempts':JSON.stringify([attempt('exposure-2025')]),
  'waseshibu-math-exam-scores':JSON.stringify([{id:'e24',deviceId:'d',resetVersion:0,year:2024,score:100,completed:true,scoreValidity:'first-look',at:'2026-08-20T00:00:00.000Z'}])
 })
-if(route.nextCheckpointYear()!==2026)throw new Error(`opened 2025 should defer to untouched 2026, got ${route.nextCheckpointYear()}`)
+if(route.nextCheckpointYear()!==2023)throw new Error(`required flow must choose 2023 before later years, got ${route.nextCheckpointYear()}`)
 console.log('PASS: untouched checkpoint is preferred after view-only exposure')
 
 // C: 旧年度を通しで開いたら、その年度の全小問を「未使用補強」として再提示しない
@@ -91,10 +91,10 @@ if(!pp.includes("if(phase==='result'||(needsWarning&&!warningAccepted))return;wr
 console.log('PASS: warning-only visits do not consume first-look eligibility')
 
 
-// I: 学習履歴画面でも2019〜2023の任意得点が「現在段階」を上書きしない
+// I: 学習履歴画面でも2019〜2021の任意得点が「現在段階」を上書きしない
 const report=fs.readFileSync('src/pages/Report.tsx','utf8')
 if(!report.includes('const latest=latestMainCheckExam()??null'))throw new Error('Report current stage still follows the latest optional old-year score')
-if(!report.includes('2019〜2023年度は補強・任意演習の履歴として保存し、現在段階を上書きしません'))throw new Error('Report does not explain old-year score role')
+if(!report.includes('2019〜2021年度は補強・任意演習の履歴として保存し、現在段階を上書きしません'))throw new Error('Report does not explain old-year score role')
 if(!report.includes("x.scoreValidity==='first-look'?'初見スコア'"))throw new Error('score history does not distinguish first-look/reference')
 const home=fs.readFileSync('src/pages/Home.tsx','utf8')
 if(!home.includes('参考スコア（初見比較には使わない）'))throw new Error('Home does not disclose reference-score status')

@@ -1,3 +1,10 @@
+# v0.17.9 build / verification status
+
+- App version: 0.17.9
+- Data version: 6（schema変更なし）
+- Required route: 2024 → 2023 → 2022 → 2025 → 2026
+- 2019〜2021: optional reinforcement / optional full-year practice
+
 # BUILD STATUS — v0.17.8
 
 ## Source / automated verification
@@ -24,20 +31,26 @@
 - `未解決` terminology guard
 
 ## Build
-`npm ci` で依存関係をクリーンインストール後、`assessGuidedStep` の import 漏れを修正しました。
+`npm run build` was executed in this environment and is currently BLOCKED by the local dependency installation, not by an application TypeScript diagnostic.
 
-- `npm run test:v0178:all` : PASS（修正後2回連続）
-- `npm run build` : PASS（修正後2回連続）
-- production bundle : `dist/` 生成確認
+Missing/empty type packages reported:
+- @types/babel__core
+- @types/babel__generator
+- @types/babel__template
+- @types/babel__traverse
+- @types/estree
+- @types/prop-types
+- @types/react
+- @types/react-dom
+
+The local `node_modules` package directories are present but empty. A clean dependency install is required before final production build verification.
 
 ## Publication gate
-Completed locally:
+Do not call this release production-complete until:
 1. clean `npm ci`
-2. `npm run build` PASS twice consecutively
-3. automated user-perspective/regression/audit suite PASS twice consecutively without code/data/test-condition changes
-
-Final publication confirmation:
-4. GitHub Actions verify/deploy success
+2. `npm run build` PASS
+3. actual-browser user-perspective test pass #1 = 0 issues
+4. actual-browser user-perspective test pass #2 = 0 issues without code/data/test-condition changes
 5. GitHub Pages confirms v0.17.8 is the served build
 
 

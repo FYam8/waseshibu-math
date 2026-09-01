@@ -4,7 +4,7 @@ import questions from '../data/questions.json'
 import { examPages, examRole, pointsFor } from '../data/examConfig'
 import ExamMarkReview from '../components/ExamMarkReview'
 import { createRecordId, loadExamScores, loadPreferences, saveAttempt, saveExamScore } from '../storage'
-import { currentLearningStep, markYearSolved, nextLearningAction, yearExposureState } from '../learningRoute'
+import { REQUIRED_MAIN_YEAR_SEQUENCE, markYearSolved, nextLearningAction, nextRequiredStageYear, requiredYearPurpose, yearExposureState } from '../learningRoute'
 import { isExamAnswerCorrect } from '../data/examAnswers'
 import { cleanAnswerInput } from '../answer'
 import { runExamIntegrityCheck } from '../preflight'
@@ -69,7 +69,10 @@ export default function PastPapers(){
     if(!(answers[key]||'').trim())return 'unanswered'
     return isExamAnswerCorrect(key,answers[key]||'')?'correct':'wrong'
   }
-  const step=currentLearningStep(),needsWarning=(year===2025&&step<5)||(year===2026&&step<7)
+  const activeRequiredYear=nextRequiredStageYear()
+  const requestedStage=REQUIRED_MAIN_YEAR_SEQUENCE.indexOf(year as (typeof REQUIRED_MAIN_YEAR_SEQUENCE)[number])
+  const activeStage=activeRequiredYear===null?-1:REQUIRED_MAIN_YEAR_SEQUENCE.indexOf(activeRequiredYear)
+  const needsWarning=requestedStage>=0&&activeStage>=0&&requestedStage>activeStage
 
   useEffect(()=>{if(!running||phase!=='solve')return;const id=window.setInterval(()=>{setSeconds(s=>s+1);if(focused)setQuestionSeconds(v=>({...v,[focused]:(v[focused]||0)+1}))},1000);return()=>window.clearInterval(id)},[running,phase,focused])
   useEffect(()=>{if(phase==='result'||(needsWarning&&!warningAccepted))return;writeDraft(year,{answers,flags,causes:causeMap,overrides,seconds,questionSeconds,majorIndex,phase:phase==='mark'?'mark':'solve',updatedAt:new Date().toISOString(),firstLookEligible})},[year,answers,flags,causeMap,overrides,seconds,questionSeconds,majorIndex,phase,firstLookEligible,needsWarning,warningAccepted])
@@ -104,7 +107,7 @@ export default function PastPapers(){
   }
 
   if(!integrity.ok)return <section className="card integrity-failed"><span className="eyebrow">SAFETY CHECK FAILED</span><h1>採点データを確認できないため開始を停止しました</h1><p>誤採点を防ぐための安全機能です。</p><ul>{integrity.issues.slice(0,8).map(x=><li key={x}>{x}</li>)}</ul><Link className="button" to="/">ホームへ戻る</Link></section>
-  if(needsWarning&&!warningAccepted&&phase==='solve')return <section className="card warning-card"><span className="eyebrow">推奨ルート外の年度</span><h1>{year}年度を先に開きますか？</h1><p>{year===2025?'先に2024年度の弱点補強を終えると、改善を正しく比較できます。':'2026年度は仕上がり確認用です。先に2024・2025年度の診断と補強を終えることを推奨します。'}</p><div className="actions"><Link className="button primary" to="/">推奨ルートへ戻る</Link><button className="button" onClick={()=>setWarningAccepted(true)}>理解して開始する</button></div></section>
+  if(needsWarning&&!warningAccepted&&phase==='solve')return <section className="card warning-card"><span className="eyebrow">推奨ルート外の年度</span><h1>{year}年度を先に開きますか？</h1><p>標準ルートでは、先に{activeRequiredYear}年度の{activeRequiredYear?requiredYearPurpose(activeRequiredYear):'現在の学習'}と弱点補強を終えてから、{year}年度の{requiredYearPurpose(year)}へ進みます。先に開くと、その年度は初見比較ではなく参考確認になる場合があります。</p><div className="actions"><Link className="button primary" to="/">推奨ルートへ戻る</Link><button className="button" onClick={()=>setWarningAccepted(true)}>理解して開始する</button></div></section>
 
   if(phase==='mark')return <ExamMarkReview year={year} majors={majors} answers={answers} flags={flags} causeMap={causeMap} overrides={overrides} statusFor={statusFor} setCauseMap={setCauseMap} setOverrides={setOverrides} onFinish={finish}/>
 
