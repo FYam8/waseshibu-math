@@ -80,5 +80,7 @@ assert.equal(packageLock.packages?.['']?.name,'waseshibu-math','package-lock roo
 const readme=read('README.md')
 for(const token of ['GitHubだけで端末間同期','fine-grained PAT','waseshibu-math-sync','GitHub REST API：端末間同期'])assert.equal(readme.includes(token),false,`README still documents removed GitHub sync behavior: ${token}`)
 assert.equal(readme.includes('GitHubアカウント、Private Repository、PAT、GitHub REST APIへの接続は学習機能に必要ありません。'),true,'README must state local-only learning architecture')
+assert.equal(readme.includes('旧GitHub接続設定・PAT・dirty状態がブラウザに残っていても自動削除せず、通常利用では参照しません。'),true,'README must distinguish unused legacy GitHub connection state')
+assert.equal(readme.includes('waseshibu-math-sync-meta')&&readme.includes('resetVersion 情報は既存学習データとの互換性維持のため端末内でのみ参照を残し、GitHubへの通信・同期には使用しません。'),true,'README must explain local-only sync-meta compatibility use')
 
 console.log('GITHUB SYNC SEPARATION VERIFIED: localStorage-only learning flow, data v6 preserved, production bundle clean')
