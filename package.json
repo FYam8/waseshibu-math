@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run test:user-perspective && npm run test:user-perspective:v0176 && tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs",
+    "build": "npm run test:sync-separation-runtime && npm run test:user-perspective && npm run test:user-perspective:v0176 && tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs",
     "preview": "vite preview",
     "self-check": "node scripts/self-check.mjs",
     "verify-critical": "node scripts/verify-critical.mjs",
     "audit:sync-separation": "node scripts/verify-github-sync-separation-v01712.mjs",
+    "test:sync-separation-runtime": "node scripts/test-github-sync-separation-runtime-v01712.mjs",
     "test:migration": "node scripts/test-migration-preservation.mjs",
     "test:mastery": "node scripts/test-mastery-reactivation.mjs",
     "syntax-check": "node scripts/syntax-check.mjs",
