@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs",
+    "build": "npm run test:user-perspective && npm run test:user-perspective:v0176 && tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs",
     "preview": "vite preview",
     "self-check": "node scripts/self-check.mjs",
     "verify-critical": "node scripts/verify-critical.mjs",
