@@ -70,6 +70,8 @@ for(const file of walk(dist)){
 }
 
 const styles=read('src/styles.css')
+assert.equal(styles.includes('.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px}'),true,'shared topbar flex layout must survive sync CSS removal')
+assert.equal(styles.includes('.local-badge'),true,'local data protection badge styling must remain')
 for(const token of ['.sync-form','.sync-badge','.sync-auth','.sync-pending','.sync-off','.token-choice'])assert.equal(styles.includes(token),false,`stale GitHub sync CSS remains: ${token}`)
 const packageJson=JSON.parse(read('package.json')),packageLock=JSON.parse(read('package-lock.json'))
 assert.equal(packageJson.name,'waseshibu-math','package name must not describe the removed GitHub sync architecture')
