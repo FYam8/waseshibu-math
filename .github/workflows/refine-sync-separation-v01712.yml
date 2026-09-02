@@ -1,0 +1,81 @@
+name: Refine v0.17.12 sync separation
+
+on:
+  push:
+    branches: ["work/remove-github-sync-v0.17.12"]
+
+permissions:
+  contents: write
+
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/remove-github-sync-v0.17.12
+      - name: Remove stale sync UI/docs/metadata
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          # 1) Remove CSS that only belonged to the deleted GitHub sync UI.
+          css_path = Path('src/styles.css')
+          css = css_path.read_text()
+          css, count = re.subn(
+              r'\n\.sync-form\{.*?\n\.sync-auth i\{background:#7c5ce5\}\n',
+              '\n',
+              css,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit('expected stale GitHub sync CSS block not found exactly once')
+          css = css.replace('.subtitle{display:none}.sync-badge{padding:4px 7px;font-size:10px}', '.subtitle{display:none}')
+          css_path.write_text(css)
+
+          # 2) Remove stale GitHub-sync wording from package identity only.
+          for filename in ['package.json', 'package-lock.json']:
+              p = Path(filename)
+              text = p.read_text()
+              old = '"name": "waseshibu-math-github-sync-final-reviewed"'
+              replacement = '"name": "waseshibu-math"'
+              expected = 1 if filename == 'package.json' else 2
+              if text.count(old) != expected:
+                  raise SystemExit(f'{filename}: unexpected old package-name count {text.count(old)}')
+              p.write_text(text.replace(old, replacement))
+
+          # 3) Replace obsolete sync-first README with the current local-only architecture.
+          Path('README.md').write_text('''# WaseShibu Math 70 — v0.17.12\n\n早稲田渋谷シンガポール校の数学対策用に作成した非公式の学習用Webアプリです。\n\n## 現在の保存方式\n\n学習データは通常利用時、ブラウザの `localStorage` に保存されます。GitHubアカウント、Private Repository、PAT、GitHub REST APIへの接続は学習機能に必要ありません。\n\n```text\n数学Webアプリ\n  ↓\nlocalStorage\n  ↓\nJSON Export / Import\n  ↓\n復元ポイント\n```\n\n旧バージョンのGitHub学習履歴同期機能は、v0.17.12で数学アプリ本体から分離しました。過去の同期設定や同期メタデータがブラウザに残っていても自動削除せず、通常利用では参照しません。\n\n## データ保護\n\n- アプリバージョン：`0.17.12`\n- 学習データ形式：`6`（v0.17.11から変更なし）\n- 既存の学習用localStorageキーを維持\n- `deviceId` / `resetVersion` は既存データ互換のため維持\n- 学習データ形式を変えていないため、この変更専用のmigrationは追加しない\n- 更新前バックアップ、復元ポイント、Safety Mode、version protectionを維持\n- JSON Export / Import の replace / merge を維持\n\n## GitHubの用途\n\nGitHubは次の用途にのみ使用します。\n\n- ソースコード管理\n- GitHub PagesによるWebアプリ配信\n\n利用者の学習履歴をGitHubへ読み書きする機能は製品コードに含めません。\n\n## 旧 `/sync` URL\n\n過去のブックマーク互換のため `/sync` は残していますが、GitHub同期画面ではなく `/data` と同じデータ管理画面を表示します。通常ナビゲーションには同期項目を表示しません。\n\n## ローカル起動\n\n```bash\nnpm install\nnpm run dev\n```\n\n## 検証\n\n```bash\nnpm run self-check\nnpm run verify-critical\nnpm run build\n```\n\n`npm run build` ではユーザ視点回帰テスト、TypeScript/Vite buildに加え、GitHub同期専用コード・文字列が製品ソースとproduction bundleへ残っていないことを監査します。\n\n## GitHub Pages\n\n`.github/workflows/deploy.yml` を使用します。既存の公開URLとoriginを維持することで、ブラウザ内の既存学習履歴を引き継げる前提を守ります。\n\n## 検索エンジン\n\n本アプリはURLを知っている利用者向けの運用方針で、`noindex` と `robots.txt` の検索除外設定を維持します。\n\n## 過去問データ\n\n公開してよいデータだけをRepositoryへ置き、非公開対象の学校公式本文・音源・ロゴ・Privateデータ・APIキー等は公開しません。\n\n## ライセンス\n\nアプリコードはMIT Licenseです。\n''')
+
+          # 4) Make the automated separation audit catch these stale remnants next time.
+          audit_path = Path('scripts/verify-github-sync-separation-v01712.mjs')
+          audit = audit_path.read_text()
+          marker = "console.log('GITHUB SYNC SEPARATION VERIFIED: localStorage-only learning flow, data v6 preserved, production bundle clean')"
+          if marker not in audit:
+              raise SystemExit('audit marker not found')
+          extra = r'''const styles=read('src/styles.css')
+          for(const token of ['.sync-form','.sync-badge','.sync-auth','.sync-pending','.sync-off','.token-choice'])assert.equal(styles.includes(token),false,`stale GitHub sync CSS remains: ${token}`)
+          const packageJson=JSON.parse(read('package.json')),packageLock=JSON.parse(read('package-lock.json'))
+          assert.equal(packageJson.name,'waseshibu-math','package name must not describe the removed GitHub sync architecture')
+          assert.equal(packageLock.name,'waseshibu-math','package-lock name must match package name')
+          assert.equal(packageLock.packages?.['']?.name,'waseshibu-math','package-lock root package name must match package name')
+          const readme=read('README.md')
+          for(const token of ['GitHubだけで端末間同期','fine-grained PAT','waseshibu-math-sync','GitHub REST API：端末間同期'])assert.equal(readme.includes(token),false,`README still documents removed GitHub sync behavior: ${token}`)
+          assert.equal(readme.includes('GitHubアカウント、Private Repository、PAT、GitHub REST APIへの接続は学習機能に必要ありません。'),true,'README must state local-only learning architecture')
+
+          '''
+          audit_path.write_text(audit.replace(marker, extra + marker))
+
+          # Remove this one-shot workflow from the final branch state.
+          Path('.github/workflows/refine-sync-separation-v01712.yml').unlink()
+          PY
+      - name: Commit refinement
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "Refine v0.17.12 GitHub sync separation"
+          git push origin HEAD:work/remove-github-sync-v0.17.12
