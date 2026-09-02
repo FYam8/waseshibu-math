@@ -56,7 +56,7 @@ npm run verify-critical
 npm run build
 ```
 
-`npm run build` ではユーザ視点回帰テスト、TypeScript/Vite buildに加え、GitHub同期専用コード・文字列が製品ソースとproduction bundleへ残っていないことを監査します。
+`npm run build` ではユーザ視点回帰テスト、TypeScript/Vite buildに加え、GitHub同期専用コード・文字列が製品ソースとproduction bundleへ残っていないことを監査します。同期専用CSS、旧同期README表現、同期版を示すpackage名の再混入も検出対象です。
 
 ## GitHub Pages
 
