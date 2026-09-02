@@ -15,7 +15,19 @@ import PrepCheck from './pages/PrepCheck'
 
 function PastPaperRoute(){
   const location=useLocation()
-  return <PastPapers key={location.search} />
+  return <PastPapers key={location.pathname+location.search} />
+}
+function GuidedReviewRoute(){
+  const location=useLocation()
+  return <GuidedReview key={location.pathname+location.search} />
+}
+function RemediationRoute(){
+  const location=useLocation()
+  return <Remediation key={location.pathname+location.search} />
+}
+function ReinforcementRoute(){
+  const location=useLocation()
+  return <Reinforcement key={location.pathname+location.search} />
 }
 
 export default function App() {
@@ -28,9 +40,9 @@ export default function App() {
         <Route path="/setup-check" element={<PrepCheck />} />
         <Route path="/fields" element={<Fields />} />
         <Route path="/mistakes" element={<MistakeReview />} />
-        <Route path="/guided-review" element={<GuidedReview />} />
-        <Route path="/remediate" element={<Remediation />} />
-        <Route path="/reinforce" element={<Reinforcement />} />
+        <Route path="/guided-review" element={<GuidedReviewRoute />} />
+        <Route path="/remediate" element={<RemediationRoute />} />
+        <Route path="/reinforce" element={<ReinforcementRoute />} />
         <Route path="/practice" element={<Practice />} />
         <Route path="/report" element={<Report />} />
         <Route path="/data" element={<DataManager />} />

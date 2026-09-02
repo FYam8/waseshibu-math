@@ -145,7 +145,7 @@ export const remediationFields: RemediationField[] = [
       {prompt:'相似な三角形の辺の比が2:3です。面積比を答えなさい。',answer:'4:9',explanation:'面積比は辺の比の2乗。'},
       {prompt:'相似な図形で、短い図形の対応する辺6cm、長い図形では9cmです。短い図形の別の辺10cmに対応する長さを求めなさい。',answer:'15',explanation:'拡大率は9/6=3/2。10×3/2=15。'},
       {prompt:'相似な図形の面積比が25:49です。対応する辺の比を答えなさい。',answer:'5:7',explanation:'面積比の平方根を取ります。'},
-      {prompt:'相似比が3:2です。小さい図形の周の長さが20cmのとき、大きい図形の周の長さを求めなさい。',answer:'30',explanation:'20×3/2=30。'}
+      {prompt:'大きい図形と小さい図形の相似比が3:2です。小さい図形の周の長さが20cmのとき、大きい図形の周の長さを求めなさい。',answer:'30',explanation:'20×3/2=30。'}
     ]
   },
   {
@@ -1629,12 +1629,12 @@ const sourceSpecificBanks: Record<string, SourceRemediationProfile> = {
     ]
   },
   '2024-Q1-5': {
-    coreSkill: '正三角形60°と正方形90°を組み合わせ、二等辺三角形の底角を出す。',
+    coreSkill: '正方形・正三角形などの既知角を図から読み取り、一直線180°や角の差で未知角を求める。',
     questions: [
-      {prompt:'正方形の角90°と正三角形の角60°が同じ頂点で隣り合います。残る一直線側の角を求めなさい。',answer:'30',explanation:'90-60。'},
-      {prompt:'二等辺三角形の頂角が30°です。底角を求めなさい。',answer:'75',explanation:'(180-30)/2。'},
-      {prompt:'正方形の対角線がつくる角45°と正三角形の角60°の差を求めなさい。',answer:'15',explanation:'60-45。'},
-      {prompt:'頂角60°の二等辺三角形の底角を求めなさい。',answer:'60',explanation:'(180-60)/2。'}
+      {prompt:'正方形ABCDの辺BCを1辺として、正方形の内側に正三角形BCEを作ります。∠ABEを求めなさい。',answer:'30',explanation:'∠ABC=90°、∠CBE=60°なので、∠ABE=90°-60°=30°。'},
+      {prompt:'一直線A-B-Cの同じ側に、∠DBA=35°、∠EBD=60°があります。∠EBCを求めなさい。',answer:'85',explanation:'一直線なので∠ABC=180°。35°+60°+∠EBC=180°より85°。'},
+      {prompt:'正方形ABCDの辺BCを1辺として、正方形の内側に正三角形BCEを作り、対角線BDを引きます。∠DBEを求めなさい。',answer:'15',explanation:'正方形の対角線より∠DBC=45°、正三角形より∠CBE=60°。差は15°。'},
+      {prompt:'正方形ABCDの辺CDの外側に正三角形CDEを作り、AとEを結びます。∠ADEを求めなさい。',answer:'150',explanation:'∠ADC=90°、正三角形より∠CDE=60°。Dで外側に開く角は90°+60°=150°。'}
     ]
   },
   '2024-Q1-6': {

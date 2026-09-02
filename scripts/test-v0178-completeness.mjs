@@ -20,10 +20,10 @@ const preflight=read('src/preflight.ts')
 const fail=(message)=>{throw new Error(message)}
 
 // Version consistency.
-assert.equal(pkg.version,'0.17.9','package.json version')
-assert.equal(lock.version,'0.17.9','package-lock top version')
-assert.equal(lock.packages?.['']?.version,'0.17.9','package-lock root package version')
-assert.match(version,/APP_VERSION='0\.17\.9'/,'APP_VERSION')
+assert.equal(pkg.version,'0.17.11','package.json version')
+assert.equal(lock.version,'0.17.11','package-lock top version')
+assert.equal(lock.packages?.['']?.version,'0.17.11','package-lock root package version')
+assert.match(version,/APP_VERSION='0\.17\.11'/,'APP_VERSION')
 
 // Migration/data protection.
 assert.match(migration,/CURRENT_DATA_VERSION=6/,'dataVersion 6')
@@ -82,5 +82,5 @@ assert.ok(answers.includes("'2022-Q2-2'")&&answers.includes('3t')&&answers.inclu
 assert.ok(home.includes('未解決'),'Home should use 未解決 terminology')
 assert.ok(!home.includes('元の誤答'),'Home contains misleading 元の誤答 wording')
 
-console.log('PASS: v0.17.9 completeness supplements')
+console.log('PASS: v0.17.11 completeness supplements')
 console.log('version / migration+backup / goal-switch preservation / first-look-reference / year-role / ETA / 2019-2020 scope / critical answers / terminology')

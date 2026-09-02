@@ -5,6 +5,7 @@ import {
 } from '../storage'
 import { strategyForStoredExam, targetGoalLabel, targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
 import { latestMainCheckExam } from '../learningRoute'
+import { loadGuidedProgressState } from '../guidedReview'
 
 export default function Report() {
   const [version,setVersion]=useState(0)
@@ -48,6 +49,9 @@ export default function Report() {
   const todoTopics:[string,number][]=targetWeak.length?targetWeak.map(x=>[x,1]):topicRanking.length?topicRanking:[['2024年度の診断',1]]
   const latestScore=latest?.score ?? null
   const targetStrategy=latest?strategyForStoredExam(prefs.target,latest,attempts):null
+  const guidedProgress=loadGuidedProgressState()
+  const consolidatedRecoveryCandidates=targetStrategy?.candidates.filter(item=>guidedProgress[item.key]?.mastery==='consolidated')||[]
+  const unresolvedRecoveryCandidates=targetStrategy?.candidates.filter(item=>guidedProgress[item.key]?.mastery!=='consolidated')||[]
   const stage =
     latestScore===null ? '未判定' :
     latestScore<50 ? '50点未満' :
@@ -117,7 +121,8 @@ export default function Report() {
       <section className={`card target-result ${targetStrategy?.reached?'reached':''}`}>
         <div className="section-head"><div><span className="eyebrow">{targetGoalLabel(prefs.target)}</span><h2>{targetStrategy?(targetStrategy.reached?`${targetGoalLabel(prefs.target)}目標に到達`:`目標まであと${targetStrategy.gap}点`):`${targetGoalLabel(prefs.target)}戦略`}</h2></div>{targetStrategy&&<b className="target-projection">回収目安 約{targetStrategy.projectedScore}点</b>}</div>
         <p>{targetStrategy?.summary||targetProfile(prefs.target).summary}</p>
-        {!!targetStrategy?.candidates.length&&<div className="recovery-list">{targetStrategy.candidates.map((item,i)=><article key={item.key}><strong>{i+1}</strong><div><b>{item.label}</b><small>優先度{item.grade}・約{item.points}点　{item.reason}</small></div></article>)}</div>}
+        {!!unresolvedRecoveryCandidates.length&&<><h3>未解決・学習中の得点回収候補</h3><div className="recovery-list">{unresolvedRecoveryCandidates.map((item,i)=><article key={item.key}><strong>{i+1}</strong><div><b>{item.label}</b><small>優先度{item.grade}・約{item.points}点　{item.reason}</small></div></article>)}</div></>}
+        {!!consolidatedRecoveryCandidates.length&&<><h3>克服済み・定着確認候補</h3><div className="recovery-list">{consolidatedRecoveryCandidates.map((item,i)=><article key={item.key}><strong>✓</strong><div><b>{item.label}</b><small>克服済み。次年度や任意復習で定着を確認します。</small></div></article>)}</div></>}
         <div className="time-plan"><b>目標別の時間配分</b><div>{(targetStrategy?.timePlan||targetProfile(prefs.target).timePlan).map(item=><span key={item.label} style={{flex:item.percent}}>{item.label}<small>{item.percent}%</small></span>)}</div></div>
       </section>
 
@@ -158,7 +163,7 @@ export default function Report() {
         </div>
         {examScores.length===0?<p className="muted">まだ記録がありません。</p>:(
           <div className="history-list">
-            {examScores.slice(0,10).map(x=><div key={x.id}><span>{x.year}年度　{x.attemptKind==='retake'?'再受験':x.attemptKind==='first'?'初回':'記録'}　{x.scoreValidity==='first-look'?'初見スコア':x.scoreValidity==='reference'?'参考スコア':x.year<=2021?'任意・補強記録':'記録スコア'}</span><b>{x.score}/100{x.correctCount!==undefined?`　正解 ${x.correctCount}問`:''}</b></div>)}
+            {examScores.slice(0,10).map(x=><div key={x.id}><span>{x.year}年度　{x.attemptKind==='retake'?'再受験':x.attemptKind==='first'?'初回':'記録'}　{x.year<=2021?'任意演習 参考スコア':x.scoreValidity==='first-look'?'初見スコア':x.scoreValidity==='reference'?'参考スコア':'記録スコア'}</span><b>{x.score}/100{x.correctCount!==undefined?`　正解 ${x.correctCount}問`:''}</b></div>)}
           </div>
         )}
       </section>

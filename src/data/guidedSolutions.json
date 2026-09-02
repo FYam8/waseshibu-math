@@ -10310,7 +10310,7 @@
         "最終答案を公式解答の指定形式（既約分数・最簡根号・最簡整数比など）まで整えない。"
       ],
       "takeaway": {
-        "pattern": "正三角形60°と正方形90°を組み合わせ、二等辺三角形の底角を出す。"
+        "pattern": "正方形・正三角形などの既知角を図から読み取り、一直線180°や角の差で未知角を求める。"
       },
       "reproduction": {
         "required": true,
@@ -10322,7 +10322,7 @@
         "practiceTopic": "正方形と正三角形の角度"
       },
       "audit": {
-        "contentVersion": 2,
+        "contentVersion": 3,
         "answerChecked": true,
         "stepsChecked": true,
         "scopeChecked": true,
