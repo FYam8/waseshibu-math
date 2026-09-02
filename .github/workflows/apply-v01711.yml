@@ -21,14 +21,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Verify transfer and apply reviewed patch
+      - name: Verify transfer and apply reviewed app patch
         shell: bash
         run: |
           cat .github/v01711-patch/chunk-* | base64 --decode > /tmp/v01711.patch.gz
           echo "387ce84186c29ec8a6933bbaf7a22472c3e8d2e5d7f1d346accc51051d93606b  /tmp/v01711.patch.gz" | sha256sum -c -
           gzip -dc /tmp/v01711.patch.gz > /tmp/v01711.patch
-          git apply --check /tmp/v01711.patch
-          git apply /tmp/v01711.patch
+          EXCLUDES="--exclude=BUILD_STATUS.md --exclude=HANDOFF.md --exclude=REVIEW_REPORT.md"
+          git apply --check $EXCLUDES /tmp/v01711.patch
+          git apply $EXCLUDES /tmp/v01711.patch
           rm -rf .github/v01711-patch
           rm -f .github/workflows/apply-v01711.yml
       - run: npm ci
