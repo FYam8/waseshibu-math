@@ -1,72 +1,45 @@
-# WaseShibu Math 70 — v0.7 最終精査済みGitHub同期版
+# WaseShibu Math 70 — v0.17.12
 
-早稲田渋谷シンガポール校の2019〜2026年度数学過去問を、問題本文の再配布ではなく「出題構造・技能・得点戦略」として整理した非公式の学習用Webアプリです。
+早稲田渋谷シンガポール校の数学対策用に作成した非公式の学習用Webアプリです。
 
-## GitHubだけで端末間同期
+## 現在の保存方式
 
-- GitHub Pages：Webアプリ本体
-- GitHub Private Repository：学習データ
-- GitHub REST API：端末間同期
-- localStorage：学習データの即時・オフライン保存
-- sessionStorage：fine-grained PAT（ブラウザを閉じると消える）
-- 409 Conflict：最新版を再取得してマージ後に再PUT
-- ブラウザCORS互換：`X-GitHub-Api-Version` を送らず、GitHubの既定サポートAPI versionを利用
-- 同期中に新規学習データが増えた場合、未同期フラグを誤って消さないrevision管理
-- 解答履歴：UUID系の一意IDで和集合マージ
-- 履歴削除：resetVersionで古い端末からの復活を防止
-- 解答履歴：月別JSON
-- 日次進捗：完了数を優先してマージし、時計ずれによる巻き戻しを抑制
-- 同期時に内容が変わらない月はPUTせず、不要なcommitを作らない
-
-## GitHub構成
+学習データは通常利用時、ブラウザの `localStorage` に保存されます。GitHubアカウント、Private Repository、PAT、GitHub REST APIへの接続は学習機能に必要ありません。
 
 ```text
-Public Repository
-└─ waseshibu-math
-   └─ GitHub Pages
-
-Private Repository
-└─ waseshibu-math-sync
-   └─ data/
-      ├─ profile.json
-      ├─ past-exams.json
-      ├─ attempts/
-      │  └─ YYYY-MM.json
-      └─ daily/
-         └─ YYYY-MM.json
+数学Webアプリ
+  ↓
+localStorage
+  ↓
+JSON Export / Import
+  ↓
+復元ポイント
 ```
 
-## 初回セットアップ
+旧バージョンのGitHub学習履歴同期機能は、v0.17.12で数学アプリ本体から分離しました。過去の同期設定や同期メタデータがブラウザに残っていても自動削除せず、通常利用では参照しません。
 
-1. GitHubで同期専用Private Repository（例：`waseshibu-math-sync`）を作ります。
-2. **READMEを追加して初期化**し、`main` ブランチを作ってください。
-3. fine-grained personal access tokenを作成します。
-4. Repository accessを **Only select repositories** にして同期Repositoryだけを選択します。
-5. Repository permissionsは **Contents: Read and write** にします。
-6. Webアプリの「端末間同期」でユーザー名・Repository名・PATを入力します。
-7. 「接続テスト」→「今すぐ同期」を実行します。
-8. 別端末でも同じRepositoryを指定し、そのブラウザセッションでPATを入力して同期します。
+## データ保護
 
-## PATの扱い
+- アプリバージョン：`0.17.12`
+- 学習データ形式：`6`（v0.17.11から変更なし）
+- 既存の学習用localStorageキーを維持
+- `deviceId` / `resetVersion` は既存データ互換のため維持
+- 学習データ形式を変えていないため、この変更専用のmigrationは追加しない
+- 更新前バックアップ、復元ポイント、Safety Mode、version protectionを維持
+- JSON Export / Import の replace / merge を維持
 
-v0.6ではPATをlocalStorageへ永続保存しません。`sessionStorage` のみに保存します。
-GitHub Pagesは同一の `github.io` origin配下で他のページを運用することがあるため、ブラウザへ長期保存する秘密情報を減らす設計にしています。
+## GitHubの用途
 
-## 同期競合
+GitHubは次の用途にのみ使用します。
 
-Repository Contents APIで更新時に必要なSHAを使用します。
-409 Conflictが発生した場合、最新版をGET → マージ → 再PUTを最大3回行います。
+- ソースコード管理
+- GitHub PagesによるWebアプリ配信
 
-## リセット
+利用者の学習履歴をGitHubへ読み書きする機能は製品コードに含めません。
 
-練習履歴や過去問得点を削除したときは`resetVersion`を上げます。
-古い端末のデータは、そのversionより古ければ再同期時に復活させません。
-同期途中に別端末でリセットが起きた場合も、最終Profile確認後にもう一度履歴を掃除します。
+## 旧 `/sync` URL
 
-## オフライン
-
-解答はまず端末内へ保存されます。ネット接続がなくても練習できます。
-GitHub同期は「今すぐ同期」でまとめて行います。
+過去のブックマーク互換のため `/sync` は残していますが、GitHub同期画面ではなく `/data` と同じデータ管理画面を表示します。通常ナビゲーションには同期項目を表示しません。
 
 ## ローカル起動
 
@@ -75,33 +48,28 @@ npm install
 npm run dev
 ```
 
-## ビルド
+## 検証
 
 ```bash
+npm run self-check
+npm run verify-critical
 npm run build
 ```
 
+`npm run build` ではユーザ視点回帰テスト、TypeScript/Vite buildに加え、GitHub同期専用コード・文字列が製品ソースとproduction bundleへ残っていないことを監査します。
+
 ## GitHub Pages
 
-`.github/workflows/deploy.yml` を同梱しています。
-GitHubで **Settings → Pages → Source: GitHub Actions** に設定してください。
+`.github/workflows/deploy.yml` を使用します。既存の公開URLとoriginを維持することで、ブラウザ内の既存学習履歴を引き継げる前提を守ります。
 
-## セキュリティ上の位置づけ
+## 検索エンジン
 
-この方式は**個人が自分のPC・iPad・スマホで使う用途向け**です。
-不特定多数の利用者にPATを入力させる公開サービスには向きません。
+本アプリはURLを知っている利用者向けの運用方針で、`noindex` と `robots.txt` の検索除外設定を維持します。
 
 ## 過去問データ
 
-過去問PDF・学校の問題本文・公式解答そのものはRepositoryへ保存しません。
-過去問分析メタデータと自作類題のみを利用します。
+公開してよいデータだけをRepositoryへ置き、非公開対象の学校公式本文・音源・ロゴ・Privateデータ・APIキー等は公開しません。
 
 ## ライセンス
+
 アプリコードはMIT Licenseです。
-
-
-## ブラウザからGitHub APIを呼ぶ際の注意
-
-GitHub REST API自体はCORSをサポートしていますが、ブラウザのpreflightで許可されるrequest headersには
-`Authorization` と `Content-Type` などが含まれる一方、`X-GitHub-Api-Version` は含まれません。
-そのためv0.7ではブラウザからそのversion headerを送らず、GitHubの既定API versionを利用します。

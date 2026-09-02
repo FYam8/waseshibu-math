@@ -69,4 +69,14 @@ for(const file of walk(dist)){
   for(const token of forbiddenProductTokens)assert.equal(text.includes(token),false,`production build contains removed GitHub sync token ${token}: ${path.relative(root,file)}`)
 }
 
+const styles=read('src/styles.css')
+for(const token of ['.sync-form','.sync-badge','.sync-auth','.sync-pending','.sync-off','.token-choice'])assert.equal(styles.includes(token),false,`stale GitHub sync CSS remains: ${token}`)
+const packageJson=JSON.parse(read('package.json')),packageLock=JSON.parse(read('package-lock.json'))
+assert.equal(packageJson.name,'waseshibu-math','package name must not describe the removed GitHub sync architecture')
+assert.equal(packageLock.name,'waseshibu-math','package-lock name must match package name')
+assert.equal(packageLock.packages?.['']?.name,'waseshibu-math','package-lock root package name must match package name')
+const readme=read('README.md')
+for(const token of ['GitHubだけで端末間同期','fine-grained PAT','waseshibu-math-sync','GitHub REST API：端末間同期'])assert.equal(readme.includes(token),false,`README still documents removed GitHub sync behavior: ${token}`)
+assert.equal(readme.includes('GitHubアカウント、Private Repository、PAT、GitHub REST APIへの接続は学習機能に必要ありません。'),true,'README must state local-only learning architecture')
+
 console.log('GITHUB SYNC SEPARATION VERIFIED: localStorage-only learning flow, data v6 preserved, production bundle clean')
