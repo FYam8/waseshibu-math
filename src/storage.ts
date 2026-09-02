@@ -7,8 +7,6 @@ const DAILY_KEY = 'waseshibu-math-daily'
 const EXAM_KEY = 'waseshibu-math-exam-scores'
 const DEVICE_KEY = 'waseshibu-math-device-id'
 const META_KEY = 'waseshibu-math-sync-meta'
-const DIRTY_KEY = 'waseshibu-math-sync-dirty'
-const DIRTY_REV_KEY = 'waseshibu-math-sync-dirty-revision'
 
 export type Preferences = {
   target: 60 | 70 | 75
@@ -40,8 +38,7 @@ const now = () => new Date().toISOString()
 const allowWrite=()=>{const allowed=canWriteLearningData();if(!allowed)notifyWriteBlocked();return allowed}
 
 function nextResetVersion(current:number) {
-  // 古い端末がオフライン中にリセットしても、通常は過去の世代より新しくなるよう
-  // 現在時刻(ms)と現在世代+1の大きい方を使う。
+  // 既存データとの互換性を維持するため、resetVersionは従来どおり単調増加させる。
   return Math.max(current + 1, Date.now())
 }
 
@@ -81,30 +78,6 @@ export function saveSyncMeta(meta: SyncMeta) {
   localStorage.setItem(META_KEY, JSON.stringify(meta))
 }
 
-export function markSyncDirty() {
-  if (!allowWrite()) return
-  const next = getSyncDirtyRevision() + 1
-  localStorage.setItem(DIRTY_REV_KEY, String(next))
-  localStorage.setItem(DIRTY_KEY, '1')
-  window.dispatchEvent(new CustomEvent('waseshibu-sync-dirty'))
-}
-
-export function getSyncDirtyRevision() {
-  const n = Number(localStorage.getItem(DIRTY_REV_KEY) || '0')
-  return Number.isFinite(n) ? n : 0
-}
-
-export function clearSyncDirtyIfUnchanged(revisionAtStart:number) {
-  if (!allowWrite()) return false
-  if (getSyncDirtyRevision() !== revisionAtStart) return false
-  localStorage.removeItem(DIRTY_KEY)
-  return true
-}
-
-export function isSyncDirty() {
-  return localStorage.getItem(DIRTY_KEY) === '1'
-}
-
 function migrateAttempt(raw: any): Attempt | null {
   if (!raw || !raw.id || !raw.questionId || !raw.at) return null
   const meta = loadSyncMeta()
@@ -135,12 +108,11 @@ export function loadAttempts(): Attempt[] {
   } catch { return [] }
 }
 
-export function replaceAttempts(attempts: Attempt[], markDirty = false) {
+export function replaceAttempts(attempts: Attempt[]) {
   if (!allowWrite()) return
   const unique = [...new Map(attempts.map(x => [x.id, x])).values()]
     .sort((a,b) => b.at.localeCompare(a.at))
   localStorage.setItem(ATTEMPT_KEY, JSON.stringify(unique))
-  if (markDirty) markSyncDirty()
 }
 
 export function saveAttempt(attempt: Omit<Attempt, 'deviceId'|'resetVersion'> & Partial<Pick<Attempt,'deviceId'|'resetVersion'>>) {
@@ -152,7 +124,6 @@ export function saveAttempt(attempt: Omit<Attempt, 'deviceId'|'resetVersion'> & 
     resetVersion: Number.isInteger(attempt.resetVersion) ? attempt.resetVersion! : meta.attemptsResetVersion
   }
   replaceAttempts([full, ...loadAttempts()])
-  markSyncDirty()
 }
 
 export function clearAttempts() {
@@ -160,7 +131,6 @@ export function clearAttempts() {
   localStorage.removeItem(ATTEMPT_KEY)
   const meta = loadSyncMeta()
   saveSyncMeta({...meta, attemptsResetVersion: nextResetVersion(meta.attemptsResetVersion)})
-  markSyncDirty()
 }
 
 export function loadPreferences(): Preferences {
@@ -176,21 +146,19 @@ export function loadPreferences(): Preferences {
   }
 }
 
-export function savePreferences(prefs: Omit<Preferences,'updatedAt'> & Partial<Pick<Preferences,'updatedAt'>>, markDirty = true) {
+export function savePreferences(prefs: Omit<Preferences,'updatedAt'> & Partial<Pick<Preferences,'updatedAt'>>) {
   if (!allowWrite()) return
   const full: Preferences = {...prefs, updatedAt: prefs.updatedAt || now()}
   localStorage.setItem(PREF_KEY, JSON.stringify(full))
-  if (markDirty) markSyncDirty()
 }
 
 export function loadDaily(): DailyState | null {
   try { return JSON.parse(localStorage.getItem(DAILY_KEY) || 'null') } catch { return null }
 }
 
-export function saveDaily(state: DailyState, markDirty = true) {
+export function saveDaily(state: DailyState) {
   if (!allowWrite()) return
   localStorage.setItem(DAILY_KEY, JSON.stringify({...state, updatedAt: state.updatedAt || now()}))
-  if (markDirty) markSyncDirty()
 }
 
 export function loadExamScores(): ExamScore[] {
@@ -208,12 +176,11 @@ export function loadExamScores(): ExamScore[] {
   } catch { return [] }
 }
 
-export function replaceExamScores(scores: ExamScore[], markDirty = false) {
+export function replaceExamScores(scores: ExamScore[]) {
   if (!allowWrite()) return
   const unique = [...new Map(scores.map(x => [x.id, x])).values()]
     .sort((a,b) => b.at.localeCompare(a.at))
   localStorage.setItem(EXAM_KEY, JSON.stringify(unique))
-  if (markDirty) markSyncDirty()
 }
 
 export function saveExamScore(score: Omit<ExamScore,'deviceId'|'resetVersion'> & Partial<Pick<ExamScore,'deviceId'|'resetVersion'>>) {
@@ -225,7 +192,6 @@ export function saveExamScore(score: Omit<ExamScore,'deviceId'|'resetVersion'> &
     resetVersion: Number.isInteger(score.resetVersion) ? score.resetVersion! : meta.examScoresResetVersion
   }
   replaceExamScores([full, ...loadExamScores()])
-  markSyncDirty()
 }
 
 export function clearExamScores() {
@@ -233,5 +199,4 @@ export function clearExamScores() {
   localStorage.removeItem(EXAM_KEY)
   const meta = loadSyncMeta()
   saveSyncMeta({...meta, examScoresResetVersion: nextResetVersion(meta.examScoresResetVersion)})
-  markSyncDirty()
 }
