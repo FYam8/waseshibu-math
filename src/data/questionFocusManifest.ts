@@ -48,7 +48,8 @@ export const questionFocusManifest:Record<string,QuestionFocusEntry>={
   '2021-Q1-2':{"common":[],"current":[{"page":5,"top":18.8,"height":7.1}]},
   '2021-Q1-3':{"common":[],"current":[{"page":5,"top":25.5,"height":5.4}]},
   '2021-Q1-4':{"common":[],"current":[{"page":5,"top":30.5,"height":5.9}]},
-  '2021-Q1-5':{"common":[],"current":[{"page":5,"top":36.0,"height":8.9}]},
+  // Q1(6)の円の上端を混入させず、Q1(5)の問題文だけを表示する。
+  '2021-Q1-5':{"common":[],"current":[{"page":5,"top":36.0,"height":5.9}]},
   '2021-Q1-6':{"common":[],"current":[{"page":5,"top":44.5,"height":15.4}]},
   '2021-Q1-7':{"common":[],"current":[{"page":5,"top":59.5,"height":11.1}]},
   '2021-Q1-8':{"common":[],"current":[{"page":5,"top":70.2,"height":14.8}]},

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run test:level2 && npm run test:sync-separation-runtime && npm run test:user-perspective && npm run test:user-perspective:v0176 && tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs",
+    "build": "npm run test:past-paper-figures && npm run test:level2 && npm run test:sync-separation-runtime && npm run test:user-perspective && npm run test:user-perspective:v0176 && tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs",
     "preview": "vite preview",
     "self-check": "node scripts/self-check.mjs",
     "verify-critical": "node scripts/verify-critical.mjs",
@@ -35,7 +35,8 @@
     "test:required-five-year-flow": "node scripts/test-required-five-year-flow-v0179.mjs",
     "test:v01710-browser-bugs": "node scripts/test-v01710-browser-bugfix-guards.mjs",
     "test:remediation-figures-hidden": "node scripts/test-remediation-figures-hidden-v01711.mjs",
-    "test:level2": "node scripts/test-level2-v018.mjs"
+    "test:level2": "node scripts/test-level2-v018.mjs",
+    "test:past-paper-figures": "node scripts/test-past-paper-figure-focus-v018.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",

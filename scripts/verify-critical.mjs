@@ -134,6 +134,8 @@ for(const major of questions){
 assert.equal(focus.questionFocusFor('2021-Q2-1').sharedTask,true)
 assert.equal(focus.questionFocusFor('2021-Q2-2').sharedTask,true)
 assert.equal(focus.questionFocusFor('2021-Q2-3').sharedTask,true)
+const q115=focus.questionFocusFor('2021-Q1-5').current[0]
+assert.ok(q115.height<=5.9,'2021 Q1(5) must not include the circle from Q1(6), which begins high in the right column')
 assert.ok(focus.questionFocusFor('2022-Q3-2-i'))
 assert.ok(focus.questionFocusFor('2022-Q3-2-ii'))
 for(const id of ['2023-Q5-1','2023-Q5-2','2023-Q5-3']){
