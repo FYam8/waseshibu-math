@@ -18,7 +18,7 @@
     "fieldAssignmentRevisionAtAttempt": 1,
     "revealedAnswerBeforeAnswer": false,
     "practiceFieldIdAtAttempt": "factoring|null",
-    "questionBank": "core160|field-support|legacy72"
+    "questionBank": "core160|past-paper|field-support|legacy72"
   },
   "questionStats": {
     "<questionId>": {
@@ -68,6 +68,6 @@
     "secondaryPracticeHistory": "An attempt from a secondary practice pool is stored under the same immutable questionId. It is not duplicated under the field. practiceFieldIdAtAttempt is only an analytics snapshot.",
     "practiceTagChange": "Adding/removing a practiceFieldId never deletes or rewrites attempts. Past attempts remain visible because questionId is unchanged.",
     "supportQuestionHistory": "Support items use immutable SUP-* questionIds and the same attempt schema. Adding/removing a support item from a field never deletes its past history.",
-    "sourceDirectMapping": "Only core160 questions participate in sourceQuestionId -> direct Level2 mapping. Field-support questions have no sourceQuestionId."
+    "sourceDirectMapping": "2019-2021 sources map to canonical official past-paper IDs; 2022-2026 sources map to active core160 IDs. Backlog and field-support questions are never direct targets."
   }
 }

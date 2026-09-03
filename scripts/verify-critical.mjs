@@ -153,6 +153,17 @@ const integrity=preflight.runExamIntegrityCheck()
 assert.equal(integrity.ok,true,integrity.issues.join('\n'))
 assert.deepEqual([integrity.questionCount,integrity.answerCount,integrity.year2024Count],[160,160,20])
 
+const level2Master=JSON.parse(fs.readFileSync('src/data/level2/level2_master_2019_2026.json','utf8'))
+const level2Pool=JSON.parse(fs.readFileSync('src/data/level2/practice_pool_index.json','utf8'))
+const level2Backlog=level2Master.filter(q=>q.status==='backlog'||q.selectable===false)
+assert.equal(level2Backlog.length,60)
+assert.equal(level2Backlog.every(q=>q.sourceYear>=2019&&q.sourceYear<=2021&&q.selectable===false),true)
+assert.equal(level2Master.filter(q=>q.status!=='backlog'&&q.selectable!==false).length,100)
+assert.deepEqual([level2Pool.coreQuestionCount,level2Pool.officialPastQuestionCount,level2Pool.backlogQuestionCount,level2Pool.supportQuestionCount],[100,60,60,2])
+const activePracticeIds=new Set(level2Pool.fields.flatMap(field=>field.masteryEligibleQuestionIds))
+assert.equal([...activePracticeIds].some(id=>/^L2-20(?:19|20|21)-/.test(id)),false)
+assert.equal([...activePracticeIds].filter(id=>/^20(?:19|20|21)-Q/.test(id)).length,60)
+
 const strategyItems=[
   {key:'a',major:1,subNo:'1',topic:'数式計算',grade:'A',status:'wrong',points:5,cause:'計算ミス'},
   {key:'b',major:2,subNo:'1',topic:'放物線',grade:'B',status:'wrong',points:5},
@@ -166,4 +177,4 @@ assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTar
 for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100)
 
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`v0.18.0, data v7, 160 GuidedSolutions + audited Level2 160/support 2, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK`)
+console.log(`v0.18.0, data v7, 60 official past + 100 active Level2 + 60 backlog + support 2, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK`)

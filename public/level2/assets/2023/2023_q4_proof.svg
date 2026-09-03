@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 430" role="img" aria-labelledby="t d">
+  <title id="t">円に内接する四角形ABCDと点M</title><desc id="d">対角線BD上に点Mをとり、Aから各点へ線を結んだ図</desc>
+  <rect width="520" height="430" fill="#fff"/><circle cx="260" cy="215" r="175" fill="none" stroke="#243342" stroke-width="4"/><g stroke="#243342" stroke-width="4" fill="none"><path d="M145 83 80 260 325 360 430 150Z"/><path d="M80 260 430 150M145 83 325 360M145 83 273 199"/></g>
+  <circle cx="273" cy="199" r="6" fill="#d04a35"/><g font-family="sans-serif" font-size="21" fill="#243342"><text x="130" y="72">A</text><text x="55" y="275">B</text><text x="328" y="384">C</text><text x="438" y="150">D</text><text x="280" y="194">M</text></g>
+</svg>

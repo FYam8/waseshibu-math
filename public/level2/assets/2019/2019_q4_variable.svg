@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 360" role="img" aria-labelledby="t d">
+  <title id="t">上限aのときの貯水量の周期</title><desc id="d">20MLからaMLまで増え、20MLまで減る周期</desc>
+  <rect width="620" height="360" fill="#fff"/><g stroke="#243342" stroke-width="3" fill="none"><path d="M70 25V305H590"/><path d="M70 270H590" stroke="#a7b0b8" stroke-dasharray="7 7"/><path d="M70 75H590" stroke="#a7b0b8" stroke-dasharray="7 7"/><path d="M70 270 205 75 405 270 540 75" stroke="#1769aa" stroke-width="6"/></g>
+  <g fill="#243342" font-family="sans-serif" font-size="19"><text x="26" y="82">a</text><text x="16" y="278">20</text><text x="570" y="330">t</text><text x="18" y="28">V (ML)</text><text x="270" y="55">T</text></g><path d="M205 45H405" stroke="#d04a35" stroke-width="3"/><path d="M205 38V52M405 38V52" stroke="#d04a35" stroke-width="3"/>
+</svg>

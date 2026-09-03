@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "streakTarget": 4,
   "eligibility": {
-    "status": "final",
+    "status": "final (backlog items are stored but never selectable)",
     "contentVerified": true,
     "materialized": true,
     "currentFieldSource": "level2_field_assignments.json"
@@ -23,8 +23,9 @@
     "shortageBehavior": "Practice may continue with the available questions using rotation, but mastery remains unavailable until the field has at least 4 eligible distinct questions."
   },
   "priority": [
-    "unseen questionId",
+    "unseen active-original or unresolved official past-paper questionId",
     "least recently presented eligible questionId",
+    "previously-correct official past-paper only when needed to keep four distinct questions",
     "other eligible questionId"
   ],
   "hardRules": [
@@ -37,6 +38,17 @@
     "Do not count a quadratic-equation item as factorization mastery merely because factorization is one possible solution method.",
     "If a field has fewer than 4 mastery-eligible unique questions, allow practice but do not award 4/4 mastery."
   ],
+  "backlog": {
+    "rule": "L2 questions derived from 2019-2021 remain stored with immutable IDs, content, figures, and history but are excluded from every active pool and direct-open route.",
+    "reactivation": "Reactivate one question at a time only after content, figure, answer, standalone-scope, and grading review. A material rewrite receives a new immutable questionId."
+  },
+  "officialPastPapers": {
+    "years": [2019, 2020, 2021],
+    "identity": "Use canonical official IDs such as 2021-Q5-1, never the backlog L2 ID.",
+    "display": "Render the verified crop from the official question page.",
+    "history": "Official attempts are independent of backlog Level2 attempts. Full-year scores are never retroactively changed.",
+    "reuse": "A correct official question is deprioritized, not permanently deleted; it may return after other questions when required to preserve a four-distinct-question streak."
+  },
   "fieldSemantics": {
     "weaknessField": "Use the current primary fieldId of the direct Level2 item.",
     "directFieldPractice": "Use all items whose practiceFieldIds contains the selected field.",

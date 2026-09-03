@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="430" viewBox="0 0 720 430" role="img" aria-labelledby="title desc">
+  <title id="title">正四角すい</title><desc id="desc">底面の正方形の対角線が6、高さが未知の正四角すい</desc><rect width="720" height="430" fill="#fff"/>
+  <g stroke="#25313c" stroke-width="4" fill="none" stroke-linejoin="round"><path d="M360 45 L155 280 L360 380 L585 265 Z"/><path d="M360 45 L360 300 L155 280 M360 300 L585 265" stroke-dasharray="10 9"/><path d="M155 280 L385 220 L585 265 M385 220 L360 380"/><path d="M360 287 h13 v13" stroke-width="3"/></g>
+  <g font-family="Arial, sans-serif" font-size="24" fill="#17212b"><text x="375" y="170">height ?</text><text x="250" y="278" fill="#2878b5">diagonal = 6</text><text x="375" y="320">O</text></g>
+</svg>

@@ -78,7 +78,7 @@ reset({
 if(route.nextCheckpointYear()!==2023)throw new Error('required 2023 checkpoint order was not preserved')
 console.log('PASS: required 2024→2023→2022→2025→2026 order begins with 2023 after diagnosis')
 
-// 5) 任意演習で露出済みの旧年度小問は、弱点補強の「未使用問題」として再予約しない。
+// 5) 任意年度演習で不正解だった旧年度小問は、閲覧済みでも補強へ戻す。
 reset()
 let bank=route.oldQuestionBank()
 const field='式の計算・文字式'
@@ -92,9 +92,9 @@ const exam={id:'e24',deviceId:'d',resetVersion:0,year:2024,score:55,completed:tr
 global.localStorage.setItem('waseshibu-math-exam-scores',JSON.stringify([exam]))
 const plan=route.ensureReinforcementPlan(exam,60)
 const selected=Object.values(plan.fields).flat()
-if(selected.includes(exposed.id))throw new Error('already exposed old question was reserved as unused reinforcement')
-if(route.oldQuestionAssignmentState(exposed.id)!=='exposed')throw new Error('old exposed question state is not exposed')
-console.log('PASS: exposed old questions are excluded from reinforcement reservation')
+if(!selected.includes(exposed.id))throw new Error('wrong old-year question did not return to reinforcement')
+if(route.oldQuestionAssignmentState(exposed.id)!=='reserved')throw new Error('reselected old question is not represented as an active reservation')
+console.log('PASS: wrong old-year questions remain eligible after exposure')
 
 // 6) 予約しただけでは「使用済み」履歴へ入れない。完了時だけcompletedになる。
 const reservedId=selected[0]

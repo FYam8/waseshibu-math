@@ -67,13 +67,17 @@ for (const q of subquestions) {
   if (mapEntries.get(q.id) !== q.grade) throw new Error(`${q.id}: difficulty map mismatch`)
 }
 
-if (master.length !== 160 || support.length !== 2) throw new Error('audited Level2 160/support 2 missing')
+if (master.length !== 160 || support.length !== 2) throw new Error('stored Level2 160/support 2 missing')
+if (master.filter(q=>q.status==='backlog'&&q.selectable===false).length !== 60) throw new Error('2019-2021 Level2 backlog must contain exactly 60 non-selectable questions')
+if (master.filter(q=>q.status!=='backlog'&&q.selectable!==false).length !== 100) throw new Error('active original Level2 must contain exactly 100 questions')
 if (Object.keys(sourceMap.map).length !== 160) throw new Error('audited source-to-Level2 map must contain 160 entries')
 if (!pools.fields.every(field => field.masteryEligibleQuestionIds.length >= 4)) throw new Error('every audited field needs at least four mastery-eligible questions')
+if (pools.fields.some(field=>field.masteryEligibleQuestionIds.some(id=>/^L2-20(?:19|20|21)-/.test(id)))) throw new Error('backlog Level2 leaked into an active mastery pool')
+if (new Set(pools.fields.flatMap(field=>field.masteryEligibleQuestionIds).filter(id=>/^20(?:19|20|21)-Q/.test(id))).size !== 60) throw new Error('official 2019-2021 replacement pool must contain 60 canonical IDs')
 if (!level2Data.includes('directQuestionForSource')) throw new Error('immutable sourceQuestionId to direct Level2 lookup missing')
 if (!remediationPage.includes('selectLevel2Question(sourceQuestion||null')) throw new Error('audited Level2 selection is not used by remediation')
 if (!level2History.includes('questionStats:Record<string,QuestionStats>')) throw new Error('Level2 history is not keyed by immutable questionId')
-if (!level2History.includes("questionBank:(input.question.bankType==='field-support'?'field-support':'core160')")) throw new Error('core/support history provenance missing')
+if (!level2History.includes("input.question.bankType==='past-paper'?'past-paper':'core160'")) throw new Error('official/core/support history provenance missing')
 if (!remediation.includes('export const remediationFields')) throw new Error('legacy 72-question bank was removed')
 if (!practicePage.includes("grade:'A'")) throw new Error('foundation bank is not explicitly A')
 if (practicePage.includes("index<2?'A':'B'")) throw new Error('arbitrary A/B difficulty labelling remains')
@@ -89,4 +93,4 @@ for (const key of required) {
 }
 
 console.log(`PASS: legacy 72 retained; old 160 source difficulties remain mapped; ${required.length} legacy B/C field-bands remain intact`)
-console.log('PASS: active remediation uses audited v7 160/support 2, immutable questionId history, and direct source mapping')
+console.log('PASS: active remediation uses 60 official past + 100 original + support 2; backlog 60 and immutable history are preserved')

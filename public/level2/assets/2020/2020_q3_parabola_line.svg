@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 450" role="img" aria-labelledby="t d">
+  <title id="t">放物線と直線の交点</title><desc id="d">放物線Cと直線lの交点A、B、y軸との交点P</desc>
+  <rect width="560" height="450" fill="#fff"/><g fill="none" stroke="#243342"><path d="M45 395H530M275 425V25" stroke-width="3"/><path d="M90 55 C175 355 215 395 275 395 C335 395 375 355 460 55" stroke-width="5"/><path d="M80 330 470 70" stroke="#1769aa" stroke-width="5"/></g>
+  <g fill="#d04a35"><circle cx="180" cy="263" r="7"/><circle cx="390" cy="123" r="7"/><circle cx="275" cy="200" r="7"/></g><g font-family="sans-serif" font-size="20" fill="#243342"><text x="155" y="255">A</text><text x="402" y="120">B</text><text x="286" y="194">P</text><text x="510" y="390">x</text><text x="285" y="30">y</text><text x="430" y="65">l</text><text x="432" y="230">C</text><text x="254" y="418">O</text></g>
+</svg>

@@ -7,6 +7,15 @@ import { loadGuidedProgressState, loadGuidedReviews } from './guidedReview'
 import { gradeInTarget, storedExamItems, weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
 
 const ROUTE_KEY='waseshibu-math-learning-route-v1'
+const LEVEL2_HISTORY_KEY='waseshibu-math-level2-history-v1'
+
+export function hasCurrentPracticeMastery(field:string,after:string){
+  try{
+    const fieldId=(()=>{const id=classifyRemediationField(field).id;return id==='radicals'?'square-roots':id==='motion'?'coordinates':id})()
+    const raw=JSON.parse(localStorage.getItem(LEVEL2_HISTORY_KEY)||'null') as {masteryEvents?:Array<{fieldId?:string;achievedAt?:string;questionIds?:string[]}>}|null
+    return !!raw?.masteryEvents?.some(event=>event.fieldId===fieldId&&(event.achievedAt||'')>after&&(event.questionIds?.length||0)>=4&&event.questionIds!.every(id=>!/^L2-20(?:19|20|21)-/.test(id)))
+  }catch{return false}
+}
 
 // v0.17.9: 2022〜2026の5年度を必須の学習サイクルにする。
 // 年代順ではなく、診断→2段階の改善確認→実戦確認→最終確認の役割順で進める。
@@ -115,16 +124,29 @@ function actualOldQuestionExposureIds(){
   return ids
 }
 
+// 閲覧しただけでは補強候補から除外しない。年度演習・補強・ステップ解説の
+// 最新結果が成功の問題だけを「原則再出題しない」対象にする。
+function successfullyUsedOldQuestionIds(){
+  const latest=new Map<string,{at:string;success:boolean}>()
+  const set=(id:string,at:string,success:boolean)=>{const old=latest.get(id);if(!old||at>old.at)latest.set(id,{at,success})}
+  for(const attempt of loadAttempts()){
+    const raw=attempt.questionId.startsWith('exam-')?attempt.questionId.slice(5):attempt.questionId.startsWith('target-')?attempt.questionId.slice(7):''
+    if(/^20(?:19|20|21)-Q\d+-/.test(raw))set(raw,attempt.at,attempt.status==='correct')
+  }
+  for(const [id,state] of Object.entries(loadGuidedProgressState()))if(/^20(?:19|20|21)-Q\d+-/.test(id))set(id,state.updatedAt,['reproduced','independent','consolidated'].includes(state.mastery))
+  return new Set([...latest].filter(([,value])=>value.success).map(([id])=>id))
+}
+
 export type OldQuestionAssignmentState='none'|'reserved'|'completed'|'exposed'
 export function oldQuestionAssignmentState(id:string):OldQuestionAssignmentState{
   const state=loadLearningRoute()
   for(const plan of Object.values(state.reinforcement)){
     if(plan.completedQuestionIds.includes(id))return 'completed'
   }
-  if(actualOldQuestionExposureIds().has(id))return 'exposed'
   for(const plan of Object.values(state.reinforcement)){
     if(Object.values(plan.fields).some(ids=>ids.includes(id)))return 'reserved'
   }
+  if(actualOldQuestionExposureIds().has(id))return 'exposed'
   return 'none'
 }
 
@@ -181,7 +203,7 @@ function practicePlanComplete(exam:ExamScore,target:TargetScore,plan:Reinforceme
   const completed=new Set(plan.completedQuestionIds)
   return fields.every(field=>{
     const actualDone=(plan.fields[field]||[]).every(id=>completed.has(id))
-    const mastered=attempts.some(a=>a.questionId.startsWith('mastery-')&&a.status==='correct'&&a.at>exam.at&&classifyRemediationField(a.topic).title===field)
+    const mastered=hasCurrentPracticeMastery(field,exam.at)
     return actualDone&&mastered
   })
 }
@@ -189,12 +211,25 @@ function practicePlanComplete(exam:ExamScore,target:TargetScore,plan:Reinforceme
 export function ensureReinforcementPlan(exam:ExamScore,target:TargetScore=loadPreferences().target):ReinforcementPlan{
   const state=loadLearningRoute(),key=String(exam.year),existing=state.reinforcement[key],attempts=loadAttempts()
   const bank=oldQuestionBank(),activeOldIds=new Set(bank.map(item=>item.id))
+  const successfullyUsed=successfullyUsedOldQuestionIds()
+  const explicitlyAttempted=new Set(attempts.flatMap(attempt=>{
+    const raw=attempt.questionId.startsWith('exam-')?attempt.questionId.slice(5):attempt.questionId.startsWith('target-')?attempt.questionId.slice(7):''
+    return /^20(?:19|20|21)-Q\d+-/.test(raw)?[raw]:[]
+  }))
   const desired=weakFieldsForStoredExam(target,exam,attempts)
   const sameFields=existing&&Object.keys(existing.fields).length===desired.length&&desired.every(field=>
     field in existing.fields&&(existing.fields[field]||[]).every(id=>activeOldIds.has(id))
   )
   if(existing?.examId===exam.id&&existing.target===target&&sameFields){
-    if(existing.requiresSourceReview!==undefined)return existing
+    const assigned=new Set(Object.values(existing.fields).flat())
+    const reconciledCompleted=[...assigned].filter(id=>successfullyUsed.has(id)||(existing.completedQuestionIds.includes(id)&&!explicitlyAttempted.has(id)))
+    const completionChanged=reconciledCompleted.length!==existing.completedQuestionIds.length||reconciledCompleted.some(id=>!existing.completedQuestionIds.includes(id))
+    if(existing.requiresSourceReview!==undefined){
+      if(!completionChanged)return existing
+      const reconciled={...existing,completedQuestionIds:reconciledCompleted}
+      saveLearningRoute({...state,usedOldQuestionIds:[...new Set([...state.usedOldQuestionIds,...reconciledCompleted])],reinforcement:{...state.reinforcement,[key]:reconciled}})
+      return reconciled
+    }
     const legacyDone=practicePlanComplete(exam,target,existing,attempts,desired)
     const stamped={...existing,requiresSourceReview:!legacyDone}
     saveLearningRoute({...state,reinforcement:{...state.reinforcement,[key]:stamped}})
@@ -204,7 +239,6 @@ export function ensureReinforcementPlan(exam:ExamScore,target:TargetScore=loadPr
   // 「予約」と「実際に解いた」を分離する。
   // 他の現行補強プランに予約されている問題、または実際に露出した問題だけを候補から外す。
   // 目標変更で現在プランから外れた未実施予約は、再び候補へ戻せる。
-  const exposed=actualOldQuestionExposureIds()
   const reservedByOther=new Set<string>()
   for(const [planKey,plan] of Object.entries(state.reinforcement)){
     if(planKey===key)continue
@@ -215,8 +249,8 @@ export function ensureReinforcementPlan(exam:ExamScore,target:TargetScore=loadPr
 
   const fields:Record<string,string[]>={}
   for(const field of desired){
-    const retained=existing?.examId===exam.id?(existing.fields[field]||[]).filter(id=>!completedAnywhere.has(id)||existing.completedQuestionIds.includes(id)):[]
-    const candidates=bank.filter(x=>x.field===field&&!reservedByOther.has(x.id)&&!completedAnywhere.has(x.id)&&!exposed.has(x.id)).sort((a,b)=>b.year-a.year||a.major-b.major)
+    const retained=existing?.examId===exam.id?(existing.fields[field]||[]).filter(id=>(!completedAnywhere.has(id)||existing.completedQuestionIds.includes(id))&&!(!existing.completedQuestionIds.includes(id)&&successfullyUsed.has(id))):[]
+    const candidates=bank.filter(x=>x.field===field&&!reservedByOther.has(x.id)&&(!completedAnywhere.has(x.id)||!successfullyUsed.has(x.id))&&!successfullyUsed.has(x.id)).sort((a,b)=>b.year-a.year||a.major-b.major)
     const selected:OldQuestionItem[]=retained.map(id=>bank.find(x=>x.id===id)).filter(Boolean) as OldQuestionItem[]
     for(const item of candidates){
       if(selected.length>=4)break
@@ -228,7 +262,7 @@ export function ensureReinforcementPlan(exam:ExamScore,target:TargetScore=loadPr
 
   const legacyDone=!!existing&&existing.examId===exam.id&&existing.target===target&&existing.requiresSourceReview===undefined&&practicePlanComplete(exam,target,existing,attempts,desired)
   const activeSelectedIds=new Set(Object.values(fields).flat())
-  const retainedCompleted=existing?.examId===exam.id?existing.completedQuestionIds.filter(id=>activeSelectedIds.has(id)):[]
+  const retainedCompleted=existing?.examId===exam.id?existing.completedQuestionIds.filter(id=>activeSelectedIds.has(id)&&successfullyUsed.has(id)):[]
   const plan:ReinforcementPlan={examId:exam.id,sourceYear:exam.year,target,fields,completedQuestionIds:retainedCompleted,createdAt:new Date().toISOString(),requiresSourceReview:!legacyDone}
   // 旧版で2022/2023を補強問題として使った履歴も消さない。ただし今後の予約候補は2019〜2021だけ。
   const completedHistory=new Set(state.usedOldQuestionIds)

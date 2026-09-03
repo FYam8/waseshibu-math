@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 360" role="img" aria-labelledby="t d">
+  <title id="t">ダムの貯水量の変化</title><desc id="d">20MLから80MLまで増え、その後20MLまで減る周期</desc>
+  <rect width="620" height="360" fill="#fff"/><g stroke="#243342" stroke-width="3" fill="none"><path d="M70 25V305H590"/><path d="M70 270H590" stroke="#a7b0b8" stroke-dasharray="7 7"/><path d="M70 70H590" stroke="#a7b0b8" stroke-dasharray="7 7"/><path d="M70 270 190 70 370 270 490 70" stroke="#1769aa" stroke-width="6"/></g>
+  <g fill="#243342" font-family="sans-serif" font-size="18"><text x="12" y="78">80</text><text x="12" y="278">20</text><text x="570" y="330">t</text><text x="18" y="28">V (ML)</text><text x="180" y="330">10</text><text x="355" y="330">25</text><text x="477" y="330">35</text></g>
+</svg>

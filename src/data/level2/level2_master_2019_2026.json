@@ -4,7 +4,7 @@
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q1-1",
     "suggestedFieldId": "square-roots",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -26,14 +26,16 @@
     "figureVerified": true,
     "contentHash": "0c9e8a1d810bf9e4",
     "taskHash": "332acda93dc57f26",
-    "renderHash": "58c843c44987ab02"
+    "renderHash": "58c843c44987ab02",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q1-2",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q1-2",
     "suggestedFieldId": "simultaneous-equations",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -56,14 +58,16 @@
     "figureVerified": true,
     "contentHash": "5ee0218558d18620",
     "taskHash": "3c69933a64828848",
-    "renderHash": "ecad9b07bac20faf"
+    "renderHash": "ecad9b07bac20faf",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q1-3",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q1-3",
     "suggestedFieldId": "quadratic-equations",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -93,14 +97,16 @@
       ]
     },
     "taskHash": "c49c6f9334192403",
-    "renderHash": "3950f41210c4995a"
+    "renderHash": "3950f41210c4995a",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q1-4",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q1-4",
     "suggestedFieldId": "plane-geometry",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -114,23 +120,25 @@
       "232度"
     ],
     "explanation": "∠B+∠C=180°−52°=128°。外角x=180°−∠B,y=180°−∠Cなのでx+y=360°−128°=232°。",
-    "problemFigure": null,
+    "problemFigure": "assets/2019/2019_q1_4_exterior_angles.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "b9326c706a5cefb0",
+    "contentHash": "d59d449e9f57f634",
     "taskHash": "5d4a49d3bbc8305f",
-    "renderHash": "e1e98751e899658d"
+    "renderHash": "022f19759a8e4bb6",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q1-5",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q1-5",
     "suggestedFieldId": "quadratic-functions",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -153,14 +161,16 @@
     "figureVerified": true,
     "contentHash": "ccd3e2294e0204e7",
     "taskHash": "7b55c9c9445c4009",
-    "renderHash": "f5cfa627610c5f9b"
+    "renderHash": "f5cfa627610c5f9b",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q1-6",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q1-6",
     "suggestedFieldId": "coordinates",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -182,14 +192,16 @@
     "figureVerified": true,
     "contentHash": "0411d4a43424fb2f",
     "taskHash": "5c857b212659f4f7",
-    "renderHash": "4c0834393c7b474d"
+    "renderHash": "4c0834393c7b474d",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q1-7",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q1-7",
     "suggestedFieldId": "integers",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "previously_audited_final",
@@ -222,14 +234,16 @@
       ]
     },
     "taskHash": "a9ac1f7983663929",
-    "renderHash": "d82cadc8c2c3f883"
+    "renderHash": "d82cadc8c2c3f883",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q1-8",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q1-8",
     "suggestedFieldId": "solids",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -241,23 +255,25 @@
       "24"
     ],
     "explanation": "正方形はひし形でもあるので、面積は「対角線×対角線÷2」。よって底面積は6×6÷2=18。144=(1/3)×18×hよりh=24。",
-    "problemFigure": null,
+    "problemFigure": "assets/2019/2019_q1_8_square_pyramid.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 2,
+    "contentRevision": 3,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "bffd167ddc33bcf6",
+    "contentHash": "06de7b924899b831",
     "taskHash": "faf2461cb18a79b0",
-    "renderHash": "cf94529d29ed459d"
+    "renderHash": "7ad1250c91258745",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q1-9",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q1-9",
     "suggestedFieldId": "quadratic-equations",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "previously_audited_final",
@@ -287,14 +303,16 @@
       ]
     },
     "taskHash": "8d8f4e7fb972bae1",
-    "renderHash": "417a34f67fa14116"
+    "renderHash": "417a34f67fa14116",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q2-1",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q2-1",
     "suggestedFieldId": "similarity",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -307,23 +325,25 @@
       "1 : 9"
     ],
     "explanation": "小三角形と大三角形の相似比は1:3なので面積比は1:9。",
-    "problemFigure": null,
+    "problemFigure": "assets/2019/2019_q2_star.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
     "gradingRevision": 1,
+    "contentRevision": 2,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "fb40b52308c8521f",
+    "contentHash": "28bd405657e23ad5",
     "taskHash": "d8190e24eefa4dd7",
-    "renderHash": "4fbc26c22d844c14"
+    "renderHash": "56ce30240b4f0776",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q2-2",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q2-2",
     "suggestedFieldId": "plane-geometry",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -335,23 +355,25 @@
       "36"
     ],
     "explanation": "大三角形は面積3の小正三角形9個分。中央の共通部分の正六角形は6個分で面積18。和集合は27+27−18=36。",
-    "problemFigure": null,
+    "problemFigure": "assets/2019/2019_q2_star.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
     "gradingRevision": 1,
+    "contentRevision": 2,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "5f87cbbe93fe7d36",
+    "contentHash": "7af88313cadfa31d",
     "taskHash": "9eae8f32d08790f5",
-    "renderHash": "85629969258c473b"
+    "renderHash": "a44572aadb9b6c4a",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q3-1",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q3-1",
     "suggestedFieldId": "counting",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -373,14 +395,16 @@
     "figureVerified": true,
     "contentHash": "7d65c815c7f6823d",
     "taskHash": "7ee4fb5184362413",
-    "renderHash": "514e5cf9efc6ddaf"
+    "renderHash": "514e5cf9efc6ddaf",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q3-2",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q3-2",
     "suggestedFieldId": "counting",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -402,14 +426,16 @@
     "figureVerified": true,
     "contentHash": "b09d9d387cbb413f",
     "taskHash": "8b9e737c0b554f6c",
-    "renderHash": "2053c965d23cfe93"
+    "renderHash": "2053c965d23cfe93",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q3-3",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q3-3",
     "suggestedFieldId": "counting",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -431,14 +457,16 @@
     "figureVerified": true,
     "contentHash": "90136100cda4ecea",
     "taskHash": "71871a20d01d8797",
-    "renderHash": "a88792350a24a8dd"
+    "renderHash": "a88792350a24a8dd",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q4-1",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q4-1",
     "suggestedFieldId": "word-problems",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -452,23 +480,25 @@
       "62メガリットル"
     ],
     "explanation": "最初の10分は放水前で、20+6×7=62。",
-    "problemFigure": null,
+    "problemFigure": "assets/2019/2019_q4_cycle.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
     "gradingRevision": 1,
+    "contentRevision": 2,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "f470d37fd58a26d3",
+    "contentHash": "baee97e415f0383d",
     "taskHash": "1213cc13cdb5094c",
-    "renderHash": "2719c70008fc9376"
+    "renderHash": "9b4cf6f9717dbe7f",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q4-2",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q4-2",
     "suggestedFieldId": "word-problems",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -481,23 +511,25 @@
       "43分"
     ],
     "explanation": "0〜10分で80、10〜25分で20、25〜35分で80。40分時点は80−4×5=60。雨が止むと毎分10ML減るので30まで3分、開始43分後。",
-    "problemFigure": null,
+    "problemFigure": "assets/2019/2019_q4_cycle.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
     "gradingRevision": 1,
+    "contentRevision": 2,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "c7192d7e721b5190",
+    "contentHash": "7c8bfa2a1e9fd659",
     "taskHash": "8b37bbd0463ac91c",
-    "renderHash": "1f98a7c20f847352"
+    "renderHash": "524dce1da2fc4f65",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q4-3",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q4-3",
     "suggestedFieldId": "word-problems",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -510,23 +542,25 @@
       "a=50"
     ],
     "explanation": "a>40なので1周期に40MLを上りと下りで2回通る。24回は12周期。1周期12.5分。周期は(a−20)/6+(a−20)/4=5(a−20)/12。これが12.5よりa=50。",
-    "problemFigure": null,
+    "problemFigure": "assets/2019/2019_q4_variable.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
     "gradingRevision": 1,
+    "contentRevision": 2,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "6d19d9c395ecf590",
+    "contentHash": "41a68de5d7c660ef",
     "taskHash": "a6f0959ef88aa8b1",
-    "renderHash": "c727711d8620bd2c"
+    "renderHash": "92536654a658e98c",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q5-1",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q5-1",
     "suggestedFieldId": "quadratic-functions",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -539,23 +573,25 @@
       "b+a"
     ],
     "explanation": "放物線上の2点(a,a²),(b,b²)を結ぶ傾きは(b²−a²)/(b−a)=a+b。",
-    "problemFigure": null,
+    "problemFigure": "assets/2019/2019_q5_parabola.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
     "gradingRevision": 1,
+    "contentRevision": 2,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "4b4558858853aae6",
+    "contentHash": "2412982630feed07",
     "taskHash": "ce4060cfb4dce6b0",
-    "renderHash": "02ffe97bf26942f3"
+    "renderHash": "1255751a9a85e122",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q5-2",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q5-2",
     "suggestedFieldId": "quadratic-functions",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "previously_audited_final",
@@ -569,23 +605,25 @@
       "d=-a-1"
     ],
     "explanation": "a+b=1、b+c=3、c+d=1。順にb=1−a,c=a+2,d=−a−1。",
-    "problemFigure": null,
+    "problemFigure": "assets/2019/2019_q5_parabola.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
     "gradingRevision": 1,
+    "contentRevision": 2,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "eb3a1c9bf850b740",
+    "contentHash": "70067909d3eae181",
     "taskHash": "b2a2c6308c60b21c",
-    "renderHash": "e7bd94d4521c805a"
+    "renderHash": "be81e6496f3feeae",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2019-Q5-3",
     "sourceYear": 2019,
     "sourceQuestionId": "2019-Q5-3",
     "suggestedFieldId": "coordinates",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "previously_audited_final",
@@ -598,23 +636,25 @@
       "7 : 2"
     ],
     "explanation": "b=1−a,c=a+2で、B,E,Cは一直線。BE:CE=(a−1):(a+2)=1:2よりa=4。するとA=(4,16),B=(−3,9),C=(6,36),D=(−5,25)。E,Fを求めて面積を計算するとS1=126,S2=36、よって7:2。",
-    "problemFigure": null,
+    "problemFigure": "assets/2019/2019_q5_full.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
     "gradingRevision": 1,
+    "contentRevision": 2,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "6ce3d5f8e872e166",
+    "contentHash": "8e71d1e27ca576d3",
     "taskHash": "d7bafc200afa6797",
-    "renderHash": "3d938eae02990a49"
+    "renderHash": "309eaa44b6ba457c",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q1-1",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q1-1",
     "suggestedFieldId": "square-roots",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -636,14 +676,16 @@
     "figureVerified": true,
     "contentHash": "8cc39fff8e61060e",
     "taskHash": "16fc900561be617b",
-    "renderHash": "1502c766fbd5ee90"
+    "renderHash": "1502c766fbd5ee90",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q1-2",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q1-2",
     "suggestedFieldId": "simultaneous-equations",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -665,14 +707,16 @@
     "figureVerified": true,
     "contentHash": "9c72eb9e3aca85f6",
     "taskHash": "5d4dc0021453bc01",
-    "renderHash": "fb2ea27924c749ac"
+    "renderHash": "fb2ea27924c749ac",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q1-3",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q1-3",
     "suggestedFieldId": "quadratic-equations",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -703,14 +747,16 @@
       ]
     },
     "taskHash": "6dd55d51753d35f1",
-    "renderHash": "2ce4c5bcac8ee283"
+    "renderHash": "2ce4c5bcac8ee283",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q1-4",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q1-4",
     "suggestedFieldId": "quadratic-functions",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -731,14 +777,16 @@
     "figureVerified": true,
     "contentHash": "e4bffa2f3657ca31",
     "taskHash": "f08a214ebdaaf351",
-    "renderHash": "57be4d20e6f835c5"
+    "renderHash": "57be4d20e6f835c5",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q1-5",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q1-5",
     "suggestedFieldId": "plane-geometry",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -751,23 +799,25 @@
       "5cm"
     ],
     "explanation": "おうぎ形の弧の長さは(150/360)×2π×12=10π。これは底面円の円周2πrに等しいのでr=5。",
-    "problemFigure": null,
+    "problemFigure": "assets/2020/2020_q1_5_cone_net.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "5a3ef4bf7f703802",
+    "contentHash": "8b4dbad609e00530",
     "taskHash": "fd7530777fc76842",
-    "renderHash": "8acb618116ec0998"
+    "renderHash": "5e8a7e74f4d6d7d2",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q1-6",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q1-6",
     "suggestedFieldId": "plane-geometry",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -790,14 +840,16 @@
     "figureVerified": true,
     "contentHash": "28ac9776c1a3a14a",
     "taskHash": "9b9283fa982ddbf5",
-    "renderHash": "956f0a0efac9abe3"
+    "renderHash": "956f0a0efac9abe3",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q1-7",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q1-7",
     "suggestedFieldId": "integers",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -819,14 +871,16 @@
     "figureVerified": true,
     "contentHash": "8f0dac03736134a6",
     "taskHash": "0f1f6c83f757c46c",
-    "renderHash": "b7222f50b5910761"
+    "renderHash": "b7222f50b5910761",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q1-8",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q1-8",
     "suggestedFieldId": "plane-geometry",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -840,23 +894,25 @@
       "21/10cm²"
     ],
     "explanation": "平行四辺形ABCDの面積が18なので、△ABCの面積は9。PはABの中点だから△PBCの面積は9÷2=9/2。BQ:QC=1:2より、△PBQの面積は(9/2)×1/3=3/2、△PCQの面積は(9/2)×2/3=3。AQとCPの交点をRとする。面積比を順に使うとCR:RP=4:1となるので、△PRQの面積は△PCQの1/5で3/5。したがって四角形BQRPの面積は3/2+3/5=21/10。",
-    "problemFigure": null,
+    "problemFigure": "assets/2020/2020_q1_8_parallelogram.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 2,
+    "contentRevision": 3,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "8150c9e0553ee3d3",
+    "contentHash": "86f46c55e48c1f68",
     "taskHash": "01fc93ca38dc062b",
-    "renderHash": "a30eee63be5f7ed3"
+    "renderHash": "40568ce593ba5ddd",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q2-1",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q2-1",
     "suggestedFieldId": "probability",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -877,14 +933,16 @@
     "figureVerified": true,
     "contentHash": "171a6187d533473a",
     "taskHash": "836cce7f70f88979",
-    "renderHash": "3eda8e4eb153af9a"
+    "renderHash": "3eda8e4eb153af9a",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q2-2",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q2-2",
     "suggestedFieldId": "probability",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -905,14 +963,16 @@
     "figureVerified": true,
     "contentHash": "1952612a29cfdb98",
     "taskHash": "69ae580ce6684f75",
-    "renderHash": "d4fcfc9842bedfaa"
+    "renderHash": "d4fcfc9842bedfaa",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q2-3",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q2-3",
     "suggestedFieldId": "probability",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -933,14 +993,16 @@
     "figureVerified": true,
     "contentHash": "462fa10824ba18ee",
     "taskHash": "326e58075d2e74ff",
-    "renderHash": "e49429e03e7ea3b8"
+    "renderHash": "e49429e03e7ea3b8",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q3-1",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q3-1",
     "suggestedFieldId": "quadratic-functions",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -953,23 +1015,25 @@
       "k=8"
     ],
     "explanation": "Aは両方のグラフ上なので4=2(−2)+kよりk=8。",
-    "problemFigure": null,
+    "problemFigure": "assets/2020/2020_q3_parabola_line.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
     "gradingRevision": 1,
+    "contentRevision": 2,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "82147ba16f3dd438",
+    "contentHash": "89e3b33631333287",
     "taskHash": "001237913f0fc560",
-    "renderHash": "d0537625a2d810ec"
+    "renderHash": "c85445037f58dec2",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q3-2",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q3-2",
     "suggestedFieldId": "coordinates",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -982,23 +1046,25 @@
       "3 : 5"
     ],
     "explanation": "x²=2x+15より交点のx座標は−3,5。△OAPと△OBPは共通の高さOPを持つので面積比は|−3|:5=3:5。",
-    "problemFigure": null,
+    "problemFigure": "assets/2020/2020_q3_parabola_line.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
     "gradingRevision": 1,
+    "contentRevision": 2,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "49f79f6ebac15651",
+    "contentHash": "6851deb7e67461bd",
     "taskHash": "297a9d661da69628",
-    "renderHash": "f1f2515e34beaf7e"
+    "renderHash": "2260eccbcd73c8f1",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q3-3",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q3-3",
     "suggestedFieldId": "quadratic-functions",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1011,23 +1077,25 @@
       "k=24"
     ],
     "explanation": "面積比S:T=2:3より、交点A,Bのx座標をそれぞれ−2q、3q(q>0)とおける。どちらもx²=2x+kを満たすので、4q²=−4q+k、9q²=6q+k。2式を引くと5q²=10qよりq=2。したがってk=4q²+4q=24。",
-    "problemFigure": null,
+    "problemFigure": "assets/2020/2020_q3_parabola_line.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 2,
     "gradingRevision": 1,
+    "contentRevision": 3,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "050c547b1a897601",
+    "contentHash": "630d2cbc98ca5db4",
     "taskHash": "0d52c431aa09275e",
-    "renderHash": "e2d70507f83a503f"
+    "renderHash": "41032fe79ebcf0f7",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q4-1",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q4-1",
     "suggestedFieldId": "word-problems",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1049,14 +1117,16 @@
     "figureVerified": true,
     "contentHash": "e491cbdfed31ae2f",
     "taskHash": "4462b89701480808",
-    "renderHash": "12b478660064efe9"
+    "renderHash": "12b478660064efe9",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q4-2",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q4-2",
     "suggestedFieldId": "linear-equations",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1078,14 +1148,16 @@
     "figureVerified": true,
     "contentHash": "cd449196b9a5e303",
     "taskHash": "577e187cbfb510d5",
-    "renderHash": "d06d14a91d1f79a3"
+    "renderHash": "d06d14a91d1f79a3",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q4-3",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q4-3",
     "suggestedFieldId": "word-problems",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1107,14 +1179,16 @@
     "figureVerified": true,
     "contentHash": "ea9a596049e76b3e",
     "taskHash": "7f8bb7f409d37f69",
-    "renderHash": "6c2e4e02b98b7507"
+    "renderHash": "6c2e4e02b98b7507",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q5-1",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q5-1",
     "suggestedFieldId": "solids",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "previously_audited_final",
@@ -1136,14 +1210,16 @@
     "figureVerified": true,
     "contentHash": "4e545ef78412a956",
     "taskHash": "159a9934319df634",
-    "renderHash": "b2aabfa1f23b57f0"
+    "renderHash": "b2aabfa1f23b57f0",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q5-2",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q5-2",
     "suggestedFieldId": "solids",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "previously_audited_final",
@@ -1165,14 +1241,16 @@
     "figureVerified": true,
     "contentHash": "0d838ecfe2c9d52c",
     "taskHash": "89d01aed6928033b",
-    "renderHash": "6c00e69b1cca0f63"
+    "renderHash": "6c00e69b1cca0f63",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2020-Q5-3",
     "sourceYear": 2020,
     "sourceQuestionId": "2020-Q5-3",
     "suggestedFieldId": "solids",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "previously_audited_final",
@@ -1194,14 +1272,16 @@
     "figureVerified": true,
     "contentHash": "00b0b9830aa72ec6",
     "taskHash": "4a9198e491392bab",
-    "renderHash": "a282440676b12382"
+    "renderHash": "a282440676b12382",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q1-1",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q1-1",
     "suggestedFieldId": "square-roots",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1223,14 +1303,16 @@
     "figureVerified": true,
     "contentHash": "e686aab2c257bb7d",
     "taskHash": "8d905580854e1065",
-    "renderHash": "e97544aa80342540"
+    "renderHash": "e97544aa80342540",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q1-2",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q1-2",
     "suggestedFieldId": "simultaneous-equations",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1253,14 +1335,16 @@
     "figureVerified": true,
     "contentHash": "4d685f51b0c003d2",
     "taskHash": "98fb5a14d1b0629a",
-    "renderHash": "90c58dca1028059d"
+    "renderHash": "90c58dca1028059d",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q1-3",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q1-3",
     "suggestedFieldId": "quadratic-equations",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1291,14 +1375,16 @@
       ]
     },
     "taskHash": "591b642d33961f07",
-    "renderHash": "1815ea00187336f9"
+    "renderHash": "1815ea00187336f9",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q1-4",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q1-4",
     "suggestedFieldId": "quadratic-functions",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1319,14 +1405,16 @@
     "figureVerified": true,
     "contentHash": "30c9ed703118f139",
     "taskHash": "82012a59faea0122",
-    "renderHash": "9d46af05da071b53"
+    "renderHash": "9d46af05da071b53",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q1-5",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q1-5",
     "suggestedFieldId": "integers",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1348,14 +1436,16 @@
     "figureVerified": true,
     "contentHash": "2ce4585ac43225a9",
     "taskHash": "0acb57073e54b41e",
-    "renderHash": "c0ebdc7ac3f6ed9e"
+    "renderHash": "c0ebdc7ac3f6ed9e",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q1-6",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q1-6",
     "suggestedFieldId": "angles-circles",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1369,23 +1459,25 @@
       "70度"
     ],
     "explanation": "円周角∠BAC=35°が見込む弧BCはその2倍なので70°。",
-    "problemFigure": null,
+    "problemFigure": "assets/2021/2021_q1_6_circle_angles.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "e64ec2d01189cb3e",
+    "contentHash": "0161e27362bfd9f5",
     "taskHash": "03caaa40dfcb257d",
-    "renderHash": "91964d372a729bcb"
+    "renderHash": "ead0e5d2abfab15a",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q1-7",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q1-7",
     "suggestedFieldId": "statistics",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1407,14 +1499,16 @@
     "figureVerified": true,
     "contentHash": "1261b064a2895d3e",
     "taskHash": "a4709447d27f087a",
-    "renderHash": "beaac3cb02409d0c"
+    "renderHash": "beaac3cb02409d0c",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q1-8",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q1-8",
     "suggestedFieldId": "plane-geometry",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1445,14 +1539,16 @@
       ]
     },
     "taskHash": "950a0b6e8d885cad",
-    "renderHash": "c56ab223f9899b3f"
+    "renderHash": "c56ab223f9899b3f",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q2-1",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q2-1",
     "suggestedFieldId": "solids",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1474,14 +1570,16 @@
     "figureVerified": true,
     "contentHash": "86560ea5cd3f4d1f",
     "taskHash": "934cff8704789927",
-    "renderHash": "07c51dae6d913b34"
+    "renderHash": "07c51dae6d913b34",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q2-2",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q2-2",
     "suggestedFieldId": "solids",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1503,14 +1601,16 @@
     "figureVerified": true,
     "contentHash": "1823cf69ad442531",
     "taskHash": "8ad8402c41b97592",
-    "renderHash": "9e5a5159c2efc6c4"
+    "renderHash": "9e5a5159c2efc6c4",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q2-3",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q2-3",
     "suggestedFieldId": "solids",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1532,14 +1632,16 @@
     "figureVerified": true,
     "contentHash": "7b05b87f5fe7bdcd",
     "taskHash": "d0d3df60e498fd30",
-    "renderHash": "6da64d27445f5089"
+    "renderHash": "6da64d27445f5089",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q3-1",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q3-1",
     "suggestedFieldId": "counting",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1561,14 +1663,16 @@
     "figureVerified": true,
     "contentHash": "dc2637cdc8f991c7",
     "taskHash": "90a1dc4637c69a4a",
-    "renderHash": "9c2f3832468b6db6"
+    "renderHash": "9c2f3832468b6db6",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q3-2",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q3-2",
     "suggestedFieldId": "counting",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1590,14 +1694,16 @@
     "figureVerified": true,
     "contentHash": "1f8bf939df5a37aa",
     "taskHash": "41f055693866d3fa",
-    "renderHash": "9f7a267bd3e504a5"
+    "renderHash": "9f7a267bd3e504a5",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q3-3",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q3-3",
     "suggestedFieldId": "counting",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
@@ -1619,19 +1725,41 @@
     "figureVerified": true,
     "contentHash": "cc566b1b6cbe35a8",
     "taskHash": "014cb84f2e8b160e",
-    "renderHash": "2791d51e39d7da4c"
+    "renderHash": "2791d51e39d7da4c",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q4-1",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q4-1",
     "suggestedFieldId": "word-problems",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
     "sourceSkill": "単価比較",
-    "context": "貴金属店P,Qの価格は、P:小売3400円/g・買取3300円/g、Q:小売3700円/g・買取3450円/gとする。店の収支は販売額−買取額。",
+    "context": "貴金属店P,Qの価格は次のとおりとする。店の収支は販売額−買取額。",
+    "problemTable": {
+      "caption": "1gあたりの価格",
+      "headers": [
+        "店",
+        "小売価格",
+        "買取価格"
+      ],
+      "rows": [
+        [
+          "P",
+          "3400円/g",
+          "3300円/g"
+        ],
+        [
+          "Q",
+          "3700円/g",
+          "3450円/g"
+        ]
+      ]
+    },
     "prompt": "客が160gを一度に買い取ってもらうとき、どちらの店がいくら高く買い取るか。",
     "answer": "Q,24000円",
     "acceptedAnswers": [
@@ -1643,25 +1771,47 @@
     "problemFigure": null,
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "598300ee2eca0dfd",
+    "contentHash": "ab69b25c2979ae0e",
     "taskHash": "1f1a7269247b0520",
-    "renderHash": "98ea032ccf4af9a8"
+    "renderHash": "6bc099e8b0b8f8b2",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q4-2",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q4-2",
     "suggestedFieldId": "linear-equations",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
     "sourceSkill": "売買の一次方程式",
-    "context": "貴金属店P,Qの価格は、P:小売3400円/g・買取3300円/g、Q:小売3700円/g・買取3450円/gとする。店の収支は販売額−買取額。 ある日Qはx g買い取り、(x+20)g販売し、収支が149000円だった。",
+    "context": "貴金属店P,Qの価格は次のとおりとする。店の収支は販売額−買取額。ある日Qはx g買い取り、(x+20)g販売し、収支が149000円だった。",
+    "problemTable": {
+      "caption": "1gあたりの価格",
+      "headers": [
+        "店",
+        "小売価格",
+        "買取価格"
+      ],
+      "rows": [
+        [
+          "P",
+          "3400円/g",
+          "3300円/g"
+        ],
+        [
+          "Q",
+          "3700円/g",
+          "3450円/g"
+        ]
+      ]
+    },
     "prompt": "xを求めなさい。",
     "answer": "300",
     "acceptedAnswers": [
@@ -1672,25 +1822,47 @@
     "problemFigure": null,
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "968fb7a3f4a3a709",
+    "contentHash": "40138cbce3b4e84b",
     "taskHash": "ba4235168664e772",
-    "renderHash": "3091fad706305f7c"
+    "renderHash": "1dcc6b12068aaa9d",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q4-3",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q4-3",
     "suggestedFieldId": "integers",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "newly_materialized_from_source",
     "sourceSkill": "整数条件を含む売買問題",
-    "context": "貴金属店P,Qの価格は、P:小売3400円/g・買取3300円/g、Q:小売3700円/g・買取3450円/gとする。店の収支は販売額−買取額。 Pは30g未満を売りに来た客から1人15000円の手数料を取る。ある日Pは合計ygを買い取り、同じygを販売し、収支と手数料の合計が150000円。手数料を払った客数nは奇数とする。",
+    "context": "貴金属店P,Qの価格は次のとおりとする。店の収支は販売額−買取額。Pは30g未満を売りに来た客から1人15000円の手数料を取る。ある日Pは合計ygを買い取り、同じygを販売し、収支と手数料の合計が150000円。手数料を払った客数nは奇数とする。",
+    "problemTable": {
+      "caption": "1gあたりの価格",
+      "headers": [
+        "店",
+        "小売価格",
+        "買取価格"
+      ],
+      "rows": [
+        [
+          "P",
+          "3400円/g",
+          "3300円/g"
+        ],
+        [
+          "Q",
+          "3700円/g",
+          "3450円/g"
+        ]
+      ]
+    },
     "prompt": "yとして考えられる正の値のうち最小のものを求めなさい。",
     "answer": "150",
     "acceptedAnswers": [
@@ -1701,20 +1873,22 @@
     "problemFigure": null,
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "73b3fe4ea0178487",
+    "contentHash": "5bd4e73ddb393ff8",
     "taskHash": "44afcc8a27498c79",
-    "renderHash": "2416081a2ac8da72"
+    "renderHash": "32895280d49cbce6",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q5-1",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q5-1",
     "suggestedFieldId": "coordinates",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "previously_audited_final",
@@ -1736,14 +1910,16 @@
     "figureVerified": true,
     "contentHash": "8573aa92f08b3e35",
     "taskHash": "c33c6cc2cc8a0c15",
-    "renderHash": "23f9e42c1c01e2e2"
+    "renderHash": "23f9e42c1c01e2e2",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q5-2",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q5-2",
     "suggestedFieldId": "coordinates",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "previously_audited_final",
@@ -1766,14 +1942,16 @@
     "figureVerified": true,
     "contentHash": "c7bb58eb81fd5326",
     "taskHash": "5c9d313b2acb6d9a",
-    "renderHash": "78018e12adebcfac"
+    "renderHash": "78018e12adebcfac",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2021-Q5-3",
     "sourceYear": 2021,
     "sourceQuestionId": "2021-Q5-3",
     "suggestedFieldId": "similarity",
-    "status": "final",
+    "status": "backlog",
     "contentVerified": true,
     "materialized": true,
     "provenance": "previously_audited_final",
@@ -1795,7 +1973,9 @@
     "figureVerified": true,
     "contentHash": "58685e2f439dca4d",
     "taskHash": "4381a1a93d7bd661",
-    "renderHash": "1b786a6f7e75d606"
+    "renderHash": "1b786a6f7e75d606",
+    "selectable": false,
+    "backlogReason": "問題成立性・図・正答・解説を再精査するまで出題停止"
   },
   {
     "id": "L2-2022-Q1-1",
@@ -2056,16 +2236,16 @@
       "B=(1,10)"
     ],
     "explanation": "Bはx=1上かつm上なのでy=10/1=10。",
-    "problemFigure": null,
+    "problemFigure": "assets/2022/2022_q2_base.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "d53ca05f85bcd480",
+    "contentHash": "bd718a48f0898b4a",
     "taskHash": "4ae5f84263d94921",
-    "renderHash": "c680c6829190ad46"
+    "renderHash": "1a71bab07fc1598e"
   },
   {
     "id": "L2-2022-Q2-2",
@@ -2087,16 +2267,16 @@
       "Q=(2t,4t²/3)"
     ],
     "explanation": "ABCDは幅t、高さ10/t−t²/3の長方形。△CDQは底辺CDが同じ高さで、x方向の高さをx_Qとすると面積は1/2×CD×x_Q。長方形と等しいのでx_Q=2t。l上だからy_Q=(1/3)(2t)²=4t²/3。",
-    "problemFigure": null,
+    "problemFigure": "assets/2022/2022_q2_with_q.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "b7ef3185d8dd56eb",
+    "contentHash": "6aa97e5b5339a55c",
     "taskHash": "ff3358fd9952ec76",
-    "renderHash": "32d5dded3269e2a1"
+    "renderHash": "5663d41a784e18e9"
   },
   {
     "id": "L2-2022-Q2-3",
@@ -2115,16 +2295,16 @@
       "30"
     ],
     "explanation": "Pのx座標をpとすると(1/3)p²=10/pよりp³=30。PH=pなので立方体の体積はp³=30。",
-    "problemFigure": null,
+    "problemFigure": "assets/2022/2022_q2_with_h.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "30ed1cb77369ac8f",
+    "contentHash": "87d78fbcd588fbd9",
     "taskHash": "7b64b45f1f42fdbe",
-    "renderHash": "107e7a51ea2cc5bb"
+    "renderHash": "f3d0650a21f6a811"
   },
   {
     "id": "L2-2022-Q3-1",
@@ -2194,7 +2374,32 @@
     "materialized": true,
     "provenance": "previously_audited_final",
     "sourceSkill": "条件変更後の数量追跡",
-    "context": "AさんとBさんが18kmを一緒に歩き、1km歩くごとに水を飲む。8km歩いて飲み終えた時、2人合わせて720mL減っており、その時点まではBさんが1kmごとに飲む量はAさんの1.25倍で一定であった。Bさんは12.5km地点で水不足に気づき、13km以降は1kmごとに飲む量を、それまでより毎回同じ量r mLだけ減らした。Aさんは最後まで1kmごとの量を変えない。18km歩き終えた時、AさんとBさんの水の減少量が等しくなった。",
+    "context": "AさんとBさんが18kmを一緒に歩き、1km歩くごとに水を飲む。8km歩いて飲み終えた時、2人合わせて720mL減っており、その時点まではBさんが1kmごとに飲む量はAさんの1.25倍で一定であった。Bさんは12.5km地点で水不足に気づいた。18km歩き終えた時、AさんとBさんの水の減少量が等しくなった。",
+    "problemTable": {
+      "caption": "1kmごとに飲む量の変化",
+      "headers": [
+        "区間",
+        "Aさん",
+        "Bさん"
+      ],
+      "rows": [
+        [
+          "1〜12km",
+          "最後まで一定",
+          "Aさんの1.25倍（一定）"
+        ],
+        [
+          "12.5km地点",
+          "変更なし",
+          "水不足に気づく"
+        ],
+        [
+          "13〜18km",
+          "変更なし",
+          "それまでより毎回r mL減らす"
+        ]
+      ]
+    },
     "prompt": "rを求めなさい。",
     "answer": "30",
     "acceptedAnswers": [
@@ -2206,13 +2411,13 @@
     "problemFigure": null,
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 2,
+    "contentRevision": 3,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "087663dc3f3c61bc",
+    "contentHash": "f953058a1545a374",
     "taskHash": "dfe4547ea56a7e92",
-    "renderHash": "0731aafb0bb08629"
+    "renderHash": "9c9986e1b11193b0"
   },
   {
     "id": "L2-2022-Q4-1",
@@ -2832,7 +3037,7 @@
       "X=ACD,Y=ACB"
     ],
     "explanation": "MはBD上にあるので∠ABM=∠ABD=∠ACD。さらに作図より∠BAM=∠CADだから△ABM∽△ACD。次に∠DAM=∠CAB、∠ADM=∠ADB=∠ACBより△ADM∽△ACB。",
-    "problemFigure": null,
+    "problemFigure": "assets/2023/2023_q4_proof.svg",
     "hintFigure": null,
     "explanationFigure": null,
     "answerSpec": {
@@ -2866,13 +3071,13 @@
       ],
       "allowEquivalentCyclicOrReversedNotation": true
     },
-    "contentRevision": 1,
     "gradingRevision": 1,
+    "contentRevision": 2,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "ed6244e74156c926",
+    "contentHash": "4a269274ffd28de7",
     "taskHash": "7247a5fa8fd7b59c",
-    "renderHash": "61c08073d9da07bd"
+    "renderHash": "7edabe125432ecaf"
   },
   {
     "id": "L2-2023-Q4-2",
@@ -2893,16 +3098,16 @@
       "1+sqrt(5)"
     ],
     "explanation": "AB=BC=CD=2、AC=BD=AD=x。関係式より2×2+x×2=x²。x²−2x−4=0の正の解は1+√5。",
-    "problemFigure": null,
+    "problemFigure": "assets/2023/2023_q4_pentagon.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 2,
     "gradingRevision": 1,
+    "contentRevision": 3,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "c54c54c8bb714fc0",
+    "contentHash": "3ff4c749ede2a5e8",
     "taskHash": "cabb6e02a7ebfb94",
-    "renderHash": "b4c66c795ece9b91"
+    "renderHash": "035209bcd53ad2b8"
   },
   {
     "id": "L2-2023-Q4-3",
@@ -2924,16 +3129,16 @@
       "ab=c(a+b)"
     ],
     "explanation": "四角形ABCEに関係式を使う。AC=b、BE=a、AB=BC=c、CE=b、EA=a だから、ab=cb+ca=c(a+b)。",
-    "problemFigure": null,
+    "problemFigure": "assets/2023/2023_q4_heptagon.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 2,
     "gradingRevision": 1,
+    "contentRevision": 3,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "2fffde00400f3ed8",
+    "contentHash": "65226ab6a01225b9",
     "taskHash": "00d34cce9bfe9fbc",
-    "renderHash": "e3fa9315aaa03de4"
+    "renderHash": "bf54a99603fa276d"
   },
   {
     "id": "L2-2023-Q5-1",
@@ -3271,16 +3476,16 @@
       "a=1/2"
     ],
     "explanation": "A(4,8)をy=ax²に代入すると8=16aよりa=1/2。",
-    "problemFigure": null,
+    "problemFigure": "assets/2024/2024_q2_base.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "4b995cd36ec64877",
+    "contentHash": "3fa192402c791fd5",
     "taskHash": "09336b375e83427d",
-    "renderHash": "7297ba03d5a9820a"
+    "renderHash": "ae1a41fc35919766"
   },
   {
     "id": "L2-2024-Q2-2",
@@ -3300,16 +3505,16 @@
       "B=(1,1)"
     ],
     "explanation": "lはy−8=(7/3)(x−4)、すなわちy=(7/3)x−4/3。y=x²と連立し3x²−7x+4=0。x=1,4/3のうち小さい方は1なのでB=(1,1)。",
-    "problemFigure": null,
+    "problemFigure": "assets/2024/2024_q2_base.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "091bb482d7ec83b2",
+    "contentHash": "0829ce31d3714049",
     "taskHash": "10833c93bde0299d",
-    "renderHash": "94e760c1bd48693f"
+    "renderHash": "8fb2214080bc2b6b"
   },
   {
     "id": "L2-2024-Q2-3",
@@ -3330,16 +3535,16 @@
       "2+sqrt(6)"
     ],
     "explanation": "△OABの面積は|4×1−8×1|/2=2。C=(t,t²/2)とすると△OAC=|t²−4t|。これが2なのでt=2±√6,2±√2。y>8を満たすのはt=2+√6のみ。",
-    "problemFigure": null,
+    "problemFigure": "assets/2024/2024_q2_with_c.svg",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "760f6f6a208f7e5e",
+    "contentHash": "6257f3ad85b247c6",
     "taskHash": "53966a5a66f1a61b",
-    "renderHash": "63c43a77c1848bbd"
+    "renderHash": "1f628cab7967ac28"
   },
   {
     "id": "L2-2024-Q3-1",
@@ -4627,19 +4832,19 @@
       "a=1"
     ],
     "explanation": "交点のx座標をr<0、s>0とする。Bのy座標がAの9倍なのでs²=9r²、よってs=−3r。A,Bはいずれもax²=2x+3を満たすので、2式を引くとa(s²−r²)=2(s−r)。s≠rよりa(s+r)=2。s=−3rを入れるとar=−1。さらにAについてar²=2r+3だから−r=2r+3、r=−1。よってa=1。",
-    "problemFigure": null,
+    "problemFigure": "assets/2026/2026_q4_graph.png",
     "hintFigure": "assets/2026/2026_q4_graph.png",
     "explanationFigure": "assets/2026/2026_q4_graph.png",
     "suggestedFieldId": "quadratic-functions",
     "sourceSkill": "放物線と直線の交点条件",
-    "contentRevision": 2,
     "gradingRevision": 1,
+    "contentRevision": 3,
     "provenance": "previously_audited_final",
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "8c66326032f262c0",
+    "contentHash": "7f96c14b45d152b7",
     "taskHash": "8f38d7e8fbdb33e8",
-    "renderHash": "2df1c2cb98550997"
+    "renderHash": "76228de42e2ac5d2"
   },
   {
     "id": "L2-2026-Q4-2",
@@ -4658,19 +4863,19 @@
       "6+4t-2t²"
     ],
     "explanation": "P=(t,t²)とし、Pと同じx座標をもち直線AB上にある点をQとする。ABはy=2x+3なのでPQ=2t+3−t²。△APQと△BPQは底辺PQを共有し、その高さの和はA,Bのx座標の差4。よって△ABPの面積は(1/2)×PQ×4=2(2t+3−t²)=−2t²+4t+6。",
-    "problemFigure": null,
-    "hintFigure": "assets/2026/2026_q4_graph.png",
-    "explanationFigure": "assets/2026/2026_q4_graph.png",
+    "problemFigure": "assets/2026/2026_q4_stage2.svg",
+    "hintFigure": "assets/2026/2026_q4_stage2.svg",
+    "explanationFigure": "assets/2026/2026_q4_stage2.svg",
     "suggestedFieldId": "coordinates",
     "sourceSkill": "座標と三角形の面積",
-    "contentRevision": 2,
     "gradingRevision": 1,
+    "contentRevision": 3,
     "provenance": "previously_audited_final",
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "8ad7ba8627fe5606",
+    "contentHash": "a684ee144d00adca",
     "taskHash": "a26f8d4788c5a5f3",
-    "renderHash": "ed213f920b955973"
+    "renderHash": "602a2acb54d51d06"
   },
   {
     "id": "L2-2026-Q4-3",
@@ -4689,19 +4894,19 @@
       "sqrt(3)-1"
     ],
     "explanation": "P=(t,t²)。円周角よりPA⊥PB。傾きはPA=t-1、PB=t+3だから (t-1)(t+3)=-1。t²+2t-2=0。AとBの間にある解は t=-1+√3。",
-    "problemFigure": null,
-    "hintFigure": "assets/2026/2026_q4_graph.png",
-    "explanationFigure": "assets/2026/2026_q4_graph.png",
+    "problemFigure": "assets/2026/2026_q4_stage3.svg",
+    "hintFigure": "assets/2026/2026_q4_stage3.svg",
+    "explanationFigure": "assets/2026/2026_q4_stage3.svg",
     "suggestedFieldId": "quadratic-functions",
     "sourceSkill": "放物線・円・垂直条件",
-    "contentRevision": 2,
     "gradingRevision": 1,
+    "contentRevision": 3,
     "provenance": "previously_audited_final",
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "20039f0b05b4c05f",
+    "contentHash": "32f007169ba975a0",
     "taskHash": "b13d4dca21ee0637",
-    "renderHash": "056a9986544d269a"
+    "renderHash": "eea126aad3700278"
   },
   {
     "id": "L2-2026-Q5-1",

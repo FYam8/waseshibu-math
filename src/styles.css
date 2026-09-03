@@ -148,3 +148,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .problem-context{white-space:pre-wrap;line-height:1.75;color:var(--muted)}
 .level2-figure{margin:18px 0;text-align:center;overflow:auto}
 .level2-figure img{display:block;max-width:100%;height:auto;margin:0 auto;border-radius:12px}
+.level2-table-wrap{max-width:100%;margin:18px 0;overflow-x:auto}
+.level2-table{width:100%;min-width:520px;border-collapse:collapse;background:#fff;font-size:.96rem}
+.level2-table caption{padding:0 0 8px;text-align:left;font-weight:700;color:var(--muted)}
+.level2-table th,.level2-table td{padding:10px 12px;border:1px solid #cfd8df;text-align:center;white-space:normal}
+.level2-table thead th{background:#eef5f7;font-weight:700}
+.level2-table tbody th{font-weight:700;background:#f8fafb}

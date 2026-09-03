@@ -46,16 +46,33 @@ if(!y21.length)throw new Error('fixture: no 2021 questions')
 if(y21.some(x=>route.oldQuestionAssignmentState(x.id)!=='exposed'))throw new Error('opened 2021 contains questions still marked unused')
 console.log('PASS: full-year old-paper viewing exposes all its subquestions')
 
-// D: 露出済み旧年度は補強予約から除外
-const sourceAttempt=attempt('exam-2024-Q1-1','2026-09-01T01:00:00.000Z','wrong','数式計算')
+// D: 閲覧だけでは旧年度問題を補強候補から永久除外しない
+const sourceAttempt=attempt('exam-2024-Q1-1','2026-09-01T01:00:00.000Z','wrong','平方根')
 reset({
  'waseshibu-math-attempts':JSON.stringify([attempt('exposure-2021'),sourceAttempt]),
- 'waseshibu-math-exam-scores':JSON.stringify([{id:'e24',deviceId:'d',resetVersion:0,year:2024,score:55,completed:true,weakFields:['式の計算・文字式'],at:'2026-09-01T01:00:00.000Z'}])
+ 'waseshibu-math-exam-scores':JSON.stringify([{id:'e24',deviceId:'d',resetVersion:0,year:2024,score:55,completed:true,weakFields:['平方根・近似値'],at:'2026-09-01T01:00:00.000Z'}])
 })
-const plan=route.ensureReinforcementPlan(JSON.parse(global.localStorage.getItem('waseshibu-math-exam-scores'))[0],60)
-const selected=Object.values(plan.fields).flat()
-if(selected.some(id=>id.startsWith('2021-')))throw new Error('opened 2021 was reused as unused reinforcement')
-console.log('PASS: viewed old year is excluded from reinforcement candidates')
+let plan=route.ensureReinforcementPlan(JSON.parse(global.localStorage.getItem('waseshibu-math-exam-scores'))[0],60)
+let selected=Object.values(plan.fields).flat()
+if(!selected.includes('2021-Q1-1'))throw new Error('view-only exposure incorrectly removed an unanswered old question from reinforcement')
+console.log('PASS: view-only exposure does not erase reinforcement eligibility')
+
+// D2: 年度演習の不正解・未回答は補強候補、正解は原則除外、正解後の再誤答は候補へ戻す
+const planForAttempts=oldAttempts=>{
+  reset({
+    'waseshibu-math-attempts':JSON.stringify([...oldAttempts,sourceAttempt]),
+    'waseshibu-math-exam-scores':JSON.stringify([{id:'e24',deviceId:'d',resetVersion:0,year:2024,score:55,completed:true,weakFields:['平方根・近似値'],at:'2026-09-01T01:00:00.000Z'}])
+  })
+  return Object.values(route.ensureReinforcementPlan(JSON.parse(global.localStorage.getItem('waseshibu-math-exam-scores'))[0],60).fields).flat()
+}
+if(!planForAttempts([attempt('exam-2021-Q1-1','2026-09-01T00:00:01.000Z','wrong','平方根')]).includes('2021-Q1-1'))throw new Error('wrong old-year question is not eligible for reinforcement')
+if(!planForAttempts([attempt('exam-2021-Q1-1','2026-09-01T00:00:01.000Z','deferred','平方根')]).includes('2021-Q1-1'))throw new Error('unanswered old-year question is not eligible for reinforcement')
+if(planForAttempts([attempt('exam-2021-Q1-1','2026-09-01T00:00:01.000Z','correct','平方根')]).includes('2021-Q1-1'))throw new Error('correct old-year question was not deprioritized')
+if(!planForAttempts([
+  attempt('exam-2021-Q1-1','2026-09-01T00:00:01.000Z','correct','平方根'),
+  attempt('exam-2021-Q1-1','2026-09-01T00:00:02.000Z','wrong','平方根')
+]).includes('2021-Q1-1'))throw new Error('latest wrong result did not return the official question to reinforcement')
+console.log('PASS: wrong/unanswered/correct/latest-wrong old-year states select correctly')
 
 // E: 任意旧年度誤答は必須キューを横取りしない
 reset({'waseshibu-math-attempts':JSON.stringify([

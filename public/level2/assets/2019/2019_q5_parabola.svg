@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 470" role="img" aria-labelledby="t d">
+  <title id="t">放物線上の4点と直線</title><desc id="d">放物線y=x二乗上のA、B、C、Dと交点E、F</desc>
+  <rect width="560" height="470" fill="#fff"/><g fill="none" stroke="#243342"><path d="M45 410H530M302 445V25" stroke-width="3"/><path d="M105 18 C190 330 225 410 302 410 C379 410 414 330 499 18" stroke-width="5"/><path d="M162 210 470 122M218 338 470 122M218 338 414 282" stroke="#1769aa" stroke-width="3"/></g>
+  <g fill="#d04a35"><circle cx="414" cy="282" r="7"/><circle cx="218" cy="338" r="7"/><circle cx="470" cy="122" r="7"/><circle cx="162" cy="210" r="7"/></g><g font-family="sans-serif" font-size="20" fill="#243342"><text x="422" y="280">A</text><text x="194" y="363">B</text><text x="478" y="116">C</text><text x="136" y="202">D</text><text x="515" y="405">x</text><text x="310" y="30">y</text><text x="365" y="390">y=x²</text></g>
+</svg>

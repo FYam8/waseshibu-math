@@ -1,27 +1,29 @@
 {
   "schemaVersion": 1,
-  "coreQuestionCount": 160,
+  "coreQuestionCount": 100,
   "supportQuestionCount": 2,
-  "identityRule": "core and support both use immutable questionId; learning history never uses fieldId as identity.",
+  "identityRule": "Active original, official past-paper, support, and backlog items keep immutable questionId; learning history never uses fieldId as identity.",
   "fields": [
     {
       "fieldId": "expressions",
       "label": "式の計算・文字式",
       "coreQuestionIds": [
-        "L2-2020-Q1-1",
         "L2-2023-Q1-1",
         "L2-2024-Q1-1",
         "L2-2025-Q1-1"
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2020-Q1-1",
+        "2020-Q1-1",
         "L2-2023-Q1-1",
         "L2-2024-Q1-1",
         "L2-2025-Q1-1"
       ],
       "masteryEligibleCount": 4,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2020-Q1-1"
+      ]
     },
     {
       "fieldId": "factoring",
@@ -41,36 +43,36 @@
         "SUP-FAC-002"
       ],
       "masteryEligibleCount": 4,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": []
     },
     {
       "fieldId": "linear-equations",
       "label": "一次方程式・式変形",
       "coreQuestionIds": [
-        "L2-2020-Q4-2",
-        "L2-2021-Q4-2",
         "L2-2023-Q1-3",
         "L2-2026-Q1-1",
         "L2-2026-Q1-4"
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2020-Q4-2",
-        "L2-2021-Q4-2",
+        "2020-Q4-2",
+        "2021-Q4-2",
         "L2-2023-Q1-3",
         "L2-2026-Q1-1",
         "L2-2026-Q1-4"
       ],
       "masteryEligibleCount": 5,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2020-Q4-2",
+        "2021-Q4-2"
+      ]
     },
     {
       "fieldId": "simultaneous-equations",
       "label": "連立方程式",
       "coreQuestionIds": [
-        "L2-2019-Q1-2",
-        "L2-2020-Q1-2",
-        "L2-2021-Q1-2",
         "L2-2022-Q1-3",
         "L2-2023-Q1-2",
         "L2-2023-Q3-2",
@@ -80,9 +82,9 @@
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2019-Q1-2",
-        "L2-2020-Q1-2",
-        "L2-2021-Q1-2",
+        "2019-Q1-2",
+        "2020-Q1-2",
+        "2021-Q1-2",
         "L2-2022-Q1-3",
         "L2-2023-Q1-2",
         "L2-2023-Q3-2",
@@ -91,51 +93,60 @@
         "L2-2025-Q1-3"
       ],
       "masteryEligibleCount": 9,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2019-Q1-2",
+        "2020-Q1-2",
+        "2021-Q1-2"
+      ]
     },
     {
       "fieldId": "quadratic-equations",
       "label": "二次方程式",
       "coreQuestionIds": [
-        "L2-2019-Q1-3",
-        "L2-2019-Q1-9",
-        "L2-2020-Q1-3",
-        "L2-2021-Q1-3",
         "L2-2022-Q1-2",
         "L2-2025-Q1-4"
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2019-Q1-3",
-        "L2-2019-Q1-9",
-        "L2-2020-Q1-3",
-        "L2-2021-Q1-3",
+        "2019-Q1-3",
+        "2019-Q1-9",
+        "2020-Q1-3",
+        "2021-Q1-3",
         "L2-2022-Q1-2",
         "L2-2025-Q1-4"
       ],
       "masteryEligibleCount": 6,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2019-Q1-3",
+        "2019-Q1-9",
+        "2020-Q1-3",
+        "2021-Q1-3"
+      ]
     },
     {
       "fieldId": "square-roots",
       "label": "平方根・近似値",
       "coreQuestionIds": [
-        "L2-2019-Q1-1",
-        "L2-2021-Q1-1",
         "L2-2022-Q1-1",
         "L2-2023-Q1-6",
         "L2-2024-Q1-7"
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2019-Q1-1",
-        "L2-2021-Q1-1",
+        "2019-Q1-1",
+        "2021-Q1-1",
         "L2-2022-Q1-1",
         "L2-2023-Q1-6",
         "L2-2024-Q1-7"
       ],
       "masteryEligibleCount": 5,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2019-Q1-1",
+        "2021-Q1-1"
+      ]
     },
     {
       "fieldId": "proportion",
@@ -154,19 +165,13 @@
         "L2-2026-Q1-2"
       ],
       "masteryEligibleCount": 4,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": []
     },
     {
       "fieldId": "quadratic-functions",
       "label": "二次関数・放物線",
       "coreQuestionIds": [
-        "L2-2019-Q1-5",
-        "L2-2019-Q5-1",
-        "L2-2019-Q5-2",
-        "L2-2020-Q1-4",
-        "L2-2020-Q3-1",
-        "L2-2020-Q3-3",
-        "L2-2021-Q1-4",
         "L2-2022-Q1-4",
         "L2-2022-Q2-3",
         "L2-2023-Q2-1",
@@ -177,13 +182,13 @@
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2019-Q1-5",
-        "L2-2019-Q5-1",
-        "L2-2019-Q5-2",
-        "L2-2020-Q1-4",
-        "L2-2020-Q3-1",
-        "L2-2020-Q3-3",
-        "L2-2021-Q1-4",
+        "2019-Q1-5",
+        "2019-Q5-1",
+        "2019-Q5-2",
+        "2020-Q1-4",
+        "2020-Q3-1",
+        "2020-Q3-3",
+        "2021-Q1-4",
         "L2-2022-Q1-4",
         "L2-2022-Q2-3",
         "L2-2023-Q2-1",
@@ -193,17 +198,21 @@
         "L2-2026-Q4-3"
       ],
       "masteryEligibleCount": 14,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2019-Q1-5",
+        "2019-Q5-1",
+        "2019-Q5-2",
+        "2020-Q1-4",
+        "2020-Q3-1",
+        "2020-Q3-3",
+        "2021-Q1-4"
+      ]
     },
     {
       "fieldId": "coordinates",
       "label": "座標・直線・面積",
       "coreQuestionIds": [
-        "L2-2019-Q1-6",
-        "L2-2019-Q5-3",
-        "L2-2020-Q3-2",
-        "L2-2021-Q5-1",
-        "L2-2021-Q5-2",
         "L2-2022-Q2-1",
         "L2-2022-Q2-2",
         "L2-2023-Q2-2",
@@ -222,11 +231,11 @@
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2019-Q1-6",
-        "L2-2019-Q5-3",
-        "L2-2020-Q3-2",
-        "L2-2021-Q5-1",
-        "L2-2021-Q5-2",
+        "2019-Q1-6",
+        "2019-Q5-3",
+        "2020-Q3-2",
+        "2021-Q5-1",
+        "2021-Q5-2",
         "L2-2022-Q2-1",
         "L2-2022-Q2-2",
         "L2-2023-Q2-2",
@@ -244,16 +253,19 @@
         "L2-2026-Q4-2"
       ],
       "masteryEligibleCount": 20,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2019-Q1-6",
+        "2019-Q5-3",
+        "2020-Q3-2",
+        "2021-Q5-1",
+        "2021-Q5-2"
+      ]
     },
     {
       "fieldId": "integers",
       "label": "整数・約数・余り",
       "coreQuestionIds": [
-        "L2-2019-Q1-7",
-        "L2-2020-Q1-7",
-        "L2-2021-Q1-5",
-        "L2-2021-Q4-3",
         "L2-2025-Q1-8",
         "L2-2026-Q1-5",
         "L2-2026-Q2-1",
@@ -262,10 +274,10 @@
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2019-Q1-7",
-        "L2-2020-Q1-7",
-        "L2-2021-Q1-5",
-        "L2-2021-Q4-3",
+        "2019-Q1-7",
+        "2020-Q1-7",
+        "2021-Q1-5",
+        "2021-Q4-3",
         "L2-2025-Q1-8",
         "L2-2026-Q1-5",
         "L2-2026-Q2-1",
@@ -273,18 +285,18 @@
         "L2-2026-Q2-3"
       ],
       "masteryEligibleCount": 9,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2019-Q1-7",
+        "2020-Q1-7",
+        "2021-Q1-5",
+        "2021-Q4-3"
+      ]
     },
     {
       "fieldId": "counting",
       "label": "場合の数・規則性",
       "coreQuestionIds": [
-        "L2-2019-Q3-1",
-        "L2-2019-Q3-2",
-        "L2-2019-Q3-3",
-        "L2-2021-Q3-1",
-        "L2-2021-Q3-2",
-        "L2-2021-Q3-3",
         "L2-2022-Q4-1",
         "L2-2022-Q4-2",
         "L2-2022-Q4-3",
@@ -292,27 +304,32 @@
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2019-Q3-1",
-        "L2-2019-Q3-2",
-        "L2-2019-Q3-3",
-        "L2-2021-Q3-1",
-        "L2-2021-Q3-2",
-        "L2-2021-Q3-3",
+        "2019-Q3-1",
+        "2019-Q3-2",
+        "2019-Q3-3",
+        "2021-Q3-1",
+        "2021-Q3-2",
+        "2021-Q3-3",
         "L2-2022-Q4-1",
         "L2-2022-Q4-2",
         "L2-2022-Q4-3",
         "L2-2026-Q1-7"
       ],
       "masteryEligibleCount": 10,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2019-Q3-1",
+        "2019-Q3-2",
+        "2019-Q3-3",
+        "2021-Q3-1",
+        "2021-Q3-2",
+        "2021-Q3-3"
+      ]
     },
     {
       "fieldId": "probability",
       "label": "確率",
       "coreQuestionIds": [
-        "L2-2020-Q2-1",
-        "L2-2020-Q2-2",
-        "L2-2020-Q2-3",
         "L2-2022-Q1-5",
         "L2-2023-Q1-4",
         "L2-2023-Q5-1",
@@ -330,9 +347,9 @@
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2020-Q2-1",
-        "L2-2020-Q2-2",
-        "L2-2020-Q2-3",
+        "2020-Q2-1",
+        "2020-Q2-2",
+        "2020-Q2-3",
         "L2-2022-Q1-5",
         "L2-2023-Q1-4",
         "L2-2023-Q5-1",
@@ -349,13 +366,17 @@
         "L2-2026-Q3-3"
       ],
       "masteryEligibleCount": 17,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2020-Q2-1",
+        "2020-Q2-2",
+        "2020-Q2-3"
+      ]
     },
     {
       "fieldId": "statistics",
       "label": "データ・中央値・平均",
       "coreQuestionIds": [
-        "L2-2021-Q1-7",
         "L2-2022-Q1-6",
         "L2-2023-Q1-7",
         "L2-2024-Q1-4",
@@ -363,25 +384,22 @@
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2021-Q1-7",
+        "2021-Q1-7",
         "L2-2022-Q1-6",
         "L2-2023-Q1-7",
         "L2-2024-Q1-4",
         "L2-2025-Q1-5"
       ],
       "masteryEligibleCount": 5,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2021-Q1-7"
+      ]
     },
     {
       "fieldId": "word-problems",
       "label": "割合・食塩水・数量文章題",
       "coreQuestionIds": [
-        "L2-2019-Q4-1",
-        "L2-2019-Q4-2",
-        "L2-2019-Q4-3",
-        "L2-2020-Q4-1",
-        "L2-2020-Q4-3",
-        "L2-2021-Q4-1",
         "L2-2022-Q1-7",
         "L2-2022-Q3-2",
         "L2-2022-Q3-3",
@@ -393,12 +411,12 @@
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2019-Q4-1",
-        "L2-2019-Q4-2",
-        "L2-2019-Q4-3",
-        "L2-2020-Q4-1",
-        "L2-2020-Q4-3",
-        "L2-2021-Q4-1",
+        "2019-Q4-1",
+        "2019-Q4-2",
+        "2019-Q4-3",
+        "2020-Q4-1",
+        "2020-Q4-3",
+        "2021-Q4-1",
         "L2-2022-Q1-7",
         "L2-2022-Q3-2",
         "L2-2022-Q3-3",
@@ -409,38 +427,47 @@
         "L2-2026-Q1-8"
       ],
       "masteryEligibleCount": 14,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2019-Q4-1",
+        "2019-Q4-2",
+        "2019-Q4-3",
+        "2020-Q4-1",
+        "2020-Q4-3",
+        "2021-Q4-1"
+      ]
     },
     {
       "fieldId": "plane-geometry",
       "label": "平面図形・面積",
       "coreQuestionIds": [
-        "L2-2019-Q1-4",
-        "L2-2019-Q2-2",
-        "L2-2020-Q1-5",
-        "L2-2020-Q1-6",
-        "L2-2020-Q1-8",
-        "L2-2021-Q1-8",
         "L2-2023-Q1-8"
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2019-Q1-4",
-        "L2-2019-Q2-2",
-        "L2-2020-Q1-5",
-        "L2-2020-Q1-6",
-        "L2-2020-Q1-8",
-        "L2-2021-Q1-8",
+        "2019-Q1-4",
+        "2019-Q2-2",
+        "2020-Q1-5",
+        "2020-Q1-6",
+        "2020-Q1-8",
+        "2021-Q1-8",
         "L2-2023-Q1-8"
       ],
       "masteryEligibleCount": 7,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2019-Q1-4",
+        "2019-Q2-2",
+        "2020-Q1-5",
+        "2020-Q1-6",
+        "2020-Q1-8",
+        "2021-Q1-8"
+      ]
     },
     {
       "fieldId": "angles-circles",
       "label": "角度・円",
       "coreQuestionIds": [
-        "L2-2021-Q1-6",
         "L2-2023-Q1-5",
         "L2-2023-Q4-2",
         "L2-2023-Q4-3",
@@ -452,7 +479,7 @@
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2021-Q1-6",
+        "2021-Q1-6",
         "L2-2023-Q1-5",
         "L2-2023-Q4-2",
         "L2-2023-Q4-3",
@@ -463,14 +490,15 @@
         "L2-2026-Q5-1"
       ],
       "masteryEligibleCount": 9,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2021-Q1-6"
+      ]
     },
     {
       "fieldId": "similarity",
       "label": "相似・面積比",
       "coreQuestionIds": [
-        "L2-2019-Q2-1",
-        "L2-2021-Q5-3",
         "L2-2022-Q1-8",
         "L2-2023-Q4-1",
         "L2-2024-Q5-3",
@@ -480,8 +508,8 @@
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2019-Q2-1",
-        "L2-2021-Q5-3",
+        "2019-Q2-1",
+        "2021-Q5-3",
         "L2-2022-Q1-8",
         "L2-2023-Q4-1",
         "L2-2024-Q5-3",
@@ -490,19 +518,16 @@
         "L2-2026-Q5-3"
       ],
       "masteryEligibleCount": 8,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2019-Q2-1",
+        "2021-Q5-3"
+      ]
     },
     {
       "fieldId": "solids",
       "label": "空間図形・体積",
       "coreQuestionIds": [
-        "L2-2019-Q1-8",
-        "L2-2020-Q5-1",
-        "L2-2020-Q5-2",
-        "L2-2020-Q5-3",
-        "L2-2021-Q2-1",
-        "L2-2021-Q2-2",
-        "L2-2021-Q2-3",
         "L2-2022-Q5-1",
         "L2-2022-Q5-2",
         "L2-2022-Q5-3",
@@ -511,13 +536,13 @@
       ],
       "supportQuestionIds": [],
       "masteryEligibleQuestionIds": [
-        "L2-2019-Q1-8",
-        "L2-2020-Q5-1",
-        "L2-2020-Q5-2",
-        "L2-2020-Q5-3",
-        "L2-2021-Q2-1",
-        "L2-2021-Q2-2",
-        "L2-2021-Q2-3",
+        "2019-Q1-8",
+        "2020-Q5-1",
+        "2020-Q5-2",
+        "2020-Q5-3",
+        "2021-Q2-1",
+        "2021-Q2-2",
+        "2021-Q2-3",
         "L2-2022-Q5-1",
         "L2-2022-Q5-2",
         "L2-2022-Q5-3",
@@ -525,7 +550,18 @@
         "L2-2025-Q3-1"
       ],
       "masteryEligibleCount": 12,
-      "fourStreakReady": true
+      "fourStreakReady": true,
+      "officialPastQuestionIds": [
+        "2019-Q1-8",
+        "2020-Q5-1",
+        "2020-Q5-2",
+        "2020-Q5-3",
+        "2021-Q2-1",
+        "2021-Q2-2",
+        "2021-Q2-3"
+      ]
     }
-  ]
+  ],
+  "officialPastQuestionCount": 60,
+  "backlogQuestionCount": 60
 }

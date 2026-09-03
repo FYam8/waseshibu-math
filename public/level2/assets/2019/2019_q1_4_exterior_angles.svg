@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="430" viewBox="0 0 720 430" role="img" aria-labelledby="title desc">
+  <title id="title">三角形ABCと頂点B、Cの外角</title><desc id="desc">辺ABとACを外側へ延長し、Bの外角をx度、Cの外角をy度とした図</desc>
+  <rect width="720" height="430" fill="#fff"/>
+  <g stroke="#25313c" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M260 70 L150 280 L570 280 Z"/><path d="M150 280 L93 389 M570 280 L665 375"/>
+    <path d="M190 280 A40 40 0 0 1 132 316" stroke="#2878b5"/><path d="M530 280 A40 40 0 0 0 598 308" stroke="#2878b5"/>
+    <path d="M239 111 A46 46 0 0 1 284 116" stroke="#d66a35"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="25" fill="#17212b"><text x="249" y="54">A</text><text x="139" y="272">B</text><text x="565" y="272">C</text><text x="143" y="340" fill="#2878b5">x°</text><text x="584" y="340" fill="#2878b5">y°</text><text x="245" y="137" fill="#d66a35">52°</text></g>
+</svg>
