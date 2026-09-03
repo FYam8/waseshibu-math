@@ -1,0 +1,58 @@
+[
+  {
+    "id": "SUP-FAC-001",
+    "bankType": "field-support",
+    "difficulty": "Level2-support",
+    "sourceQuestionId": null,
+    "fieldId": "factoring",
+    "practiceFieldIds": [
+      "factoring"
+    ],
+    "status": "final",
+    "contentVerified": true,
+    "materialized": true,
+    "context": "",
+    "prompt": "ab+4a−3b−12 を因数分解しなさい。",
+    "answer": "(a−3)(b+4)",
+    "acceptedAnswers": [
+      "(a−3)(b+4)",
+      "(b+4)(a−3)",
+      "(a-3)(b+4)",
+      "(b+4)(a-3)"
+    ],
+    "explanation": "前半と後半に分けると a(b+4)−3(b+4)。共通因数(b+4)をくくって(a−3)(b+4)。",
+    "problemFigure": null,
+    "hintFigure": null,
+    "explanationFigure": null,
+    "masteryEligible": true,
+    "designNote": "単なる数値替えではなく、共通因数を作るためのグループ分けを問う。"
+  },
+  {
+    "id": "SUP-FAC-002",
+    "bankType": "field-support",
+    "difficulty": "Level2-support",
+    "sourceQuestionId": null,
+    "fieldId": "factoring",
+    "practiceFieldIds": [
+      "factoring"
+    ],
+    "status": "final",
+    "contentVerified": true,
+    "materialized": true,
+    "context": "",
+    "prompt": "x²+6x+9−4y² を因数分解しなさい。",
+    "answer": "(x+3−2y)(x+3+2y)",
+    "acceptedAnswers": [
+      "(x+3−2y)(x+3+2y)",
+      "(x+3+2y)(x+3−2y)",
+      "(x+3-2y)(x+3+2y)",
+      "(x+3+2y)(x+3-2y)"
+    ],
+    "explanation": "x²+6x+9=(x+3)²。したがって (x+3)²−(2y)² となり、平方の差より(x+3−2y)(x+3+2y)。",
+    "problemFigure": null,
+    "hintFigure": null,
+    "explanationFigure": null,
+    "masteryEligible": true,
+    "designNote": "平方完成ではなく、完全平方の形を見抜いて平方の差へつなぐ2段階の因数分解。"
+  }
+]

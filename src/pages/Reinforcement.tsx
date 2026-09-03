@@ -54,6 +54,7 @@ export default function Reinforcement(){
     {fields.length===0&&<section className="card"><h2>優先補強なし</h2><p>今回の診断では目標範囲の失点分野がありませんでした。次年度へ進めます。</p></section>}
     <div className="reinforce-fields">{fields.map((fieldName,fieldIndex)=>{
       const ids=fresh.fields[fieldName]||[],items=ids.map(id=>bank.find(x=>x.id===id)).filter(Boolean) as ReturnType<typeof oldQuestionBank>
+      const triggerSourceQuestionId=attempts.filter(a=>a.status==='wrong'&&a.questionId.startsWith(`exam-${source}-`)&&classifyRemediationField(a.topic).title===fieldName).sort((a,b)=>b.at.localeCompare(a.at))[0]?.questionId.replace(/^exam-/,'')
       const actualDone=ids.every(id=>completed.has(id))
       const mastered=attempts.some(a=>a.questionId.startsWith('mastery-')&&a.status==='correct'&&a.at>exam.at&&classifyRemediationField(a.topic).title===fieldName)
       return <section className="card reinforce-field" key={fieldName}><div className="section-head"><div><span className="field-number">{fieldIndex+1}</span><h2>{fieldName}</h2></div><b>{actualDone?'過去問済み':'過去問演習中'} / {mastered?'類題済み':'類題未完了'}</b></div><p className="muted">この診断で予約した問題だけを表示します。同じ問題を別の補強で重複使用しません。</p>
@@ -71,7 +72,7 @@ export default function Reinforcement(){
             }
           }
         }}>{showAnswer[item.id]?'正答を隠して自力で再現':'この小問の正答だけ見る'}</button>{showAnswer[item.id]&&<div className="single-answer-only"><span>この小問の正答</span><strong>{expected?.answer||'正答データなし'}</strong><small>正答を見ただけでは完了になりません。「正答を隠して自力で再現」を押すと入力をリセットし、もう一度正解したときだけ完了になります。</small></div>}<Link className="button" to={`/guided-review?q=${encodeURIComponent(item.id)}`}>この1問をステップで理解する</Link><p>{isDone?'この問題は採点・記録済みです。':'答えを入力するとこの小問だけを自動採点します。全角数字・記号も使えます。'}</p></aside></div>}</article>})}</div>
-        <div className="reinforce-next"><div><b>過去問 {ids.filter(id=>completed.has(id)).length}/{ids.length}</b><span> → </span><b>類題 {mastered?'4/4':'0〜3/4'}</b></div><Link className={`button ${actualDone?'primary':'disabled'}`} aria-disabled={!actualDone} onClick={e=>{if(!actualDone)e.preventDefault()}} to={`/remediate?topic=${encodeURIComponent(fieldName)}&source=${source}`}>{mastered?'類題4問をもう一度':'類題4問へ進む'}</Link></div>
+        <div className="reinforce-next"><div><b>過去問 {ids.filter(id=>completed.has(id)).length}/{ids.length}</b><span> → </span><b>類題 {mastered?'4/4':'0〜3/4'}</b></div><Link className={`button ${actualDone?'primary':'disabled'}`} aria-disabled={!actualDone} onClick={e=>{if(!actualDone)e.preventDefault()}} to={`/remediate?topic=${encodeURIComponent(fieldName)}&source=${source}${triggerSourceQuestionId?`&q=${encodeURIComponent(triggerSourceQuestionId)}`:''}`}>{mastered?'類題4問をもう一度':'類題4問へ進む'}</Link></div>
       </section>})}</div>
     <section className={`card route-complete ${done?'done':''}`}><h2>{done?'補強が完了しました':source===2026?'仕上げ補強を完了します':'次の確認は補強完了後に解放'}</h2><p>{done?`次の推奨は「${nextAfterDone?.label||'ホームで進捗を確認'}」です。未露出の確認年度が残っている場合は、そちらを優先します。`:'元の未解決問題確認、各分野の該当過去問、類題4問連続正解を順に完了します。'}</p>{done&&nextAfterDone?<Link className="button primary" to={nextAfterDone.to}>{nextAfterDone.label}</Link>:<Link className="button" to="/">ホームで進捗を見る</Link>}</section>
   </>

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "goal": "Never lose existing 72-question learning history when the 160-question bank is introduced.",
+  "rules": [
+    "Do not rewrite a legacy attempt onto a new Level2 question solely because their categories match.",
+    "Retain every legacy attempt under its original legacyQuestionId (or a stable generated LEGACY72-* id).",
+    "Legacy history remains visible in overall learning history even if the legacy question is no longer in the active practice pool.",
+    "Merge legacy stats into a new Level2 question only after an explicit content-equivalence mapping is verified.",
+    "A category change is never evidence that two question identities are the same.",
+    "Until an old72->new160 equivalence map is verified, new160 seen/unseen status is independent of legacy72 history."
+  ],
+  "status": "policy-ready; exact old72->new160 identity mapping requires the current 72-question bank/IDs from the app."
+}

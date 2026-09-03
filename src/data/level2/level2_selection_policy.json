@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 5,
+  "streakTarget": 4,
+  "eligibility": {
+    "status": "final",
+    "contentVerified": true,
+    "materialized": true,
+    "currentFieldSource": "level2_field_assignments.json"
+  },
+  "directRemediation": {
+    "lookupKey": "sourceQuestionId via source_to_level2_map.json",
+    "fieldForWeaknessSession": "current fieldId of the mapped Level2 question",
+    "firstChoice": "Use the direct Level2 if unseen, or if it is not among the last 3 presentations in that field.",
+    "recentDirectFallback": "Choose from the same current field using the normal rotation."
+  },
+  "rotation": {
+    "method": "shuffle-bag",
+    "rule": "Prefer questions not yet presented in the current rotation cycle.",
+    "afterCycleExhaustion": "Refill from all eligible questions, but do not immediately repeat the last question.",
+    "currentStreakDistinctness": "Never present a questionId already counted in the current qualifying streak.",
+    "wrongOrAssistedAnswer": "Reset the qualifying streak, but keep attempt history and continue the rotation.",
+    "minimumUniquePool": 4,
+    "shortageBehavior": "Practice may continue with the available questions using rotation, but mastery remains unavailable until the field has at least 4 eligible distinct questions."
+  },
+  "priority": [
+    "unseen questionId",
+    "least recently presented eligible questionId",
+    "other eligible questionId"
+  ],
+  "hardRules": [
+    "Never immediately repeat the same questionId.",
+    "A valid 4/4 mastery streak must contain 4 distinct questionIds.",
+    "A wrong answer resets currentStreak to 0 but never deletes history.",
+    "Using a hint, explanation, or revealing the answer before the first answer resets currentStreak to 0.",
+    "Category changes never change questionId, seen status, or past attempts.",
+    "Only items explicitly listed in masteryEligibleQuestionIds may count toward that field's 4/4.",
+    "Do not count a quadratic-equation item as factorization mastery merely because factorization is one possible solution method.",
+    "If a field has fewer than 4 mastery-eligible unique questions, allow practice but do not award 4/4 mastery."
+  ],
+  "fieldSemantics": {
+    "weaknessField": "Use the current primary fieldId of the direct Level2 item.",
+    "directFieldPractice": "Use all items whose practiceFieldIds contains the selected field.",
+    "secondaryPracticeItem": "Counts normally for the selected field's streak because it was explicitly tagged as testing that field's skill; its primary category and history remain unchanged."
+  },
+  "poolSource": "practice_pool_index.json",
+  "supportQuestions": {
+    "behavior": "support questions participate in the same shuffle-bag and streak rules as core questions",
+    "sourceWeaknessDirectLink": "support questions are never used as the direct source-question counterpart",
+    "history": "stored under their own immutable SUP-* questionId"
+  }
+}

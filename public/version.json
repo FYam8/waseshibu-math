@@ -1,7 +1,7 @@
 {
-  "appVersion": "0.17.12",
-  "dataVersion": 6,
-  "releasedAt": "2026-09-02",
-  "release": "github-sync-separated",
-  "version": "0.17.12"
+  "appVersion": "0.18.0",
+  "dataVersion": 7,
+  "releasedAt": "2026-09-03",
+  "release": "audited-level2-v7",
+  "version": "0.18.0"
 }

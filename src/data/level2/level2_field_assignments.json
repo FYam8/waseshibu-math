@@ -1,0 +1,2030 @@
+{
+  "schemaVersion": 7,
+  "identityKey": "questionId",
+  "editableField": "fieldId",
+  "rules": {
+    "fieldIdIsMutableMetadata": true,
+    "recategorizationNeverChangesQuestionId": true,
+    "recategorizationNeverDeletesAttempts": true,
+    "fieldCountsAreDerivedNotState": true,
+    "directLevel2LookupUsesSourceQuestionIdNotFieldId": true,
+    "categoryEditsAreAlwaysAllowed": true,
+    "minimumUniqueQuestionsForFourStreak": 4,
+    "afterEditRecomputeFieldCounts": true,
+    "ifFieldFallsBelowMinimum": "Keep the category edit and all history; mark the field as content-shortage instead of silently misclassifying or repeating a question.",
+    "selectionUsesThisFileNotSuggestedFieldId": true,
+    "assignmentSetRevisionIncrementsOnAnyCategoryEdit": true,
+    "fieldHealthCountsOnlyEligibleFinalQuestions": true,
+    "masteryFromOlderAssignmentRevisionIsHistoricalNotCurrent": true,
+    "semanticClassificationBeatsPoolQuota": true,
+    "neverMisclassifyToReachFourQuestions": true,
+    "contentShortageIsAllowed": true,
+    "fieldIdMeansPrimaryCategory": true,
+    "practiceFieldIdsMeansEligiblePracticePools": true,
+    "practiceFieldIdsAlwaysContainsPrimaryFieldId": true,
+    "secondaryEligibilityRequiresPedagogicalReason": true,
+    "secondaryEligibilityNeverChangesQuestionIdentity": true,
+    "secondaryEligibilityNeverChangesWeaknessPrimaryField": true,
+    "doNotUseSecondaryEligibilityOnlyToMeetQuota": true,
+    "secondaryPracticeRequiresSameObservableTarget": true,
+    "doNotCountAlternativeMethodItemsTowardMastery": true,
+    "core160PrimaryClassificationRemainsSingle": true
+  },
+  "fields": [
+    {
+      "id": "expressions",
+      "label": "式の計算・文字式"
+    },
+    {
+      "id": "factoring",
+      "label": "因数分解"
+    },
+    {
+      "id": "linear-equations",
+      "label": "一次方程式・式変形"
+    },
+    {
+      "id": "simultaneous-equations",
+      "label": "連立方程式"
+    },
+    {
+      "id": "quadratic-equations",
+      "label": "二次方程式"
+    },
+    {
+      "id": "square-roots",
+      "label": "平方根・近似値"
+    },
+    {
+      "id": "proportion",
+      "label": "比例・反比例"
+    },
+    {
+      "id": "quadratic-functions",
+      "label": "二次関数・放物線"
+    },
+    {
+      "id": "coordinates",
+      "label": "座標・直線・面積"
+    },
+    {
+      "id": "integers",
+      "label": "整数・約数・余り"
+    },
+    {
+      "id": "counting",
+      "label": "場合の数・規則性"
+    },
+    {
+      "id": "probability",
+      "label": "確率"
+    },
+    {
+      "id": "statistics",
+      "label": "データ・中央値・平均"
+    },
+    {
+      "id": "word-problems",
+      "label": "割合・食塩水・数量文章題"
+    },
+    {
+      "id": "plane-geometry",
+      "label": "平面図形・面積"
+    },
+    {
+      "id": "angles-circles",
+      "label": "角度・円"
+    },
+    {
+      "id": "similarity",
+      "label": "相似・面積比"
+    },
+    {
+      "id": "solids",
+      "label": "空間図形・体積"
+    }
+  ],
+  "assignments": [
+    {
+      "questionId": "L2-2019-Q1-1",
+      "fieldId": "square-roots",
+      "suggestedFieldId": "square-roots",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "square-roots"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q1-2",
+      "fieldId": "simultaneous-equations",
+      "suggestedFieldId": "simultaneous-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "simultaneous-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q1-3",
+      "fieldId": "quadratic-equations",
+      "suggestedFieldId": "quadratic-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 2,
+      "adjustmentReason": "精査v5で修正。問いは「二次方程式を解く」であり、因数分解は解法の一部にすぎないため、主分類を二次方程式へ戻した。",
+      "practiceFieldIds": [
+        "quadratic-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q1-4",
+      "fieldId": "plane-geometry",
+      "suggestedFieldId": "plane-geometry",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "plane-geometry"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q1-5",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q1-6",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q1-7",
+      "fieldId": "integers",
+      "suggestedFieldId": "integers",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "integers"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q1-8",
+      "fieldId": "solids",
+      "suggestedFieldId": "solids",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "solids"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q1-9",
+      "fieldId": "quadratic-equations",
+      "suggestedFieldId": "quadratic-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q2-1",
+      "fieldId": "similarity",
+      "suggestedFieldId": "similarity",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "similarity"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q2-2",
+      "fieldId": "plane-geometry",
+      "suggestedFieldId": "plane-geometry",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "plane-geometry"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q3-1",
+      "fieldId": "counting",
+      "suggestedFieldId": "counting",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "counting"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q3-2",
+      "fieldId": "counting",
+      "suggestedFieldId": "counting",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "counting"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q3-3",
+      "fieldId": "counting",
+      "suggestedFieldId": "counting",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "counting"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q4-1",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q4-2",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q4-3",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q5-1",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q5-2",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2019-Q5-3",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q1-1",
+      "fieldId": "expressions",
+      "suggestedFieldId": "square-roots",
+      "manuallyAdjusted": true,
+      "assignmentRevision": 1,
+      "adjustmentReason": "平方根を含むが、中心作業は展開・式の計算なので「式の計算・文字式」を主分類とする。",
+      "practiceFieldIds": [
+        "expressions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q1-2",
+      "fieldId": "simultaneous-equations",
+      "suggestedFieldId": "simultaneous-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "simultaneous-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q1-3",
+      "fieldId": "quadratic-equations",
+      "suggestedFieldId": "quadratic-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q1-4",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q1-5",
+      "fieldId": "plane-geometry",
+      "suggestedFieldId": "plane-geometry",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "plane-geometry"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q1-6",
+      "fieldId": "plane-geometry",
+      "suggestedFieldId": "plane-geometry",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "plane-geometry"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q1-7",
+      "fieldId": "integers",
+      "suggestedFieldId": "integers",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "integers"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q1-8",
+      "fieldId": "plane-geometry",
+      "suggestedFieldId": "plane-geometry",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "plane-geometry"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q2-1",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q2-2",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q2-3",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q3-1",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q3-2",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q3-3",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q4-1",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q4-2",
+      "fieldId": "linear-equations",
+      "suggestedFieldId": "linear-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "linear-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q4-3",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q5-1",
+      "fieldId": "solids",
+      "suggestedFieldId": "solids",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "solids"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q5-2",
+      "fieldId": "solids",
+      "suggestedFieldId": "solids",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "solids"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2020-Q5-3",
+      "fieldId": "solids",
+      "suggestedFieldId": "solids",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "solids"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q1-1",
+      "fieldId": "square-roots",
+      "suggestedFieldId": "square-roots",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "square-roots"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q1-2",
+      "fieldId": "simultaneous-equations",
+      "suggestedFieldId": "simultaneous-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "simultaneous-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q1-3",
+      "fieldId": "quadratic-equations",
+      "suggestedFieldId": "quadratic-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q1-4",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q1-5",
+      "fieldId": "integers",
+      "suggestedFieldId": "integers",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "integers"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q1-6",
+      "fieldId": "angles-circles",
+      "suggestedFieldId": "angles-circles",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "angles-circles"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q1-7",
+      "fieldId": "statistics",
+      "suggestedFieldId": "statistics",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "statistics"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q1-8",
+      "fieldId": "plane-geometry",
+      "suggestedFieldId": "plane-geometry",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "plane-geometry"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q2-1",
+      "fieldId": "solids",
+      "suggestedFieldId": "solids",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "solids"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q2-2",
+      "fieldId": "solids",
+      "suggestedFieldId": "solids",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "solids"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q2-3",
+      "fieldId": "solids",
+      "suggestedFieldId": "solids",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "solids"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q3-1",
+      "fieldId": "counting",
+      "suggestedFieldId": "counting",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "counting"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q3-2",
+      "fieldId": "counting",
+      "suggestedFieldId": "counting",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "counting"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q3-3",
+      "fieldId": "counting",
+      "suggestedFieldId": "counting",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "counting"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q4-1",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q4-2",
+      "fieldId": "linear-equations",
+      "suggestedFieldId": "linear-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "linear-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q4-3",
+      "fieldId": "integers",
+      "suggestedFieldId": "integers",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "integers"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q5-1",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q5-2",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2021-Q5-3",
+      "fieldId": "similarity",
+      "suggestedFieldId": "similarity",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "similarity"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q1-1",
+      "fieldId": "square-roots",
+      "suggestedFieldId": "square-roots",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "square-roots"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q1-2",
+      "fieldId": "quadratic-equations",
+      "suggestedFieldId": "quadratic-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 2,
+      "adjustmentReason": "精査v5で修正。問いは「二次方程式を解く」であり、因数分解は解法の一部にすぎないため、主分類を二次方程式へ戻した。",
+      "practiceFieldIds": [
+        "quadratic-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q1-3",
+      "fieldId": "simultaneous-equations",
+      "suggestedFieldId": "simultaneous-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "simultaneous-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q1-4",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q1-5",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q1-6",
+      "fieldId": "statistics",
+      "suggestedFieldId": "statistics",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "statistics"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q1-7",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q1-8",
+      "fieldId": "similarity",
+      "suggestedFieldId": "similarity",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "similarity"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q2-1",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q2-2",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q2-3",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q3-1",
+      "fieldId": "proportion",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": true,
+      "assignmentRevision": 1,
+      "adjustmentReason": "文章形式だが、求める中心技能が比例計算なので「比例・反比例」を主分類とする。",
+      "practiceFieldIds": [
+        "proportion"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q3-2",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q3-3",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q4-1",
+      "fieldId": "counting",
+      "suggestedFieldId": "counting",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "counting"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q4-2",
+      "fieldId": "counting",
+      "suggestedFieldId": "counting",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "counting"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q4-3",
+      "fieldId": "counting",
+      "suggestedFieldId": "counting",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "counting"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q5-1",
+      "fieldId": "solids",
+      "suggestedFieldId": "solids",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "solids"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q5-2",
+      "fieldId": "solids",
+      "suggestedFieldId": "solids",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "solids"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2022-Q5-3",
+      "fieldId": "solids",
+      "suggestedFieldId": "solids",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "solids"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q1-1",
+      "fieldId": "expressions",
+      "suggestedFieldId": "expressions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "expressions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q1-2",
+      "fieldId": "simultaneous-equations",
+      "suggestedFieldId": "simultaneous-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "simultaneous-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q1-3",
+      "fieldId": "linear-equations",
+      "suggestedFieldId": "linear-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "linear-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q1-4",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q1-5",
+      "fieldId": "angles-circles",
+      "suggestedFieldId": "angles-circles",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "angles-circles"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q1-6",
+      "fieldId": "square-roots",
+      "suggestedFieldId": "square-roots",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "square-roots"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q1-7",
+      "fieldId": "statistics",
+      "suggestedFieldId": "statistics",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "statistics"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q1-8",
+      "fieldId": "plane-geometry",
+      "suggestedFieldId": "plane-geometry",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "plane-geometry"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q2-1",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q2-2",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q2-3",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q3-1",
+      "fieldId": "proportion",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": true,
+      "assignmentRevision": 1,
+      "adjustmentReason": "文章形式だが、求める中心技能が比例計算なので「比例・反比例」を主分類とする。",
+      "practiceFieldIds": [
+        "proportion"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q3-2",
+      "fieldId": "simultaneous-equations",
+      "suggestedFieldId": "simultaneous-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "simultaneous-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q3-3",
+      "fieldId": "simultaneous-equations",
+      "suggestedFieldId": "simultaneous-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "simultaneous-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q4-1",
+      "fieldId": "similarity",
+      "suggestedFieldId": "similarity",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "similarity"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q4-2",
+      "fieldId": "angles-circles",
+      "suggestedFieldId": "angles-circles",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "angles-circles"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q4-3",
+      "fieldId": "angles-circles",
+      "suggestedFieldId": "angles-circles",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "angles-circles"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q5-1",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q5-2",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2023-Q5-3",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q1-1",
+      "fieldId": "expressions",
+      "suggestedFieldId": "expressions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "expressions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q1-2",
+      "fieldId": "solids",
+      "suggestedFieldId": "solids",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "solids"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q1-3",
+      "fieldId": "proportion",
+      "suggestedFieldId": "proportion",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "proportion"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q1-4",
+      "fieldId": "statistics",
+      "suggestedFieldId": "statistics",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "statistics"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q1-5",
+      "fieldId": "angles-circles",
+      "suggestedFieldId": "angles-circles",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "angles-circles"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q1-6",
+      "fieldId": "simultaneous-equations",
+      "suggestedFieldId": "simultaneous-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "simultaneous-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q1-7",
+      "fieldId": "square-roots",
+      "suggestedFieldId": "square-roots",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "square-roots"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q1-8",
+      "fieldId": "angles-circles",
+      "suggestedFieldId": "angles-circles",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "angles-circles"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q2-1",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q2-2",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q2-3",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q3-1",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q3-2",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q3-3",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q4-1",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q4-2",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q4-3",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q5-1",
+      "fieldId": "angles-circles",
+      "suggestedFieldId": "angles-circles",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "angles-circles"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q5-2",
+      "fieldId": "angles-circles",
+      "suggestedFieldId": "angles-circles",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "angles-circles"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2024-Q5-3",
+      "fieldId": "similarity",
+      "suggestedFieldId": "similarity",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "similarity"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q1-1",
+      "fieldId": "expressions",
+      "suggestedFieldId": "expressions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "expressions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q1-2",
+      "fieldId": "factoring",
+      "suggestedFieldId": "factoring",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "factoring"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q1-3",
+      "fieldId": "simultaneous-equations",
+      "suggestedFieldId": "simultaneous-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "simultaneous-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q1-4",
+      "fieldId": "quadratic-equations",
+      "suggestedFieldId": "quadratic-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q1-5",
+      "fieldId": "statistics",
+      "suggestedFieldId": "statistics",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "statistics"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q1-6",
+      "fieldId": "similarity",
+      "suggestedFieldId": "similarity",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "similarity"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q1-7",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q1-8",
+      "fieldId": "integers",
+      "suggestedFieldId": "integers",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "integers"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q2-1",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q2-2",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q2-3",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q3-1",
+      "fieldId": "solids",
+      "suggestedFieldId": "solids",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "solids"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q3-2",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q3-3",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q4-1",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q4-2",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q4-3",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q5-1",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q5-2",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2025-Q5-3",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q1-1",
+      "fieldId": "linear-equations",
+      "suggestedFieldId": "linear-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "linear-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q1-2",
+      "fieldId": "proportion",
+      "suggestedFieldId": "proportion",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "proportion"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q1-3",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q1-4",
+      "fieldId": "linear-equations",
+      "suggestedFieldId": "linear-equations",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "linear-equations"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q1-5",
+      "fieldId": "integers",
+      "suggestedFieldId": "integers",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "integers"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q1-6",
+      "fieldId": "factoring",
+      "suggestedFieldId": "factoring",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "factoring"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q1-7",
+      "fieldId": "counting",
+      "suggestedFieldId": "counting",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "counting"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q1-8",
+      "fieldId": "word-problems",
+      "suggestedFieldId": "word-problems",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "word-problems"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q2-1",
+      "fieldId": "integers",
+      "suggestedFieldId": "integers",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "integers"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q2-2",
+      "fieldId": "integers",
+      "suggestedFieldId": "integers",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "integers"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q2-3",
+      "fieldId": "integers",
+      "suggestedFieldId": "integers",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "integers"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q3-1",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q3-2",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q3-3",
+      "fieldId": "probability",
+      "suggestedFieldId": "probability",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "probability"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q4-1",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q4-2",
+      "fieldId": "coordinates",
+      "suggestedFieldId": "coordinates",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "coordinates"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q4-3",
+      "fieldId": "quadratic-functions",
+      "suggestedFieldId": "quadratic-functions",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "quadratic-functions"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q5-1",
+      "fieldId": "angles-circles",
+      "suggestedFieldId": "angles-circles",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "angles-circles"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q5-2",
+      "fieldId": "similarity",
+      "suggestedFieldId": "similarity",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "similarity"
+      ],
+      "secondaryPracticeReasons": {}
+    },
+    {
+      "questionId": "L2-2026-Q5-3",
+      "fieldId": "similarity",
+      "suggestedFieldId": "similarity",
+      "manuallyAdjusted": false,
+      "assignmentRevision": 1,
+      "adjustmentReason": null,
+      "practiceFieldIds": [
+        "similarity"
+      ],
+      "secondaryPracticeReasons": {}
+    }
+  ],
+  "assignmentSetRevision": 4
+}

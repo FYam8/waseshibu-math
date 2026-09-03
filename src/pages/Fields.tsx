@@ -1,27 +1,13 @@
 import { Link } from 'react-router-dom'
-import questions from '../data/questions.json'
-import type { MajorQuestion } from '../types'
-import { classifyRemediationField, remediationFields } from '../data/remediation'
-import { oldQuestionAssignmentState, oldQuestionBank } from '../learningRoute'
-
-const majors=questions.questions as MajorQuestion[]
+import { level2Fields } from '../data/level2Data'
 
 export default function Fields(){
-  const oldBank=oldQuestionBank()
-  const coverage=new Map<string,Set<number>>()
-  for(const major of majors)for(const sub of major.subquestions){
-    const field=classifyRemediationField(sub.topic)
-    if(!coverage.has(field.id))coverage.set(field.id,new Set())
-    coverage.get(field.id)!.add(major.year)
-  }
   return <>
-    <div className="page-head"><div><span className="eyebrow">18 FIELDS × 4 QUESTIONS</span><h1>18分野の類題</h1><p className="muted">2019〜2026年度の出題テーマを18分野に整理した、全72問の類題バンクです。</p></div><b className="streak-badge">18分野・72問</b></div>
-    <section className="card notice-box"><b>基本は過去問が先です。</b><br/>過去問を解いて間違えた分野は「間違い直し」に自動で並びます。この一覧から直接練習することもできます。</section>
-    <section className="field-grid">{remediationFields.map((field,index)=>{
-      const years=[...(coverage.get(field.id)||new Set<number>())].sort()
-      const actual=oldBank.filter(x=>x.field===field.title),remaining=actual.filter(x=>oldQuestionAssignmentState(x.id)==='none')
-      return <article className="card field-card" key={field.id}><div className="section-head"><span className="field-number">{String(index+1).padStart(2,'0')}</span><b>類題4問</b></div><h2>{field.title}</h2><p className="muted">過去問分析での該当年度：{years.length?years.join('・'):'個別テーマを統合'}<br/>2019〜2021年度の未割当：{remaining.length}/{actual.length}小問</p><details><summary>この分野の実際の過去問</summary><div className="field-actual-list">{actual.length?actual.map(x=><Link key={x.id} to={`/past-papers?year=${x.year}&major=${x.major}`}>{oldQuestionAssignmentState(x.id)==='reserved'?'予約済':oldQuestionAssignmentState(x.id)==='completed'?'補強完了':oldQuestionAssignmentState(x.id)==='exposed'?'露出済':'未使用'}　{x.year}年度 大問{x.major}（{x.subNo}）</Link>):<span className="muted">該当問題なし</span>}</div></details><Link className="button primary" to={`/remediate?topic=${encodeURIComponent(field.title)}`}>類題4問に挑戦</Link></article>
-    })}</section>
-    <section className="card"><h2>「全年度分」の意味</h2><p>この72問は、過去問本文72問ではありません。2019〜2026年度の実際の過去問を分析して作った類題です。実際の過去問は「過去問演習」で年度ごとに問題冊子を表示します。</p></section>
+    <div className="page-head"><div><span className="eyebrow">18 FIELDS · AUDITED V7</span><h1>18分野のLevel2</h1><p className="muted">2019〜2026年度の実過去問160小問に直結するcore Level2と、因数分解support 2問です。</p></div><b className="streak-badge">core 160＋support 2</b></div>
+    <section className="card notice-box"><b>基本は過去問が先です。</b><br/>過去問を間違えた直後は、カテゴリ検索ではなく sourceQuestionId に対応する直結Level2から開始します。この一覧から分野練習もできます。</section>
+    <section className="field-grid">{level2Fields.map((field,index)=>
+      <article className="card field-card" key={field.fieldId}><div className="section-head"><span className="field-number">{String(index+1).padStart(2,'0')}</span><b>{field.masteryEligibleCount}問</b></div><h2>{field.label}</h2><p className="muted">core：{field.coreQuestionIds.length}問{field.supportQuestionIds.length?<><br/>field-support：{field.supportQuestionIds.length}問</>:null}<br/>異なる4問で4/4：{field.fourStreakReady?'可能':'問題不足'}</p><Link className="button primary" to={`/remediate?field=${encodeURIComponent(field.fieldId)}&topic=${encodeURIComponent(field.label)}`}>この分野を練習</Link></article>
+    )}</section>
+    <section className="card"><h2>旧類題の扱い</h2><p>旧72問と既存の難易度別・過去問別類題は削除していません。既存attemptとともにlegacyとして保持し、内容同一性を確認せず新Level2へ履歴を移すことはありません。</p></section>
   </>
 }

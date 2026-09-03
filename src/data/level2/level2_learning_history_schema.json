@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 7,
+  "identityRule": "questionId is immutable; fieldId is mutable metadata.",
+  "attempt": {
+    "attemptId": "uuid",
+    "questionId": "L2-2024-Q1-6",
+    "presentationId": "uuid",
+    "weaknessSessionId": "uuid|null",
+    "answeredAt": "ISO-8601",
+    "submissionIndex": 1,
+    "isFirstSubmissionForPresentation": true,
+    "isCorrect": true,
+    "usedHintBeforeAnswer": false,
+    "usedExplanationBeforeAnswer": false,
+    "contentRevisionAtAttempt": 1,
+    "gradingRevisionAtAttempt": 1,
+    "fieldIdAtAttempt": "simultaneous-equations",
+    "fieldAssignmentRevisionAtAttempt": 1,
+    "revealedAnswerBeforeAnswer": false,
+    "practiceFieldIdAtAttempt": "factoring|null",
+    "questionBank": "core160|field-support|legacy72"
+  },
+  "questionStats": {
+    "<questionId>": {
+      "attemptCount": 0,
+      "correctCount": 0,
+      "qualifyingCorrectCount": 0,
+      "lastAttemptAt": null,
+      "lastResult": null,
+      "note": "seen is derived as attemptCount > 0; do not persist a separate seen flag."
+    }
+  },
+  "weaknessSession": {
+    "sessionId": "uuid",
+    "triggerSourceQuestionId": "2024-Q1-6",
+    "directLevel2QuestionId": "L2-2024-Q1-6",
+    "fieldIdAtSessionStart": "simultaneous-equations",
+    "fieldAssignmentRevisionAtSessionStart": 1,
+    "currentStreak": 0,
+    "currentStreakQuestionIds": [],
+    "bestStreak": 0,
+    "status": "active"
+  },
+  "masteryEvent": {
+    "fieldId": "simultaneous-equations",
+    "achievedAt": "ISO-8601",
+    "fieldAssignmentRevision": 1,
+    "questionIds": [
+      "q1",
+      "q2",
+      "q3",
+      "q4"
+    ],
+    "label": "いったん克服"
+  },
+  "rules": {
+    "qualifyingCorrect": "first submission AND correct AND no hint AND no explanation AND answer not revealed",
+    "nonQualifyingPresentation": "wrong, hint-used, explanation-used, or answer-revealed => currentStreak becomes 0",
+    "historyRetention": "attempts and questionStats are never deleted by wrong answers or recategorization",
+    "recategorization": "change only field assignment metadata; attempts remain keyed by questionId",
+    "seenAfterRecategorization": "seen = attemptCount > 0, so a solved item never becomes unseen merely because it moved fields",
+    "activeSessionDuringRecategorization": "active session keeps its field/revision snapshot; future sessions use the latest assignment",
+    "masteryAfterRecategorization": "old masteryEvent remains historical, but if its assignment revision is older than current it is shown as 要再確認 rather than current mastery",
+    "contentClarification": "wording/figure/explanation-only change keeps questionId and increments contentRevision",
+    "mathematicalTaskChange": "changed givens/target/correct answer => new questionId; old item becomes deprecated but history stays",
+    "gradingChange": "answer-acceptance-only change keeps questionId and increments gradingRevision",
+    "shortageField": "Keep all attempts and allow practice, but do not create a masteryEvent while fewer than 4 eligible distinct questions exist in the current field.",
+    "secondaryPracticeHistory": "An attempt from a secondary practice pool is stored under the same immutable questionId. It is not duplicated under the field. practiceFieldIdAtAttempt is only an analytics snapshot.",
+    "practiceTagChange": "Adding/removing a practiceFieldId never deletes or rewrites attempts. Past attempts remain visible because questionId is unchanged.",
+    "supportQuestionHistory": "Support items use immutable SUP-* questionIds and the same attempt schema. Adding/removing a support item from a field never deletes its past history.",
+    "sourceDirectMapping": "Only core160 questions participate in sourceQuestionId -> direct Level2 mapping. Field-support questions have no sourceQuestionId."
+  }
+}

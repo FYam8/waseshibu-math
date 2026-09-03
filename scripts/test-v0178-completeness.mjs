@@ -20,18 +20,18 @@ const preflight=read('src/preflight.ts')
 const fail=(message)=>{throw new Error(message)}
 
 // Version consistency.
-assert.equal(pkg.version,'0.17.11','package.json version')
-assert.equal(lock.version,'0.17.11','package-lock top version')
-assert.equal(lock.packages?.['']?.version,'0.17.11','package-lock root package version')
-assert.match(version,/APP_VERSION='0\.17\.11'/,'APP_VERSION')
+assert.equal(pkg.version,'0.18.0','package.json version')
+assert.equal(lock.version,'0.18.0','package-lock top version')
+assert.equal(lock.packages?.['']?.version,'0.18.0','package-lock root package version')
+assert.match(version,/APP_VERSION='0\.18\.0'/,'APP_VERSION')
 
 // Migration/data protection.
-assert.match(migration,/CURRENT_DATA_VERSION=6/,'dataVersion 6')
+assert.match(migration,/CURRENT_DATA_VERSION=7/,'dataVersion 7')
 for(const token of [
   'waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily',
   'waseshibu-math-exam-scores','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1',
   'waseshibu-math-guided-review-v1','waseshibu-math-guided-progress-v2',
-  'waseshibu-math-remediation-progress-v1'
+  'waseshibu-math-remediation-progress-v1','waseshibu-math-level2-history-v1'
 ]) assert.ok(migration.includes(token),`migration key missing: ${token}`)
 assert.ok(migration.includes('MIGRATION_BACKUP_STORAGE_KEY'),'pre-migration backup missing')
 assert.ok(migration.includes('for(const [key,value] of before)'),'migration rollback missing')

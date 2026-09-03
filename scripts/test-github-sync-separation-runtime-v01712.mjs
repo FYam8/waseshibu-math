@@ -36,7 +36,7 @@ const legacyLocal={
   'waseshibu-math-sync-dirty-revision':'7',
   'waseshibu-github-sync-config':JSON.stringify({owner:'legacy-owner',repo:'legacy-repo',branch:'main'}),
   'waseshibu-github-token-local':'legacy-token-placeholder',
-  'waseshibu-math-active-app-version':'0.17.12'
+  'waseshibu-math-active-app-version':'0.18.0'
 }
 const legacySession={
   'waseshibu-github-token-session':'legacy-session-token-placeholder'

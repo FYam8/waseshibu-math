@@ -1,51 +1,57 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import MathAnswerInput from '../components/MathAnswerInput'
-import { getRemediationForSource } from '../data/remediation'
-import { isAcceptedAnswer } from '../answer'
+import { classifyRemediationField } from '../data/remediation'
+import { currentFieldId, level2FieldById, level2FigureUrl, resolveLevel2FieldId, type Level2Question } from '../data/level2Data'
+import { isAcceptedLevel2Answer } from '../level2Answer'
+import { markLevel2Assistance, recordLevel2Attempt, selectLevel2Question, type Level2Session } from '../level2History'
 import { createRecordId, loadAttempts, saveAttempt } from '../storage'
 import { updateGuidedProgress } from '../guidedReview'
-import { ensureRemediationProgress, recordRemediationAttempt } from '../remediationProgress'
+
+type Presentation={question:Level2Question;presentationId:string;session:Level2Session;key:string}
 
 export default function Remediation(){
-  const [params]=useSearchParams(),topic=params.get('topic')||'式の計算・文字式',source=params.get('source'),sourceQuestion=params.get('q')||'',remediation=getRemediationForSource(topic,sourceQuestion),field=remediation.field,questions=remediation.questions,difficulty=remediation.difficulty
+  const [params]=useSearchParams(),topic=params.get('topic')||'式の計算・文字式',source=params.get('source'),sourceQuestion=params.get('q')||''
+  const requestedField=params.get('field')||resolveLevel2FieldId(topic)||resolveLevel2FieldId(classifyRemediationField(topic).title)||'expressions'
   const latestSourceAttemptAt=sourceQuestion?loadAttempts().filter(a=>a.questionId===`exam-${sourceQuestion}`&&a.status!=='correct').sort((a,b)=>b.at.localeCompare(a.at))[0]?.at:undefined
-  const initial=sourceQuestion?ensureRemediationProgress(sourceQuestion,field.id,difficulty,questions.length,latestSourceAttemptAt):undefined
-  const [index,setIndex]=useState(initial?.currentIndex||0),[answer,setAnswer]=useState(''),[result,setResult]=useState<boolean|null>(null)
-  const [streak,setStreak]=useState(initial?.streak||0),[total,setTotal]=useState(initial?.attemptCount||0),[finished,setFinished]=useState(initial?.status==='completed')
-  const q=questions[index%Math.max(1,questions.length)]
-  const submit=()=>{if(result!==null||!answer.trim())return;setResult(isAcceptedAnswer(answer,q.answer,q.acceptedAnswers))}
-  const next=()=>{
-    if(result===null)return
-    const questionId=`remedy-${sourceQuestion||field.id}-${difficulty}-${index}`
-    saveAttempt({id:createRecordId(`remedy-${index}`),questionId,mode:'multi',topic,status:result?'correct':'wrong',mistakeTag:result?undefined:'解法未習得',at:new Date().toISOString()})
-    if(sourceQuestion){
-      const progress=recordRemediationAttempt(sourceQuestion,field.id,difficulty,questions.length,questionId,result,latestSourceAttemptAt)
-      // Guided側の既存参照も同じ値へ同期する。重複問題では進めない。
-      updateGuidedProgress(sourceQuestion,progress.status==='completed'?{practiceStreak:progress.streak,mastery:'consolidated'}:{practiceStreak:progress.streak})
-      setTotal(progress.attemptCount);setStreak(progress.streak);setIndex(progress.currentIndex)
-      if(progress.status==='completed'){
-        saveAttempt({id:createRecordId('mastery'),questionId:`mastery-${sourceQuestion}`,mode:'multi',topic,status:'correct',at:new Date().toISOString()})
-        setFinished(true);return
-      }
-    }else{
-      const nextStreak=result?streak+1:0
-      setTotal(v=>v+1)
-      if(nextStreak>=4){
-        saveAttempt({id:createRecordId('mastery'),questionId:`mastery-${topic}`,mode:'multi',topic,status:'correct',at:new Date().toISOString()})
-        setStreak(4);setFinished(true);return
-      }
-      setStreak(nextStreak);setIndex(v=>(v+1)%questions.length)
-    }
-    setAnswer('');setResult(null)
+  const [presentation,setPresentation]=useState<Presentation>(()=>selectLevel2Question(sourceQuestion||null,requestedField,localStorage,latestSourceAttemptAt))
+  const [answer,setAnswer]=useState(''),[result,setResult]=useState<boolean|null>(null)
+  const [usedHint,setUsedHint]=useState(false),[usedExplanation,setUsedExplanation]=useState(false),[revealedAnswer,setRevealedAnswer]=useState(false)
+  const [session,setSession]=useState(presentation.session),[finished,setFinished]=useState(presentation.session.status==='completed')
+  const q=presentation.question,fieldId=session.fieldIdAtSessionStart||currentFieldId(q.id),field=level2FieldById.get(fieldId)
+
+  const submit=()=>{
+    if(result!==null||!answer.trim()||finished)return
+    const correct=isAcceptedLevel2Answer(answer,q)
+    const recorded=recordLevel2Attempt({key:presentation.key,question:q,presentationId:presentation.presentationId,answer,correct,usedHint,usedExplanation,revealedAnswer,firstSubmission:true,practiceFieldId:fieldId})
+    saveAttempt({id:createRecordId('level2'),questionId:q.id,mode:'multi',topic:field?.label||topic,status:correct?'correct':'wrong',mistakeTag:correct?undefined:'解法未習得',answer,at:recorded.attempt.answeredAt})
+    if(sourceQuestion)updateGuidedProgress(sourceQuestion,recorded.completed?{practiceStreak:4,mastery:'consolidated'}:{practiceStreak:recorded.session.currentStreak})
+    if(recorded.completed)saveAttempt({id:createRecordId('mastery'),questionId:`mastery-${sourceQuestion||fieldId}`,mode:'multi',topic:field?.label||topic,status:'correct',at:recorded.attempt.answeredAt})
+    setResult(correct);setSession(recorded.session);if(recorded.completed)setFinished(true)
   }
-  if(finished)return <section className="card mastery-card"><span className="eyebrow">MASTERED</span><h1>4問連続正解</h1><p><b>{field.title}</b>を克服済みにしました。4つの異なる類題を順に正解した記録を保存しています。</p><div className="actions"><Link className="button primary" to={source?`/reinforce?source=${source}`:'/mistakes'}>{source?'弱点補強へ戻る':'次の弱点へ'}</Link><Link className="button" to="/">ホームで次の行動を見る</Link></div></section>
+  const next=()=>{
+    if(result===null||finished)return
+    const selected=selectLevel2Question(sourceQuestion||null,requestedField)
+    setPresentation(selected);setSession(selected.session);setAnswer('');setResult(null);setUsedHint(false);setUsedExplanation(false);setRevealedAnswer(false)
+  }
+  const useHint=()=>{setUsedHint(true);const next=markLevel2Assistance(presentation.key);if(next)setSession(next)}
+  const reveal=()=>{setUsedExplanation(true);setRevealedAnswer(true);const next=markLevel2Assistance(presentation.key);if(next)setSession(next)}
+  const restart=()=>{const selected=selectLevel2Question(sourceQuestion||null,requestedField,localStorage,latestSourceAttemptAt,true);setPresentation(selected);setSession(selected.session);setAnswer('');setResult(null);setUsedHint(false);setUsedExplanation(false);setRevealedAnswer(false);setFinished(false)}
+  if(finished)return <section className="card mastery-card"><span className="eyebrow">MASTERED FOR NOW</span><h1>4/4達成</h1><p><b>{field?.label||topic}</b>は、いったん克服しました。異なる4つのquestionIdを自力で連続正解した履歴を保存しています。</p><p className="muted">後の過去問で再度間違えた場合は、弱点として新しい0/4を開始します。</p><div className="actions"><Link className="button primary" to={source?`/reinforce?source=${source}`:'/mistakes'}>{source?'弱点補強へ戻る':'次の弱点へ'}</Link><button className="button" onClick={restart}>新しい0/4で再練習</button><Link className="button" to="/">ホームへ</Link></div></section>
+  const problemFigure=level2FigureUrl(q.problemFigure),explanationFigure=level2FigureUrl(q.explanationFigure)
   return <>
-    <div className="page-head"><div><span className="eyebrow">4-QUESTION REMEDIATION</span><h1>{field.title}</h1><p className="muted">過去問基準の難易度：{difficulty}</p>{topic!==field.title&&<p className="muted">過去問の未解決：{topic}</p>}</div><div className="streak-badge">連続 {streak}/4</div></div>
-    <div className="progress-track"><i style={{width:`${streak/4*100}%`}}/></div>
-    <article className="card practice-card"><div className="qtop"><div><span className="eyebrow">連続正解チャレンジ {Math.min(streak+1,4)}/4</span><h2>{field.title}</h2></div><span className="progress-pill">挑戦 {total+1}</span></div><p className="problem">{q.prompt}</p><MathAnswerInput value={answer} onChange={setAnswer} onEnter={submit} disabled={result!==null} autoFocus/>
-      {result===null?<div className="actions"><button className="button primary" onClick={submit} disabled={!answer.trim()}>採点する</button></div>:<div className={`result ${result?'ok':'ng'}`}><h3>{result?'○ 正解':'× 不正解・連続記録を0に戻します'}</h3><p><b>正答：</b>{q.answer}</p><p>{q.explanation}</p><button className="button primary" onClick={next}>{result?'次の類題へ':'解法を確認して次へ'}</button></div>}
+    <div className="page-head"><div><span className="eyebrow">LEVEL 2 · AUDITED V7</span><h1>{field?.label||topic}</h1><p className="muted">{sourceQuestion?`過去問 ${sourceQuestion} の直結Level2から開始`:'未出優先の分野練習'}</p></div><div className="streak-badge">連続 {session.currentStreak}/4</div></div>
+    <div className="progress-track"><i style={{width:`${session.currentStreak/4*100}%`}}/></div>
+    <article className="card practice-card">
+      <div className="qtop"><div><span className="eyebrow">{q.bankType==='field-support'?'FIELD SUPPORT':'CORE LEVEL 2'}</span><h2>{q.id}</h2></div><span className="progress-pill">{Math.min(session.currentStreak+1,4)}/4</span></div>
+      {q.context&&<p className="problem-context">{q.context}</p>}<p className="problem">{q.prompt}</p>
+      {problemFigure&&<figure className="level2-figure"><img src={problemFigure} alt={`${q.id}の問題図`}/></figure>}
+      <MathAnswerInput value={answer} onChange={setAnswer} onEnter={submit} disabled={result!==null} autoFocus/>
+      {usedHint&&<div className="hint"><b>ヒント：</b>条件と求めるものを分け、対応する公式・性質を1つずつ確認しましょう。</div>}
+      {(usedExplanation||revealedAnswer)&&result===null&&<div className="answer-reveal"><span>解説・正答を確認しました</span><strong>{q.answer}</strong><p>{q.explanation}</p></div>}
+      {result===null?<div className="actions"><button className="button primary" onClick={submit} disabled={!answer.trim()}>採点する</button><button className="button" onClick={useHint}>ヒント</button><button className="button" onClick={reveal}>答え・解説を見る</button></div>:
+        <div className={`result ${result?'ok':'ng'}`}><h3>{result?'○ 正解':'× 不正解・連続記録は0/4'}</h3><p><b>正答：</b>{q.answer}</p><p>{q.explanation}</p>{explanationFigure&&explanationFigure!==problemFigure&&<figure className="level2-figure"><img src={explanationFigure} alt={`${q.id}の解説図`}/></figure>}<p className="muted">{result&&!usedHint&&!usedExplanation&&!revealedAnswer?'この正解は自力連続に加算されました。':'履歴は保存しましたが、このpresentationは自力連続には加算されません。'}</p><button className="button primary" onClick={next}>次の問題へ</button></div>}
     </article>
-    <section className="card"><h2>克服ルール</h2><p>元問題のA/B/C判定と中心技能に合わせた4問を、異なる問題として順番に連続正解すると克服です。途中で間違えた場合は0/4へ戻ります。途中でHomeへ戻ったり再読み込みしても、次の問題位置から再開します。</p></section>
+    <section className="card"><h2>4/4のルール</h2><p>異なる4問題を、初回回答・自力・ヒント未使用・解説未使用・答え未表示で連続正解すると「いったん克服」です。誤答や補助利用では0/4へ戻りますが、過去のattemptは削除されません。</p></section>
   </>
 }

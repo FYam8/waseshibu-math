@@ -27,6 +27,6 @@ assert.doesNotMatch(remedy,/RemediationFigure/,'Remediation must keep experiment
 assert.match(home,/item\.streak>0\|\|item\.attemptCount>0/,'Started remediation at 0/4 after a wrong attempt must remain resumable from Home')
 assert.match(data,/正方形ABCDの辺BCを1辺として、正方形の内側に正三角形BCEを作ります。∠ABEを求めなさい。',answer:'30'/,'2024-Q1-5 variant 1 must place the equilateral triangle inside the square for the 30 degree answer')
 assert.match(data,/正方形ABCDの辺BCを1辺として、正方形の内側に正三角形BCEを作り、対角線BDを引きます。∠DBEを求めなさい。',answer:'15'/,'2024-Q1-5 variant 3 must place the equilateral triangle inside the square for the 15 degree answer')
-assert.match(version,/APP_VERSION='0\.17\.11'/,'Version must be 0.17.10')
+assert.match(version,/APP_VERSION='0\.18\.0'/,'Version must be 0.18.0')
 
 console.log('PASS: v0.17.11 browser-reported bugfix guards (01-08 + remediation figures hidden)')

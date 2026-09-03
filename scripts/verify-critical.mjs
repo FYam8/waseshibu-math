@@ -39,8 +39,8 @@ const focus=await loadModule('src/data/questionFocus.ts')
 const targetStrategy=await loadModule('src/targetStrategy.ts')
 const version=await loadModule('src/version.ts')
 
-assert.equal(version.APP_VERSION,'0.17.12')
-assert.equal(migration.CURRENT_DATA_VERSION,6)
+assert.equal(version.APP_VERSION,'0.18.0')
+assert.equal(migration.CURRENT_DATA_VERSION,7)
 assert.equal(guided.GUIDED_REVIEW_KEY,'waseshibu-math-guided-review-v1')
 assert.equal(guided.GUIDED_PROGRESS_KEY,'waseshibu-math-guided-progress-v2')
 assert.equal(guided.guidedSolutionCount(),160)
@@ -73,7 +73,7 @@ const v2Seed={
 }
 const v2=new MemoryStorage(v2Seed),migrated=migration.runDataMigrations(v2)
 assert.equal(migrated.ok,true)
-assert.equal(v2.getItem('waseshibu-math-data-version'),'6')
+assert.equal(v2.getItem('waseshibu-math-data-version'),'7')
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-attempts')),JSON.parse(v2Seed['waseshibu-math-attempts']))
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-exam-scores')),JSON.parse(v2Seed['waseshibu-math-exam-scores']))
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-guided-review-v1')),{})
@@ -164,4 +164,4 @@ assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTar
 for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100)
 
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`v0.17.12, data v6, 160 GuidedSolutions, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK, integrity: 160/160`)
+console.log(`v0.18.0, data v7, 160 GuidedSolutions + audited Level2 160/support 2, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK`)

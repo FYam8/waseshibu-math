@@ -33,7 +33,7 @@ const layout=read('src/components/Layout.tsx')
 assert.equal(layout.includes('SyncBadge'),false,'SyncBadge must not be rendered')
 assert.equal(layout.includes('学習データはこの端末に保存されます。'),true,'local-only storage message must remain')
 const migration=read('src/dataMigration.ts')
-assert.equal(migration.includes('CURRENT_DATA_VERSION=6'),true,'data version must remain 6')
+assert.equal(migration.includes('CURRENT_DATA_VERSION=7'),true,'data version must be 7')
 
 const forbiddenProductTokens=[
   'https://api.github.com/',
@@ -83,4 +83,4 @@ assert.equal(readme.includes('GitHubアカウント、Private Repository、PAT�
 assert.equal(readme.includes('旧GitHub接続設定・PAT・dirty状態がブラウザに残っていても自動削除せず、通常利用では参照しません。'),true,'README must distinguish unused legacy GitHub connection state')
 assert.equal(readme.includes('waseshibu-math-sync-meta')&&readme.includes('resetVersion 情報は既存学習データとの互換性維持のため端末内でのみ参照を残し、GitHubへの通信・同期には使用しません。'),true,'README must explain local-only sync-meta compatibility use')
 
-console.log('GITHUB SYNC SEPARATION VERIFIED: localStorage-only learning flow, data v6 preserved, production bundle clean')
+console.log('GITHUB SYNC SEPARATION VERIFIED: localStorage-only learning flow, data v7 preserved, production bundle clean')
