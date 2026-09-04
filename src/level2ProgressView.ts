@@ -1,3 +1,5 @@
+import { requiredPracticeCount } from './practiceLoad'
+
 export type Level2SessionSummary={
   triggerSourceQuestionId:string|null
   sourceAttemptAt?:string
@@ -15,10 +17,13 @@ export function loadLevel2SessionSummaries(storage:Pick<Storage,'getItem'>=local
       if(!value||typeof value!=='object')return []
       const session=value as Record<string,unknown>
       const completed=Array.isArray(session.completedQuestionIds)?session.completedQuestionIds.map(String):Array.isArray(session.currentStreakQuestionIds)?session.currentStreakQuestionIds.map(String):[]
+      const triggerSourceQuestionId=typeof session.triggerSourceQuestionId==='string'?session.triggerSourceQuestionId:null
+      const fieldIdAtSessionStart=typeof session.fieldIdAtSessionStart==='string'?session.fieldIdAtSessionStart:''
       return [{
-        triggerSourceQuestionId:typeof session.triggerSourceQuestionId==='string'?session.triggerSourceQuestionId:null,
+        triggerSourceQuestionId,
         sourceAttemptAt:typeof session.sourceAttemptAt==='string'?session.sourceAttemptAt:undefined,
-        requiredCount:Math.max(1,Math.min(4,Number(session.requiredCount)||4)),
+        // 旧セッションも、実際に開いたときと同じ負荷判定で表示する。
+        requiredCount:Math.max(1,Math.min(4,Number(session.requiredCount)||requiredPracticeCount(triggerSourceQuestionId,fieldIdAtSessionStart))),
         completedQuestionIds:completed,
         status:session.status==='completed'?'completed':'active',
         updatedAt:typeof session.updatedAt==='string'?session.updatedAt:new Date(0).toISOString()

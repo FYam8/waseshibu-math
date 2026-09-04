@@ -77,7 +77,7 @@ assert.match(pastPapersUi,/q\.subquestions\.some\(sub=>keyFor\(q,sub\.no\)===rem
 assert.match(pastPapersUi,/onPointerDown=\{e=>e\.preventDefault\(\)\}/,'past-paper keypad must not blur the selected answer field on touch')
 
 const out=path.join(os.tmpdir(),`waseshibu-level2-${process.pid}.mjs`)
-await build({stdin:{contents:`export * from ${JSON.stringify(path.resolve('src/level2History.ts'))};export {isAcceptedLevel2Answer} from ${JSON.stringify(path.resolve('src/level2Answer.ts'))};export * from ${JSON.stringify(path.resolve('src/data/level2Data.ts'))};`,resolveDir:process.cwd(),loader:'ts'},bundle:true,platform:'node',format:'esm',outfile:out,define:{'import.meta.env.BASE_URL':'"./"'}})
+await build({stdin:{contents:`export * from ${JSON.stringify(path.resolve('src/level2History.ts'))};export * from ${JSON.stringify(path.resolve('src/level2ProgressView.ts'))};export {isAcceptedLevel2Answer} from ${JSON.stringify(path.resolve('src/level2Answer.ts'))};export * from ${JSON.stringify(path.resolve('src/data/level2Data.ts'))};`,resolveDir:process.cwd(),loader:'ts'},bundle:true,platform:'node',format:'esm',outfile:out,define:{'import.meta.env.BASE_URL':'"./"'}})
 const mod=await import(pathToFileURL(out).href+`?t=${Date.now()}`)
 for(const q of [...core,...support]){
   assert.equal(mod.isAcceptedLevel2Answer(q.answer,q),true,`${q.id} canonical answer must pass`)
@@ -173,6 +173,7 @@ legacyHeavyStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify({schemaVe
   sessionId:'legacy-heavy',triggerSourceQuestionId:'2024-Q5-1',directLevel2QuestionId:'L2-2024-Q5-1',fieldIdAtSessionStart:'angles-circles',fieldAssignmentRevisionAtSessionStart:1,
   currentStreak:0,currentStreakQuestionIds:[],bestStreak:0,status:'active',lastQuestionId:null,lastPresentedIds:[],bagRemaining:[],updatedAt:'2026-09-01T00:00:00.000Z'
 }}}))
+assert.equal(mod.loadLevel2SessionSummaries(legacyHeavyStore)[0].requiredCount,2,'Today/ETA summary must match the two-question target before a legacy session is opened')
 assert.equal(mod.selectLevel2Question('2024-Q5-1','angles-circles',legacyHeavyStore).session.requiredCount,2,'legacy heavy session without requiredCount must migrate to two questions')
 
 const legacyHeavyCompleteStore=new MemoryStorage()
