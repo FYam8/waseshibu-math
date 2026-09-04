@@ -58,6 +58,9 @@ for(const sourceQuestionId of requiredProblemTables){
   assert.equal(q.renderHash,hash({context:q.context,prompt:q.prompt,problemFigure:q.problemFigure,hintFigure:q.hintFigure,explanationFigure:q.explanationFigure,problemTable:q.problemTable}),`${sourceQuestionId} renderHash must include the current table`)
 }
 const remediationUi=fs.readFileSync('src/pages/Remediation.tsx','utf8')
+const mathAnswerInputUi=fs.readFileSync('src/components/MathAnswerInput.tsx','utf8')
+const pastPapersUi=fs.readFileSync('src/pages/PastPapers.tsx','utf8')
+const reinforcementUi=fs.readFileSync('src/pages/Reinforcement.tsx','utf8')
 assert.match(remediationUi,/level2FigureUrl\(q\.hintFigure\)/,'hintFigure must be read by the practice UI')
 assert.match(remediationUi,/alt=\{`\$\{q\.id\}のヒント図`\}/,'hintFigure must be rendered after hint use')
 assert.match(remediationUi,/usedExplanation\|\|revealedAnswer[\s\S]*explanationFigure/,'answer reveal must render its explanation figure before grading')
@@ -65,6 +68,13 @@ assert.match(remediationUi,/q\.problemTable[\s\S]*<table className="level2-table
 assert.match(remediationUi,/isOfficial[\s\S]*<FocusedQuestionView/,'official practice questions must render the verified official-page crop')
 assert.match(remediationUi,/isOfficial\?isExamAnswerCorrect/,'official practice questions must use official answer grading')
 assert.match(remediationUi,/isOfficial\?`target-\$\{q\.id\}`:q\.id/,'official practice history must use the canonical target-prefixed ID')
+for(const symbol of ['≦','≧','＜','＞','＝'])assert.ok(mathAnswerInputUi.includes(`label:'${symbol}'`),`math keypad must provide ${symbol}`)
+for(const symbol of ['≦','≧','＜','＞','＝'])assert.ok(pastPapersUi.includes(`['${symbol}'`),`past-paper keypad must provide ${symbol}`)
+assert.match(reinforcementUi,/<MathAnswerInput value=\{answers\[item\.id\]\|\|''\}/,'official reinforcement must use the math keypad')
+assert.match(mathAnswerInputUi,/onPointerDown=\{e=>e\.preventDefault\(\)\}/,'math keypad must retain the active input cursor on touch')
+assert.match(pastPapersUi,/focusedInputKey=useRef<string>/,'past-paper keypad must remember the selected answer field')
+assert.match(pastPapersUi,/q\.subquestions\.some\(sub=>keyFor\(q,sub\.no\)===remembered\)/,'remembered field must be limited to the visible major question')
+assert.match(pastPapersUi,/onPointerDown=\{e=>e\.preventDefault\(\)\}/,'past-paper keypad must not blur the selected answer field on touch')
 
 const out=path.join(os.tmpdir(),`waseshibu-level2-${process.pid}.mjs`)
 await build({stdin:{contents:`export * from ${JSON.stringify(path.resolve('src/level2History.ts'))};export {isAcceptedLevel2Answer} from ${JSON.stringify(path.resolve('src/level2Answer.ts'))};export * from ${JSON.stringify(path.resolve('src/data/level2Data.ts'))};`,resolveDir:process.cwd(),loader:'ts'},bundle:true,platform:'node',format:'esm',outfile:out,define:{'import.meta.env.BASE_URL':'"./"'}})
@@ -90,6 +100,10 @@ const officialRuntime=mod.level2QuestionById.get('2021-Q5-1')
 assert.equal(officialRuntime?.bankType,'past-paper')
 assert.equal(officialRuntime?.answer,'(24/13,0)')
 assert.equal(mod.directQuestionForSource('2021-Q5-1')?.id,'2021-Q5-1')
+const rangeRuntime=mod.level2QuestionById.get('L2-2022-Q1-4')
+assert.ok(rangeRuntime,'range-answer Level2 question must remain selectable')
+assert.equal(mod.isAcceptedLevel2Answer('0≦y≦32',rangeRuntime),true,'Japanese inequality symbols must pass')
+assert.equal(mod.isAcceptedLevel2Answer('0<=y<=32',rangeRuntime),true,'ASCII inequality symbols must pass')
 
 // A saved 3/4 streak containing backlog questions must not complete a new official question.
 const migratedStore=new MemoryStorage()
@@ -140,7 +154,6 @@ for(const wrongAt of [2,3,4]){
   assert.equal(rotationHistory.attempts.length,wrongAt,`position ${wrongAt}: every attempt must be retained`)
   assert.equal(rotationHistory.sessions[step.key].currentStreak,0,`position ${wrongAt}: only streak must reset`)
 }
-
 // An older saved session may have lastQuestionId but no shuffle-bag arrays.
 // It must resume away from the last/first question instead of treating it as new.
 const legacyStore=new MemoryStorage()
@@ -154,7 +167,6 @@ legacyStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify(legacyRaw))
 legacyStep=mod.selectLevel2Question('2024-Q1-6','expressions',legacyStore)
 assert.notEqual(legacyStep.question.id,legacyFirst,'legacy session must not jump to its first problem')
 assert.equal(mod.loadLevel2History(legacyStore).attempts.length,1,'legacy-session normalization must retain attempts')
-
 const storage=new MemoryStorage()
 let selected=mod.selectLevel2Question('2024-Q1-6','expressions',storage,'2026-09-03T00:00:00.000Z')
 assert.equal(selected.question.id,'L2-2024-Q1-6','source question must open direct Level2')
