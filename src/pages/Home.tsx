@@ -6,8 +6,8 @@ import { loadPrepState, runExamIntegrityCheck, savePrepState } from '../prefligh
 import { buildNextDayTasks, buildOptionalNextTask, buildTodayTasks, nextDayPlanSummary, startNextDayPlan, todayPlanSummary } from '../dailyPlan'
 import { gradeInTarget, storedExamItems, strategyForStoredExam, targetGoalLabel, targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
 import { buildGoalDayEstimates } from '../targetEta'
-import { inProgressRemediations } from '../remediationProgress'
-import { remediationFields } from '../data/remediation'
+import { inProgressLevel2Sessions } from '../level2History'
+import { level2FieldById } from '../data/level2Data'
 
 
 
@@ -35,19 +35,19 @@ export default function Home(){
   const goalDayEstimates=useMemo(()=>buildGoalDayEstimates(),[prefs.target])
   const prepInProgress=!prep.completed&&!prep.skipped&&(prep.index>0||Object.keys(prep.answers).length>0)
   const optionalOldDraft=optionalOldYearDraftAction()
-  const activeRemediations=inProgressRemediations().filter(item=>{
-    const match=item.sourceQuestionId.match(/^(\d{4})-/)
+  const activeRemediations=inProgressLevel2Sessions().filter(item=>{
+    const match=item.triggerSourceQuestionId?.match(/^(\d{4})-/)
     const year=match?Number(match[1]):0
-    return year>=2022&&year<=2026&&(item.streak>0||item.attemptCount>0)
+    return year>=2022&&year<=2026
   })
-  const preferredRemediation=activeRemediations.find(item=>unresolved&&item.sourceQuestionId.startsWith(`${unresolved.year}-`))||activeRemediations[0]
-  const preferredRemediationField=preferredRemediation?remediationFields.find(f=>f.id===preferredRemediation.field):undefined
-  const preferredRemediationYear=preferredRemediation?Number(preferredRemediation.sourceQuestionId.slice(0,4)):undefined
-  const preferredRemediationMatch=preferredRemediation?.sourceQuestionId.match(/^(\d{4})-Q(\d+)-(.+)$/)
-  const preferredRemediationSourceLabel=preferredRemediationMatch?`${preferredRemediationMatch[1]}年度 大問${preferredRemediationMatch[2]}（${preferredRemediationMatch[3]}）`:preferredRemediation?.sourceQuestionId
+  const preferredRemediation=activeRemediations.find(item=>unresolved&&item.triggerSourceQuestionId?.startsWith(`${unresolved.year}-`))||activeRemediations[0]
+  const preferredRemediationField=preferredRemediation?level2FieldById.get(preferredRemediation.fieldIdAtSessionStart):undefined
+  const preferredRemediationYear=preferredRemediation?.triggerSourceQuestionId?Number(preferredRemediation.triggerSourceQuestionId.slice(0,4)):undefined
+  const preferredRemediationMatch=preferredRemediation?.triggerSourceQuestionId?.match(/^(\d{4})-Q(\d+)-(.+)$/)
+  const preferredRemediationSourceLabel=preferredRemediationMatch?`${preferredRemediationMatch[1]}年度 大問${preferredRemediationMatch[2]}（${preferredRemediationMatch[3]}）`:preferredRemediation?.triggerSourceQuestionId
   const remediationResume=preferredRemediation?{
-    to:`/remediate?topic=${encodeURIComponent(preferredRemediationField?.title||preferredRemediation.field)}&source=${preferredRemediationYear}&q=${encodeURIComponent(preferredRemediation.sourceQuestionId)}`,
-    label:`${preferredRemediationField?.title||'弱点'}の類題 ${preferredRemediation.streak}/4 の続き`
+    to:`/remediate?topic=${encodeURIComponent(preferredRemediationField?.label||preferredRemediation.fieldIdAtSessionStart)}&source=${preferredRemediationYear}&q=${encodeURIComponent(preferredRemediation.triggerSourceQuestionId||'')}`,
+    label:`${preferredRemediationField?.label||'弱点'}の類題 ${preferredRemediation.completedQuestionIds.length}/${preferredRemediation.requiredCount} の続き`
   }:null
   const resume=prepInProgress?{to:'/setup-check',label:`準備問題 ${prep.index+1}/5 から続ける`}:null
   const setTarget=(target:60|70|75)=>{const next={...prefs,target};setPrefs(next);savePreferences(next)}
@@ -91,7 +91,7 @@ export default function Home(){
         :<>
           <div className="today-complete">
             <b>{remediationResume?'✓ 今日の予定分は完了しました':'✓ 本日の必須課題は完了です'}</b>
-            <p>{remediationResume?`学習全体には続きがあります。途中の類題は ${preferredRemediation?.streak||0}/4 で保存済みです。次回も同じ位置から再開できます。`:'今日の必須課題は完了です。学習全体に続きがある場合は「次のアクション」から進められます。'}</p>
+            <p>{remediationResume?`学習全体には続きがあります。途中の類題は ${preferredRemediation?.completedQuestionIds.length||0}/${preferredRemediation?.requiredCount||0} で保存済みです。次回も同じ固定セットから再開できます。`:'今日の必須課題は完了です。学習全体に続きがある場合は「次のアクション」から進められます。'}</p>
             <div className="actions">
               <Link className="button" to={optionalNext?.to||'/years'}>{optionalNext?'時間があれば次のアクションへ':'時間があれば先へ進む'}</Link>
               {!nextDaySummary.started&&<button className="button" type="button" onClick={startAhead}>次の日の分も先取りする</button>}
@@ -112,9 +112,9 @@ export default function Home(){
     </section>
 
     {remediationResume&&<section className="card remediation-resume-card">
-      <div className="section-head"><div><span className="eyebrow">IN-PROGRESS REMEDIATION</span><h2>{preferredRemediationField?.title||'弱点'}の類題を続ける</h2></div><b>{preferredRemediation?.streak}/4</b></div>
+      <div className="section-head"><div><span className="eyebrow">IN-PROGRESS REMEDIATION</span><h2>{preferredRemediationField?.label||'弱点'}の類題を続ける</h2></div><b>{preferredRemediation?.completedQuestionIds.length}/{preferredRemediation?.requiredCount}</b></div>
       <p>{preferredRemediationSourceLabel}の弱点補強が途中です。正式な進捗は保存済みです。</p>
-      <div className="actions"><Link className="button primary" to={remediationResume.to}>類題 {preferredRemediation?.streak}/4 の続きから</Link></div>
+      <div className="actions"><Link className="button primary" to={remediationResume.to}>類題 {preferredRemediation?.completedQuestionIds.length}/{preferredRemediation?.requiredCount} の続きから</Link></div>
     </section>}
     <section className="card current-status">
       <div className="section-head"><div><span className="eyebrow">CURRENT STATUS</span><h2>現在の到達状況</h2></div>{targetStrategy&&<b>{targetStrategy.reached?'目標到達':'あと'+targetStrategy.gap+'点'}</b>}</div>

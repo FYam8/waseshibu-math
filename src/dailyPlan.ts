@@ -5,7 +5,8 @@ import { loadAttempts, loadExamScores, loadPreferences } from './storage'
 import { loadGuidedProgressState } from './guidedReview'
 import { gradeInTarget, type TargetScore } from './targetStrategy'
 import { isMainCheckYear } from './learningRoute'
-import { loadRemediationProgressState } from './remediationProgress'
+import { loadLevel2SessionSummaries } from './level2ProgressView'
+import { requiredPracticeCount } from './practiceLoad'
 
 export type TodayTaskKind='review'|'practice'|'past-paper'
 export type TodayTask={
@@ -38,7 +39,7 @@ const localDateKey=(d=new Date())=>{
 export const todayDateKey=localDateKey
 
 export function buildTodayTaskCandidates(target:TargetScore, now=new Date()):TodayTask[]{
-  const attempts=loadAttempts(),scores=loadExamScores(),progress=loadGuidedProgressState(),remediationProgress=loadRemediationProgressState()
+  const attempts=loadAttempts(),scores=loadExamScores(),progress=loadGuidedProgressState(),level2Sessions=loadLevel2SessionSummaries()
   const latest=scores.find(x=>x.completed!==false)
   const latestByQuestion=new Map<string,(typeof attempts)[number]>()
   for(const attempt of attempts){
@@ -68,16 +69,17 @@ export function buildTodayTaskCandidates(target:TargetScore, now=new Date()):Tod
         priority:base+(easy?30:0)+(meta.major===1?15:0)
       })
     }else{
-      const rp=remediationProgress[qid]
+      const rp=level2Sessions.find(session=>session.triggerSourceQuestionId===qid)
       const rpIsCurrent=!!rp&&(!rp.sourceAttemptAt||rp.sourceAttemptAt>=attempt.at)
-      const savedStreak=rpIsCurrent?rp.streak:(progressIsCurrent?(p?.practiceStreak||0):0)
-      const practiceComplete=(rpIsCurrent&&rp.status==='completed')||mastery==='consolidated'||savedStreak>=4
+      const requiredCount=rpIsCurrent?rp.requiredCount:requiredPracticeCount(qid,'')
+      const savedStreak=rpIsCurrent?rp.completedQuestionIds.length:(progressIsCurrent?(p?.practiceStreak||0):0)
+      const practiceComplete=(rpIsCurrent&&rp.status==='completed')||mastery==='consolidated'||savedStreak>=requiredCount
       if(!practiceComplete){
         const field=classifyRemediationField(meta.topic).title
         tasks.push({
           id:`practice-${qid}`,kind:'practice',questionId:qid,grade:meta.grade,
           title:`${field}の類題を続ける`,
-          detail:`${meta.year}年度 大問${meta.major}（${meta.subNo}）の弱点補強・連続正解 ${savedStreak}/4`,
+          detail:`${meta.year}年度 大問${meta.major}（${meta.subNo}）の弱点補強・完了 ${savedStreak}/${requiredCount}`,
           to:`/remediate?topic=${encodeURIComponent(meta.topic)}&source=${meta.year}&q=${encodeURIComponent(qid)}`,
           priority:base+20
         })

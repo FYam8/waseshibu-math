@@ -205,7 +205,7 @@ export function guidedOutcomeLabel(outcome?:GuidedOutcome|MasteryState){
   if(outcome==='independent')return 'ヒントなしで自力正解'
   if(outcome==='guided')return 'ヒントありで理解'
   if(outcome==='reproduced')return '答え確認後に再現'
-  if(outcome==='consolidated')return '類題4問連続正解'
+  if(outcome==='consolidated')return '固定類題セット完了'
   if(outcome==='exposed')return '答えを確認済み・未再現'
   if(outcome==='attempted')return '学習中'
   if(outcome==='wrong')return 'もう一度確認'

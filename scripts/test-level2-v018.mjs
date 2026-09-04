@@ -129,8 +129,7 @@ for(let i=0;i<4;i++){
 }
 assert.equal(new Set(priorityIds).size,4)
 assert.equal(priorityIds[3],'2020-Q1-1','correct official question may return only after the other three distinct questions')
-// A wrong answer at positions 2, 3 or 4 must continue through any remaining bag.
-// Wrapping to the first item is valid only after the bag has actually completed.
+// A wrong answer preserves already completed items and continues through the fixed set.
 for(const wrongAt of [2,3,4]){
   const rotationStore=new MemoryStorage()
   let step=mod.selectLevel2Question('2024-Q1-6','expressions',rotationStore,'2026-09-05T00:00:00.000Z')
@@ -140,19 +139,16 @@ for(const wrongAt of [2,3,4]){
     record(step,position!==wrongAt,rotationStore)
     if(position<wrongAt)step=mod.selectLevel2Question('2024-Q1-6','expressions',rotationStore)
   }
-  const remainingAfterWrong=step.session.bagRemaining[0]
+  const remainingAfterWrong=mod.loadLevel2History(rotationStore).sessions[step.key].bagRemaining[0]
   const following=mod.selectLevel2Question('2024-Q1-6','expressions',rotationStore)
-  assert.notEqual(following.question.id,shown.at(-1),`position ${wrongAt}: wrong problem must not repeat immediately`)
+  if(remainingAfterWrong)assert.notEqual(following.question.id,shown.at(-1),`position ${wrongAt}: continue through unpresented fixed problems first`)
   if(remainingAfterWrong){
     assert.equal(following.question.id,remainingAfterWrong,`position ${wrongAt}: must continue to the next bag problem`)
     assert.notEqual(following.question.id,shown[0],`position ${wrongAt}: must not hard-reset to the first problem`)
-  }else{
-    assert.equal(wrongAt,4,'only a completed four-question bag may wrap')
-    assert.equal(following.question.id,shown[0],'position 4: completed bag may start its next rotation')
-  }
+  }else assert.equal(following.question.id,shown.at(-1),'after the first pass, only the unresolved item is retried')
   const rotationHistory=mod.loadLevel2History(rotationStore)
   assert.equal(rotationHistory.attempts.length,wrongAt,`position ${wrongAt}: every attempt must be retained`)
-  assert.equal(rotationHistory.sessions[step.key].currentStreak,0,`position ${wrongAt}: only streak must reset`)
+  assert.equal(rotationHistory.sessions[step.key].currentStreak,wrongAt-1,`position ${wrongAt}: completed problems must remain complete`)
 }
 // An older saved session may have lastQuestionId but no shuffle-bag arrays.
 // It must resume away from the last/first question instead of treating it as new.
@@ -163,10 +159,30 @@ record(legacyStep,false,legacyStore)
 const legacyRaw=JSON.parse(legacyStore.getItem(mod.LEVEL2_HISTORY_STORAGE_KEY))
 delete legacyRaw.sessions[legacyStep.key].lastPresentedIds
 delete legacyRaw.sessions[legacyStep.key].bagRemaining
+delete legacyRaw.sessions[legacyStep.key].fixedQuestionIds
+delete legacyRaw.sessions[legacyStep.key].completedQuestionIds
+delete legacyRaw.sessions[legacyStep.key].retryQuestionIds
+delete legacyRaw.sessions[legacyStep.key].requiredCount
 legacyStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify(legacyRaw))
 legacyStep=mod.selectLevel2Question('2024-Q1-6','expressions',legacyStore)
 assert.notEqual(legacyStep.question.id,legacyFirst,'legacy session must not jump to its first problem')
 assert.equal(mod.loadLevel2History(legacyStore).attempts.length,1,'legacy-session normalization must retain attempts')
+
+const legacyHeavyStore=new MemoryStorage()
+legacyHeavyStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify({schemaVersion:1,attempts:[],questionStats:{},masteryEvents:[],sessions:{'source:2024-Q5-1':{
+  sessionId:'legacy-heavy',triggerSourceQuestionId:'2024-Q5-1',directLevel2QuestionId:'L2-2024-Q5-1',fieldIdAtSessionStart:'angles-circles',fieldAssignmentRevisionAtSessionStart:1,
+  currentStreak:0,currentStreakQuestionIds:[],bestStreak:0,status:'active',lastQuestionId:null,lastPresentedIds:[],bagRemaining:[],updatedAt:'2026-09-01T00:00:00.000Z'
+}}}))
+assert.equal(mod.selectLevel2Question('2024-Q5-1','angles-circles',legacyHeavyStore).session.requiredCount,2,'legacy heavy session without requiredCount must migrate to two questions')
+
+const legacyHeavyCompleteStore=new MemoryStorage()
+legacyHeavyCompleteStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify({schemaVersion:1,attempts:[],questionStats:{},masteryEvents:[],sessions:{'source:2024-Q5-1':{
+  sessionId:'legacy-heavy-progress',triggerSourceQuestionId:'2024-Q5-1',directLevel2QuestionId:'L2-2024-Q5-1',fieldIdAtSessionStart:'angles-circles',fieldAssignmentRevisionAtSessionStart:1,
+  currentStreak:2,currentStreakQuestionIds:['L2-2024-Q5-1','L2-2023-Q1-5'],bestStreak:2,status:'active',lastQuestionId:'L2-2023-Q1-5',lastPresentedIds:['L2-2024-Q5-1','L2-2023-Q1-5'],bagRemaining:[],updatedAt:'2026-09-01T00:00:00.000Z'
+}}}))
+const migratedHeavyComplete=mod.selectLevel2Question('2024-Q5-1','angles-circles',legacyHeavyCompleteStore)
+assert.equal(migratedHeavyComplete.session.status,'completed','legacy 2 qualifying answers must satisfy the new frozen two-question target')
+assert.equal(mod.loadLevel2History(legacyHeavyCompleteStore).masteryEvents.length,1,'qualified legacy completion must create one mastery checkpoint without deleting history')
 const storage=new MemoryStorage()
 let selected=mod.selectLevel2Question('2024-Q1-6','expressions',storage,'2026-09-03T00:00:00.000Z')
 assert.equal(selected.question.id,'L2-2024-Q1-6','source question must open direct Level2')
@@ -192,9 +208,9 @@ const firstAfterReactivation=selected.question.id
 let result=mod.recordLevel2Attempt({key:selected.key,question:selected.question,presentationId:selected.presentationId,answer:selected.question.answer,correct:true,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:selected.session.fieldIdAtSessionStart},storage)
 selected=mod.selectLevel2Question('2024-Q1-6','expressions',storage)
 const wrongQuestion=selected.question.id
-const expectedNextQuestion=selected.session.bagRemaining[0]
 result=mod.recordLevel2Attempt({key:selected.key,question:selected.question,presentationId:selected.presentationId,answer:'wrong',correct:false,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:selected.session.fieldIdAtSessionStart},storage)
-assert.equal(result.session.currentStreak,0)
+const expectedNextQuestion=result.session.bagRemaining[0]
+assert.equal(result.session.currentStreak,1)
 selected=mod.selectLevel2Question('2024-Q1-6','expressions',storage)
 assert.equal(selected.question.id,expectedNextQuestion,'wrong answer must continue to the next shuffle-bag problem')
 assert.notEqual(selected.question.id,firstAfterReactivation,'wrong answer must not jump back to the first problem')
@@ -205,7 +221,28 @@ selected=mod.selectLevel2Question(null,'factoring',storage)
 result=mod.recordLevel2Attempt({key:selected.key,question:selected.question,presentationId:selected.presentationId,answer:selected.question.answer,correct:true,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:'factoring'},storage)
 assert.equal(result.session.currentStreak,1)
 const assisted=mod.markLevel2Assistance(selected.key,storage)
-assert.equal(assisted.currentStreak,0,'hint/reveal must reset immediately')
+assert.equal(assisted.currentStreak,1,'hint/reveal must not erase completed problems')
+
+// Workload-based targets are frozen at session start: Q1=4, Q2/Q3=3, Q4/Q5=2.
+for(const [sourceId,expected] of [['2024-Q1-1',4],['2024-Q2-1',3],['2024-Q5-1',2]]){
+  const workloadStore=new MemoryStorage()
+  let workloadStep=mod.selectLevel2Question(sourceId,'expressions',workloadStore)
+  assert.equal(workloadStep.session.requiredCount,expected,`${sourceId} target count`)
+  assert.equal(workloadStep.session.fixedQuestionIds.length,expected,`${sourceId} fixed set size`)
+  const fixed=[...workloadStep.session.fixedQuestionIds]
+  const reloaded=mod.selectLevel2Question(sourceId,'expressions',workloadStore)
+  assert.equal(reloaded.question.id,workloadStep.question.id,'reload before answering must keep the current fixed question')
+  assert.deepEqual(reloaded.session.fixedQuestionIds,fixed,'reload must not rerandomize the fixed set')
+  let guard=0
+  while(workloadStep.session.status!=='completed'&&guard++<10){
+    const recorded=record(workloadStep,true,workloadStore)
+    workloadStep=recorded.completed?{...workloadStep,session:recorded.session}:mod.selectLevel2Question(sourceId,'expressions',workloadStore)
+  }
+  assert.equal(workloadStep.session.status,'completed',`${sourceId} must complete at its frozen target`)
+  const completedReload=mod.selectLevel2Question(sourceId,'expressions',workloadStore)
+  assert.equal(completedReload.session.status,'completed','completed session must reload without crashing or starting a new set')
+  assert.deepEqual(completedReload.session.fixedQuestionIds,fixed,'completed reload must preserve the original fixed set')
+}
 
 const fraction={id:'test',sourceQuestionId:null,status:'final',contentVerified:true,materialized:true,prompt:'',answer:'1/3',explanation:''}
 const radical={...fraction,answer:'√3−1',acceptedAnswers:[]}
@@ -221,4 +258,4 @@ assert.equal(mod.isAcceptedLevel2Answer('x=-4/3,-12',unordered),true,'unordered 
 assert.equal(mod.isAcceptedLevel2Answer('オ・ア・エ・ウ',choices),true,'unordered choices must accept any order')
 assert.equal(mod.isAcceptedLevel2Answer('ACD~ABM,ACB~ADM',triangles),true,'equivalent triangle-pair order/direction must pass')
 fs.unlinkSync(out)
-console.log('PASS: 60 backlog + 60 official + 100 active original + 2 support, canonical history, distinct 4/4, reset/retention, assistance, final-answer grading')
+console.log('PASS: fixed 2-4 question sets, unresolved-only retry, non-destructive history, assistance, final-answer grading')

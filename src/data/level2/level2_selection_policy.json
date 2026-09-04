@@ -1,63 +1,26 @@
 {
-  "schemaVersion": 6,
-  "streakTarget": 4,
-  "eligibility": {
-    "status": "final (backlog items are stored but never selectable)",
-    "contentVerified": true,
-    "materialized": true,
-    "currentFieldSource": "level2_field_assignments.json"
+  "schemaVersion": 7,
+  "completionModel": "fixed-set",
+  "requiredCount": {"shortCalculation": 4, "standard": 3, "heavyOrLateMajor": 2, "freezeRule": "Determine once at session start and persist it."},
+  "eligibility": {"status": "final", "contentVerified": true, "materialized": true, "currentFieldSource": "level2_field_assignments.json"},
+  "fixedSet": {
+    "selection": "Select requiredCount distinct eligible questionIds at session start.",
+    "immutability": "Never replace, append, or rerandomize the set during the session.",
+    "firstPass": "Present every unresolved fixed item in saved order.",
+    "retry": "After the first pass, present only wrong or assisted unresolved items in fixed-set order.",
+    "completion": "Complete when every fixed item has one qualifying correct answer.",
+    "shortage": "Use every available distinct item, lower persisted requiredCount, and never duplicate an item."
   },
-  "directRemediation": {
-    "lookupKey": "sourceQuestionId via source_to_level2_map.json",
-    "fieldForWeaknessSession": "current fieldId of the mapped Level2 question",
-    "firstChoice": "Use the direct Level2 if unseen, or if it is not among the last 3 presentations in that field.",
-    "recentDirectFallback": "Choose from the same current field using the normal rotation."
-  },
-  "rotation": {
-    "method": "shuffle-bag",
-    "rule": "Prefer questions not yet presented in the current rotation cycle.",
-    "afterCycleExhaustion": "Refill from all eligible questions, but do not immediately repeat the last question.",
-    "currentStreakDistinctness": "Never present a questionId already counted in the current qualifying streak.",
-    "wrongOrAssistedAnswer": "Reset the qualifying streak, but keep attempt history and continue the rotation.",
-    "minimumUniquePool": 4,
-    "shortageBehavior": "Practice may continue with the available questions using rotation, but mastery remains unavailable until the field has at least 4 eligible distinct questions."
-  },
-  "priority": [
-    "unseen active-original or unresolved official past-paper questionId",
-    "least recently presented eligible questionId",
-    "previously-correct official past-paper only when needed to keep four distinct questions",
-    "other eligible questionId"
-  ],
   "hardRules": [
-    "Never immediately repeat the same questionId.",
-    "A valid 4/4 mastery streak must contain 4 distinct questionIds.",
-    "A wrong answer resets currentStreak to 0 but never deletes history.",
-    "Using a hint, explanation, or revealing the answer before the first answer resets currentStreak to 0.",
+    "A qualifying answer is first-submission correct with no hint, explanation, or revealed answer.",
+    "A wrong or assisted answer never removes another question's completed state.",
+    "A completed question is not presented again in the same session.",
+    "Reload and Home resume preserve the fixed set, order, completed state, and retry state.",
+    "A newer unresolved source attempt starts a new fixed session without deleting history.",
     "Category changes never change questionId, seen status, or past attempts.",
-    "Only items explicitly listed in masteryEligibleQuestionIds may count toward that field's 4/4.",
-    "Do not count a quadratic-equation item as factorization mastery merely because factorization is one possible solution method.",
-    "If a field has fewer than 4 mastery-eligible unique questions, allow practice but do not award 4/4 mastery."
+    "Only masteryEligibleQuestionIds may enter a fixed set."
   ],
-  "backlog": {
-    "rule": "L2 questions derived from 2019-2021 remain stored with immutable IDs, content, figures, and history but are excluded from every active pool and direct-open route.",
-    "reactivation": "Reactivate one question at a time only after content, figure, answer, standalone-scope, and grading review. A material rewrite receives a new immutable questionId."
-  },
-  "officialPastPapers": {
-    "years": [2019, 2020, 2021],
-    "identity": "Use canonical official IDs such as 2021-Q5-1, never the backlog L2 ID.",
-    "display": "Render the verified crop from the official question page.",
-    "history": "Official attempts are independent of backlog Level2 attempts. Full-year scores are never retroactively changed.",
-    "reuse": "A correct official question is deprioritized, not permanently deleted; it may return after other questions when required to preserve a four-distinct-question streak."
-  },
-  "fieldSemantics": {
-    "weaknessField": "Use the current primary fieldId of the direct Level2 item.",
-    "directFieldPractice": "Use all items whose practiceFieldIds contains the selected field.",
-    "secondaryPracticeItem": "Counts normally for the selected field's streak because it was explicitly tagged as testing that field's skill; its primary category and history remain unchanged."
-  },
-  "poolSource": "practice_pool_index.json",
-  "supportQuestions": {
-    "behavior": "support questions participate in the same shuffle-bag and streak rules as core questions",
-    "sourceWeaknessDirectLink": "support questions are never used as the direct source-question counterpart",
-    "history": "stored under their own immutable SUP-* questionId"
-  }
+  "backlog": {"rule": "2019-2021-derived Level2 items remain stored but excluded from active pools.", "reactivation": "Review one item at a time before reactivation."},
+  "officialPastPapers": {"years": [2019, 2020, 2021], "identity": "Use canonical official IDs.", "display": "Render verified official question crops.", "history": "Never rewrite full-year scores."},
+  "poolSource": "practice_pool_index.json"
 }

@@ -12,8 +12,8 @@ assert.match(app,/GuidedReview key=\{location\.pathname\+location\.search\}/,'Gu
 assert.match(app,/Remediation key=\{location\.pathname\+location\.search\}/,'Remediation route must remount per route identity')
 assert.match(app,/Reinforcement key=\{location\.pathname\+location\.search\}/,'Reinforcement route must remount per route identity')
 
-assert.match(home,/inProgressRemediations/,'Home must inspect persisted remediation progress')
-assert.match(home,/類題 \{preferredRemediation\?\.streak\}\/4 の続きから/,'Home must show direct remediation resume CTA')
+assert.match(home,/inProgressLevel2Sessions/,'Home must inspect canonical persisted Level2 sessions')
+assert.match(home,/preferredRemediation\?\.completedQuestionIds\.length/,'Home must show direct fixed-set resume progress')
 assert.match(home,/今日の予定分は完了しました/,'Today completion wording must not imply all learning is finished while remediation continues')
 
 assert.match(report,/未解決・学習中の得点回収候補/,'Unresolved recovery candidates must be labeled accurately')
@@ -24,7 +24,7 @@ assert.match(data,/大きい図形と小さい図形の相似比が3:2/,'Similar
 assert.match(data,/'2024-Q1-5'[\s\S]*正方形ABCDの辺BCを1辺として、正方形の内側に正三角形BCE/,'2024-Q1-5 must keep square/equilateral visual-reading skill')
 assert.doesNotMatch(remedy,/RemediationFigure/,'Remediation must keep experimental geometry figures hidden')
 
-assert.match(home,/item\.streak>0\|\|item\.attemptCount>0/,'Started remediation at 0/4 after a wrong attempt must remain resumable from Home')
+assert.match(home,/triggerSourceQuestionId/,'Started fixed-set remediation must remain resumable from Home')
 assert.match(data,/正方形ABCDの辺BCを1辺として、正方形の内側に正三角形BCEを作ります。∠ABEを求めなさい。',answer:'30'/,'2024-Q1-5 variant 1 must place the equilateral triangle inside the square for the 30 degree answer')
 assert.match(data,/正方形ABCDの辺BCを1辺として、正方形の内側に正三角形BCEを作り、対角線BDを引きます。∠DBEを求めなさい。',answer:'15'/,'2024-Q1-5 variant 3 must place the equilateral triangle inside the square for the 15 degree answer')
 assert.match(version,/APP_VERSION='0\.18\.0'/,'Version must be 0.18.0')

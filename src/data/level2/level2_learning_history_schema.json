@@ -38,6 +38,10 @@
     "fieldAssignmentRevisionAtSessionStart": 1,
     "currentStreak": 0,
     "currentStreakQuestionIds": [],
+    "requiredCount": 3,
+    "fixedQuestionIds": ["q1", "q2", "q3"],
+    "completedQuestionIds": [],
+    "retryQuestionIds": [],
     "bestStreak": 0,
     "status": "active"
   },
@@ -51,11 +55,12 @@
       "q3",
       "q4"
     ],
+    "requiredCount": 4,
     "label": "いったん克服"
   },
   "rules": {
     "qualifyingCorrect": "first submission AND correct AND no hint AND no explanation AND answer not revealed",
-    "nonQualifyingPresentation": "wrong, hint-used, explanation-used, or answer-revealed => currentStreak becomes 0",
+    "nonQualifyingPresentation": "wrong, hint-used, explanation-used, or answer-revealed => preserve other completed items and retry only this item",
     "historyRetention": "attempts and questionStats are never deleted by wrong answers or recategorization",
     "recategorization": "change only field assignment metadata; attempts remain keyed by questionId",
     "seenAfterRecategorization": "seen = attemptCount > 0, so a solved item never becomes unseen merely because it moved fields",
@@ -64,7 +69,7 @@
     "contentClarification": "wording/figure/explanation-only change keeps questionId and increments contentRevision",
     "mathematicalTaskChange": "changed givens/target/correct answer => new questionId; old item becomes deprecated but history stays",
     "gradingChange": "answer-acceptance-only change keeps questionId and increments gradingRevision",
-    "shortageField": "Keep all attempts and allow practice, but do not create a masteryEvent while fewer than 4 eligible distinct questions exist in the current field.",
+    "shortageField": "Use every available distinct item, lower requiredCount, and never duplicate an item to fill the set.",
     "secondaryPracticeHistory": "An attempt from a secondary practice pool is stored under the same immutable questionId. It is not duplicated under the field. practiceFieldIdAtAttempt is only an analytics snapshot.",
     "practiceTagChange": "Adding/removing a practiceFieldId never deletes or rewrites attempts. Past attempts remain visible because questionId is unchanged.",
     "supportQuestionHistory": "Support items use immutable SUP-* questionIds and the same attempt schema. Adding/removing a support item from a field never deletes its past history.",

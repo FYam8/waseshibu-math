@@ -2,7 +2,8 @@ import questions from './data/questions.json'
 import type { MajorQuestion } from './types'
 import { loadAttempts } from './storage'
 import { loadGuidedProgressState, type GuidedProgressState } from './guidedReview'
-import { loadRemediationProgressState } from './remediationProgress'
+import { loadLevel2SessionSummaries } from './level2ProgressView'
+import { requiredPracticeCount } from './practiceLoad'
 import { classifyRemediationField } from './data/remediation'
 import { REQUIRED_MAIN_YEAR_SEQUENCE, latestExam, loadLearningRoute } from './learningRoute'
 import { gradeInTarget, storedExamItems, targetGoalLabel, weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
@@ -67,7 +68,7 @@ export function buildGoalDayEstimates(
   dailyCapacity=DEFAULT_DAILY_TASK_CAPACITY,
 ):GoalDayEstimate[]{
   const progress=loadGuidedProgressState()
-  const remediationProgress=loadRemediationProgressState()
+  const level2Sessions=loadLevel2SessionSummaries()
   const {attempts,latestByQuestion}=latestExamAttempts()
   const route=loadLearningRoute()
 
@@ -96,7 +97,7 @@ export function buildGoalDayEstimates(
     }
 
     // 2019〜2021年度は「全問題」を数えない。現在の補強計画に実際に選ばれた問題だけを数える。
-    // さらに、各弱点分野の類題4問も未完了なら学習単位として加える。
+    // さらに、各弱点分野の負荷別固定セットも未完了なら学習単位として加える。
     for(const sourceYear of REQUIRED_MAIN_YEAR_SEQUENCE){
       const exam=latestExam(sourceYear)
       if(!exam)continue
@@ -112,13 +113,16 @@ export function buildGoalDayEstimates(
 
         const mastered=attempts.some(a=>a.questionId.startsWith('mastery-')&&a.status==='correct'&&a.at>exam.at&&classifyRemediationField(a.topic).title===field)
         if(!mastered){
-          // 4問連続正解の類題セットを、実際の4学習単位として見込む。
           const sourceIds=storedExamItems(exam,attempts)
             .filter(item=>item.status!=='correct'&&gradeInTarget(target,item.grade))
             .filter(item=>classifyRemediationField(item.topic).title===field)
             .map(item=>item.key)
-          const streak=Math.max(0,...sourceIds.map(id=>remediationProgress[id]?.streak??progress[id]?.practiceStreak??0))
-          remainingUnits+=Math.max(0,4-Math.min(4,streak))
+          const sessions=level2Sessions.filter(session=>session.triggerSourceQuestionId&&sourceIds.includes(session.triggerSourceQuestionId))
+          const session=sessions.sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))[0]
+          const sourceId=session?.triggerSourceQuestionId||sourceIds[0]||null
+          const requiredCount=session?.requiredCount||requiredPracticeCount(sourceId,'')
+          const completed=session?.completedQuestionIds.length||0
+          remainingUnits+=Math.max(0,requiredCount-Math.min(requiredCount,completed))
         }
       }
     }
