@@ -2267,16 +2267,16 @@
       "Q=(2t,4t²/3)"
     ],
     "explanation": "ABCDは幅t、高さ10/t−t²/3の長方形。△CDQは底辺CDが同じ高さで、x方向の高さをx_Qとすると面積は1/2×CD×x_Q。長方形と等しいのでx_Q=2t。l上だからy_Q=(1/3)(2t)²=4t²/3。",
-    "problemFigure": "assets/2022/2022_q2_with_q.svg",
+    "problemFigure": null,
     "hintFigure": null,
     "explanationFigure": "assets/2022/2022_q2_2_explanation.png",
-    "contentRevision": 3,
+    "contentRevision": 4,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "02190282aaf04f40",
+    "contentHash": "47ed83e486dbb51b",
     "taskHash": "ff3358fd9952ec76",
-    "renderHash": "38a84123a040b668"
+    "renderHash": "6c8b94e8d778c1b7"
   },
   {
     "id": "L2-2022-Q2-3",
@@ -3037,7 +3037,7 @@
       "X=ACD,Y=ACB"
     ],
     "explanation": "MはBD上にあるので∠ABM=∠ABD=∠ACD。さらに作図より∠BAM=∠CADだから△ABM∽△ACD。次に∠DAM=∠CAB、∠ADM=∠ADB=∠ACBより△ADM∽△ACB。",
-    "problemFigure": "assets/2023/2023_q4_proof.svg",
+    "problemFigure": null,
     "hintFigure": null,
     "explanationFigure": "assets/2023/2023_q4_1_explanation.png",
     "answerSpec": {
@@ -3072,12 +3072,12 @@
       "allowEquivalentCyclicOrReversedNotation": true
     },
     "gradingRevision": 1,
-    "contentRevision": 3,
+    "contentRevision": 4,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "a8e1d5902faa56c7",
+    "contentHash": "87059385f08bafb1",
     "taskHash": "7247a5fa8fd7b59c",
-    "renderHash": "44583a6b2341339c"
+    "renderHash": "faaea469aa526ec2"
   },
   {
     "id": "L2-2023-Q4-2",

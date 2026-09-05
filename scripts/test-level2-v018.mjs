@@ -35,8 +35,8 @@ for(const q of [...core,...support])for(const key of ['problemFigure','hintFigur
 const requiredProblemFigures=[
   '2019-Q1-4','2019-Q1-8','2020-Q1-5','2020-Q1-8','2021-Q1-6',
   '2019-Q2-1','2019-Q2-2','2019-Q4-1','2019-Q4-2','2019-Q4-3','2019-Q5-1','2019-Q5-2','2019-Q5-3',
-  '2020-Q3-1','2020-Q3-2','2020-Q3-3','2022-Q2-1','2022-Q2-2','2022-Q2-3',
-  '2023-Q4-1','2023-Q4-2','2023-Q4-3','2024-Q2-1','2024-Q2-2','2024-Q2-3',
+  '2020-Q3-1','2020-Q3-2','2020-Q3-3','2022-Q2-1','2022-Q2-3',
+  '2023-Q4-2','2023-Q4-3','2024-Q2-1','2024-Q2-2','2024-Q2-3',
   '2026-Q4-1','2026-Q4-2','2026-Q4-3'
 ]
 for(const sourceQuestionId of requiredProblemFigures){
@@ -46,6 +46,22 @@ for(const sourceQuestionId of requiredProblemFigures){
   const hash=value=>crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0,16)
   assert.equal(q.contentHash,hash({context:q.context,prompt:q.prompt,answer:q.answer,acceptedAnswers:q.acceptedAnswers,explanation:q.explanation,problemFigure:q.problemFigure,hintFigure:q.hintFigure,explanationFigure:q.explanationFigure,problemTable:q.problemTable}),`${sourceQuestionId} contentHash must include the current figures and table`)
   assert.equal(q.renderHash,hash({context:q.context,prompt:q.prompt,problemFigure:q.problemFigure,hintFigure:q.hintFigure,explanationFigure:q.explanationFigure,problemTable:q.problemTable}),`${sourceQuestionId} renderHash must include the current figures and table`)
+}
+const explanationOnlyFigures={
+  '2022-Q2-2':'assets/2022/2022_q2_2_explanation.png',
+  '2023-Q4-1':'assets/2023/2023_q4_1_explanation.png'
+}
+for(const [sourceQuestionId,explanationFigure] of Object.entries(explanationOnlyFigures)){
+  const q=core.find(item=>item.sourceQuestionId===sourceQuestionId)
+  assert.ok(q,`${sourceQuestionId} must remain in the Level2 master`)
+  assert.equal(q.problemFigure,null,`${sourceQuestionId} must not fix an indeterminate construction before answering`)
+  assert.equal(q.hintFigure,null,`${sourceQuestionId} must not reveal the audited construction as a hint`)
+  assert.equal(q.explanationFigure,explanationFigure,`${sourceQuestionId} must show only the audited explanation figure after answering`)
+  assert.equal(q.figureVerified,true,`${sourceQuestionId} explanation figure must remain verified`)
+  assert.ok(q.contentRevision>=4,`${sourceQuestionId} explanation-only correction must increment contentRevision`)
+  const hash=value=>crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0,16)
+  assert.equal(q.contentHash,hash({context:q.context,prompt:q.prompt,answer:q.answer,acceptedAnswers:q.acceptedAnswers,explanation:q.explanation,problemFigure:q.problemFigure,hintFigure:q.hintFigure,explanationFigure:q.explanationFigure,problemTable:q.problemTable}),`${sourceQuestionId} contentHash must include the explanation-only figure timing`)
+  assert.equal(q.renderHash,hash({context:q.context,prompt:q.prompt,problemFigure:q.problemFigure,hintFigure:q.hintFigure,explanationFigure:q.explanationFigure,problemTable:q.problemTable}),`${sourceQuestionId} renderHash must include the explanation-only figure timing`)
 }
 const requiredProblemTables=['2021-Q4-1','2021-Q4-2','2021-Q4-3','2022-Q3-3']
 for(const sourceQuestionId of requiredProblemTables){
