@@ -111,11 +111,14 @@ export function selectLevel2Question(sourceQuestionId:string|null,requestedField
     if(!completedQuestion)throw new Error('完了済みセッションの問題が見つかりません')
     return {question:completedQuestion,presentationId:uuid(),session,key:ensured.key}
   }
-  if(!session.fixedQuestionIds.length){
+  if(session.fixedQuestionIds.length<session.requiredCount){
     const ordered=orderedCandidates(ids,history,session,storage)
     const retained=session.completedQuestionIds.filter(id=>ids.includes(id))
-    const directFirst=directId&&ids.includes(directId)&&!retained.includes(directId)&&!session.lastQuestionId?[directId]:[]
-    const fixed=[...retained,...directFirst,...ordered.filter(id=>!directFirst.includes(id)&&!retained.includes(id)&&id!==session.lastQuestionId),...(session.lastQuestionId&&ids.includes(session.lastQuestionId)?[session.lastQuestionId]:[])].slice(0,session.requiredCount)
+    // 旧形式・不完全なimportで固定セットが途中までしかない場合も、
+    // 既存の問題を入れ替えず、不足分だけ異なる問題で補う。
+    const retainedFixed=session.fixedQuestionIds.filter(id=>ids.includes(id)&&!retained.includes(id))
+    const directFirst=directId&&ids.includes(directId)&&!retained.includes(directId)&&!retainedFixed.includes(directId)&&!session.lastQuestionId?[directId]:[]
+    const fixed=uniqueIds([...retained,...retainedFixed,...directFirst,...ordered.filter(id=>!directFirst.includes(id)&&!retained.includes(id)&&!retainedFixed.includes(id)&&id!==session.lastQuestionId),...(session.lastQuestionId&&ids.includes(session.lastQuestionId)?[session.lastQuestionId]:[])]).slice(0,session.requiredCount)
     if(!fixed.length)throw new Error('出題可能な問題がありません')
     const completedQuestionIds=retained.filter(id=>fixed.includes(id))
     session={...session,requiredCount:fixed.length,fixedQuestionIds:fixed,bagRemaining:fixed.filter(id=>!completedQuestionIds.includes(id)),

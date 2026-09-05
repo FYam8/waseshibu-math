@@ -191,6 +191,18 @@ assert.equal(duplicateLegacyStep.session.status,'active','one repeated ID must n
 assert.equal(duplicateLegacyStep.session.currentStreak,1,'normalized progress must equal the one distinct completed question')
 assert.equal(new Set(duplicateLegacyStep.session.fixedQuestionIds).size,2,'rebuilt fixed set must contain two distinct questions')
 
+const partialFixedStore=new MemoryStorage()
+partialFixedStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify({schemaVersion:1,attempts:[],questionStats:{},masteryEvents:[],sessions:{'source:2024-Q5-1':{
+  sessionId:'partial-fixed',triggerSourceQuestionId:'2024-Q5-1',directLevel2QuestionId:'L2-2024-Q5-1',fieldIdAtSessionStart:'angles-circles',fieldAssignmentRevisionAtSessionStart:1,
+  requiredCount:2,fixedQuestionIds:['L2-2024-Q5-1'],completedQuestionIds:[],retryQuestionIds:[],currentStreak:0,currentStreakQuestionIds:[],bestStreak:0,status:'active',
+  lastQuestionId:'L2-2024-Q5-1',lastPresentedIds:['L2-2024-Q5-1'],bagRemaining:[],updatedAt:'2026-09-02T00:00:00.000Z'
+}}}))
+const partialFixedStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',partialFixedStore)
+assert.equal(partialFixedStep.question.id,'L2-2024-Q5-1','reload must keep the already presented fixed question')
+assert.equal(partialFixedStep.session.fixedQuestionIds[0],'L2-2024-Q5-1','partial fixed set must preserve its existing first question')
+assert.equal(partialFixedStep.session.fixedQuestionIds.length,2,'partial fixed set must be filled to its frozen target')
+assert.equal(new Set(partialFixedStep.session.fixedQuestionIds).size,2,'partial fixed set must be filled with a distinct question')
+
 const legacyHeavyCompleteStore=new MemoryStorage()
 legacyHeavyCompleteStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify({schemaVersion:1,attempts:[],questionStats:{},masteryEvents:[],sessions:{'source:2024-Q5-1':{
   sessionId:'legacy-heavy-progress',triggerSourceQuestionId:'2024-Q5-1',directLevel2QuestionId:'L2-2024-Q5-1',fieldIdAtSessionStart:'angles-circles',fieldAssignmentRevisionAtSessionStart:1,
