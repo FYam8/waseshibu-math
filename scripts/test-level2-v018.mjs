@@ -89,7 +89,7 @@ class MemoryStorage{
   setItem(k,v){this.map.set(k,String(v))}
 }
 const record=(selected,correct,store)=>mod.recordLevel2Attempt({
-  key:selected.key,question:selected.question,presentationId:selected.presentationId,
+  key:selected.key,sessionId:selected.session.sessionId,question:selected.question,presentationId:selected.presentationId,
   answer:correct?selected.question.answer:'wrong',correct,usedHint:false,usedExplanation:false,
   revealedAnswer:false,firstSubmission:true,practiceFieldId:selected.session.fieldIdAtSessionStart
 },store)
@@ -240,7 +240,7 @@ const used=[]
 for(let i=0;i<4;i++){
   if(i)selected=mod.selectLevel2Question('2024-Q1-6','expressions',storage)
   used.push(selected.question.id)
-  const result=mod.recordLevel2Attempt({key:selected.key,question:selected.question,presentationId:selected.presentationId,answer:selected.question.answer,correct:true,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:selected.session.fieldIdAtSessionStart},storage)
+  const result=mod.recordLevel2Attempt({key:selected.key,sessionId:selected.session.sessionId,question:selected.question,presentationId:selected.presentationId,answer:selected.question.answer,correct:true,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:selected.session.fieldIdAtSessionStart},storage)
   assert.equal(result.session.currentStreak,i+1)
 }
 assert.equal(new Set(used).size,4,'4/4 must use distinct questionIds')
@@ -255,10 +255,10 @@ assert.equal(mod.loadLevel2History(storage).attempts.length,4)
 selected=mod.selectLevel2Question('2024-Q1-6','expressions',storage,'2026-09-04T00:00:00.000Z')
 assert.equal(selected.session.currentStreak,0,'new wrong source attempt must reactivate at 0/4')
 const firstAfterReactivation=selected.question.id
-let result=mod.recordLevel2Attempt({key:selected.key,question:selected.question,presentationId:selected.presentationId,answer:selected.question.answer,correct:true,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:selected.session.fieldIdAtSessionStart},storage)
+let result=mod.recordLevel2Attempt({key:selected.key,sessionId:selected.session.sessionId,question:selected.question,presentationId:selected.presentationId,answer:selected.question.answer,correct:true,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:selected.session.fieldIdAtSessionStart},storage)
 selected=mod.selectLevel2Question('2024-Q1-6','expressions',storage)
 const wrongQuestion=selected.question.id
-result=mod.recordLevel2Attempt({key:selected.key,question:selected.question,presentationId:selected.presentationId,answer:'wrong',correct:false,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:selected.session.fieldIdAtSessionStart},storage)
+  result=mod.recordLevel2Attempt({key:selected.key,sessionId:selected.session.sessionId,question:selected.question,presentationId:selected.presentationId,answer:'wrong',correct:false,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:selected.session.fieldIdAtSessionStart},storage)
 const expectedNextQuestion=result.session.bagRemaining[0]
 assert.equal(result.session.currentStreak,1)
 selected=mod.selectLevel2Question('2024-Q1-6','expressions',storage)
@@ -268,14 +268,14 @@ assert.notEqual(selected.question.id,wrongQuestion,'wrong answer must not immedi
 assert.equal(mod.loadLevel2History(storage).attempts.length,6,'wrong reset must retain every attempt')
 
 selected=mod.selectLevel2Question(null,'factoring',storage)
-result=mod.recordLevel2Attempt({key:selected.key,question:selected.question,presentationId:selected.presentationId,answer:selected.question.answer,correct:true,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:'factoring'},storage)
+result=mod.recordLevel2Attempt({key:selected.key,sessionId:selected.session.sessionId,question:selected.question,presentationId:selected.presentationId,answer:selected.question.answer,correct:true,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:'factoring'},storage)
 assert.equal(result.session.currentStreak,1)
-const assisted=mod.markLevel2Assistance(selected.key,selected.question.id,{usedHint:true,usedExplanation:false,revealedAnswer:false},storage)
+const assisted=mod.markLevel2Assistance(selected.key,selected.session.sessionId,selected.question.id,{usedHint:true,usedExplanation:false,revealedAnswer:false},storage)
 assert.equal(assisted.currentStreak,1,'hint/reveal must not erase completed problems')
 
 const assistedReloadStore=new MemoryStorage()
 let assistedReloadStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',assistedReloadStore)
-mod.markLevel2Assistance(assistedReloadStep.key,assistedReloadStep.question.id,{usedHint:true,usedExplanation:false,revealedAnswer:false},assistedReloadStore)
+mod.markLevel2Assistance(assistedReloadStep.key,assistedReloadStep.session.sessionId,assistedReloadStep.question.id,{usedHint:true,usedExplanation:false,revealedAnswer:false},assistedReloadStore)
 assistedReloadStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',assistedReloadStore)
 assert.equal(assistedReloadStep.session.pendingAssistance?.usedHint,true,'reload must retain assistance used before grading')
 let assistedReloadResult=record(assistedReloadStep,true,assistedReloadStore)
@@ -286,6 +286,17 @@ assert.equal(assistedReloadResult.session.pendingAssistance,null,'submitted assi
 assistedReloadStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',assistedReloadStore)
 assistedReloadResult=record(assistedReloadStep,true,assistedReloadStore)
 assert.equal(assistedReloadResult.qualifying,true,'a later fresh independent retry must be allowed to complete the problem')
+
+const staleTabStore=new MemoryStorage()
+const staleTabStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',staleTabStore)
+const replacementStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',staleTabStore,undefined,true)
+assert.notEqual(replacementStep.session.sessionId,staleTabStep.session.sessionId,'restart must create a new session identity')
+const staleResult=record(staleTabStep,true,staleTabStore)
+assert.equal(staleResult.stale,true,'an answer from the replaced session must be recognized as stale')
+assert.equal(staleResult.session.sessionId,replacementStep.session.sessionId,'stale submission must return the current session')
+assert.equal(staleResult.session.currentStreak,0,'stale submission must not advance the new fixed set')
+assert.equal(staleResult.qualifying,false,'stale submission must not qualify for mastery')
+assert.equal(mod.loadLevel2History(staleTabStore).attempts.length,1,'the learner answer itself must remain in immutable history')
 
 // Workload-based targets are frozen at session start: Q1=4, Q2/Q3=3, Q4/Q5=2.
 for(const [sourceId,expected] of [['2024-Q1-1',4],['2024-Q2-1',3],['2024-Q5-1',2]]){

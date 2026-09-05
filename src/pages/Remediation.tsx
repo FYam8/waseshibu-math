@@ -18,7 +18,7 @@ export default function Remediation(){
   const latestSourceAttemptAt=sourceQuestion?loadAttempts().filter(a=>a.questionId===`exam-${sourceQuestion}`&&a.status!=='correct').sort((a,b)=>b.at.localeCompare(a.at))[0]?.at:undefined
   const [presentation,setPresentation]=useState<Presentation>(()=>selectLevel2Question(sourceQuestion||null,requestedField,localStorage,latestSourceAttemptAt))
   const pending=presentation.session.pendingAssistance?.questionId===presentation.question.id?presentation.session.pendingAssistance:null
-  const [answer,setAnswer]=useState(''),[result,setResult]=useState<boolean|null>(null)
+  const [answer,setAnswer]=useState(''),[result,setResult]=useState<boolean|null>(null),[staleSubmission,setStaleSubmission]=useState(false)
   const [usedHint,setUsedHint]=useState(!!pending?.usedHint),[usedExplanation,setUsedExplanation]=useState(!!pending?.usedExplanation),[revealedAnswer,setRevealedAnswer]=useState(!!pending?.revealedAnswer)
   const [session,setSession]=useState(presentation.session),[finished,setFinished]=useState(presentation.session.status==='completed')
   const q=presentation.question,fieldId=session.fieldIdAtSessionStart||currentFieldId(q.id),field=level2FieldById.get(fieldId)
@@ -27,20 +27,20 @@ export default function Remediation(){
   const submit=()=>{
     if(result!==null||!answer.trim()||finished)return
     const correct=isOfficial?isExamAnswerCorrect(q.id,answer):isAcceptedLevel2Answer(answer,q)
-    const recorded=recordLevel2Attempt({key:presentation.key,question:q,presentationId:presentation.presentationId,answer,correct,usedHint,usedExplanation,revealedAnswer,firstSubmission:true,practiceFieldId:fieldId})
+    const recorded=recordLevel2Attempt({key:presentation.key,sessionId:presentation.session.sessionId,question:q,presentationId:presentation.presentationId,answer,correct,usedHint,usedExplanation,revealedAnswer,firstSubmission:true,practiceFieldId:fieldId})
     saveAttempt({id:createRecordId(isOfficial?'past-practice':'level2'),questionId:isOfficial?`target-${q.id}`:q.id,mode:'multi',topic:field?.label||topic,status:correct?'correct':'wrong',mistakeTag:correct?undefined:'解法未習得',answer,at:recorded.attempt.answeredAt})
-    if(sourceQuestion)updateGuidedProgress(sourceQuestion,recorded.completed?{practiceStreak:4,mastery:'consolidated'}:{practiceStreak:recorded.session.currentStreak})
+    if(sourceQuestion&&!recorded.stale)updateGuidedProgress(sourceQuestion,recorded.completed?{practiceStreak:4,mastery:'consolidated'}:{practiceStreak:recorded.session.currentStreak})
     if(recorded.completed)saveAttempt({id:createRecordId('mastery'),questionId:`mastery-${sourceQuestion||fieldId}`,mode:'multi',topic:field?.label||topic,status:'correct',at:recorded.attempt.answeredAt})
-    setResult(correct);setSession(recorded.session);if(recorded.completed)setFinished(true)
+    setResult(correct);setStaleSubmission(recorded.stale);setSession(recorded.session);if(recorded.completed||recorded.session.status==='completed')setFinished(true)
   }
   const next=()=>{
     if(result===null||finished)return
     const selected=selectLevel2Question(sourceQuestion||null,requestedField)
-    setPresentation(selected);setSession(selected.session);setAnswer('');setResult(null);setUsedHint(false);setUsedExplanation(false);setRevealedAnswer(false)
+    setPresentation(selected);setSession(selected.session);setAnswer('');setResult(null);setStaleSubmission(false);setUsedHint(false);setUsedExplanation(false);setRevealedAnswer(false);setFinished(selected.session.status==='completed')
   }
-  const useHint=()=>{setUsedHint(true);const next=markLevel2Assistance(presentation.key,q.id,{usedHint:true,usedExplanation:false,revealedAnswer:false});if(next)setSession(next)}
-  const reveal=()=>{setUsedExplanation(true);setRevealedAnswer(true);const next=markLevel2Assistance(presentation.key,q.id,{usedHint:false,usedExplanation:true,revealedAnswer:true});if(next)setSession(next)}
-  const restart=()=>{const selected=selectLevel2Question(sourceQuestion||null,requestedField,localStorage,latestSourceAttemptAt,true);setPresentation(selected);setSession(selected.session);setAnswer('');setResult(null);setUsedHint(false);setUsedExplanation(false);setRevealedAnswer(false);setFinished(false)}
+  const useHint=()=>{setUsedHint(true);const next=markLevel2Assistance(presentation.key,presentation.session.sessionId,q.id,{usedHint:true,usedExplanation:false,revealedAnswer:false});if(next)setSession(next)}
+  const reveal=()=>{setUsedExplanation(true);setRevealedAnswer(true);const next=markLevel2Assistance(presentation.key,presentation.session.sessionId,q.id,{usedHint:false,usedExplanation:true,revealedAnswer:true});if(next)setSession(next)}
+  const restart=()=>{const selected=selectLevel2Question(sourceQuestion||null,requestedField,localStorage,latestSourceAttemptAt,true);setPresentation(selected);setSession(selected.session);setAnswer('');setResult(null);setStaleSubmission(false);setUsedHint(false);setUsedExplanation(false);setRevealedAnswer(false);setFinished(false)}
   if(finished)return <section className="card mastery-card"><span className="eyebrow">MASTERED FOR NOW</span><h1>{session.requiredCount}/{session.requiredCount}問完了</h1><p><b>{field?.label||topic}</b>は、いったん克服しました。開始時に固定した{session.requiredCount}問すべてに自力で正解した履歴を保存しています。</p><p className="muted">後の過去問で再度間違えた場合は、新しい固定セットで弱点補強を開始します。</p><div className="actions"><Link className="button primary" to={source?`/reinforce?source=${source}`:'/mistakes'}>{source?'弱点補強へ戻る':'次の弱点へ'}</Link><button className="button" onClick={restart}>新しいセットで再練習</button><Link className="button" to="/">ホームへ</Link></div></section>
   const problemFigure=level2FigureUrl(q.problemFigure),hintFigure=level2FigureUrl(q.hintFigure),explanationFigure=level2FigureUrl(q.explanationFigure)
   return <>
@@ -58,7 +58,7 @@ export default function Remediation(){
       {usedHint&&<div className="hint"><b>ヒント：</b>条件と求めるものを分け、対応する公式・性質を1つずつ確認しましょう。{hintFigure&&hintFigure!==problemFigure&&<figure className="level2-figure"><img src={hintFigure} alt={`${q.id}のヒント図`}/></figure>}</div>}
       {(usedExplanation||revealedAnswer)&&result===null&&<div className="answer-reveal"><span>解説・正答を確認しました</span><strong>{q.answer}</strong><p>{q.explanation}</p>{explanationFigure&&explanationFigure!==problemFigure&&<figure className="level2-figure"><img src={explanationFigure} alt={`${q.id}の解説図`}/></figure>}</div>}
       {result===null?<div className="actions"><button className="button primary" onClick={submit} disabled={!answer.trim()}>採点する</button><button className="button" onClick={useHint}>ヒント</button><button className="button" onClick={reveal}>答え・解説を見る</button></div>:
-        <div className={`result ${result?'ok':'ng'}`}><h3>{result?'○ 正解':'× 不正解'}</h3><p><b>正答：</b>{q.answer}</p><p>{q.explanation}</p>{explanationFigure&&explanationFigure!==problemFigure&&<figure className="level2-figure"><img src={explanationFigure} alt={`${q.id}の解説図`}/></figure>}<p className="muted">{result&&!usedHint&&!usedExplanation&&!revealedAnswer?'この問題は完了です。正解済み問題は再出題しません。':result?'履歴は保存しましたが、補助を使ったため、この問題は後でもう一度出題します。':'ほかの問題の完了状態は維持します。この問題だけ一巡後にもう一度出題します。'}</p><button className="button primary" onClick={next}>次の問題へ</button></div>}
+        <div className={`result ${result?'ok':'ng'}`}><h3>{result?'○ 正解':'× 不正解'}</h3><p><b>正答：</b>{q.answer}</p><p>{q.explanation}</p>{explanationFigure&&explanationFigure!==problemFigure&&<figure className="level2-figure"><img src={explanationFigure} alt={`${q.id}の解説図`}/></figure>}<p className="muted">{staleSubmission?'別の画面で新しいセットが開始されたため、この解答は履歴だけ保存し、現在のセットの進捗には加えていません。':result&&!usedHint&&!usedExplanation&&!revealedAnswer?'この問題は完了です。正解済み問題は再出題しません。':result?'履歴は保存しましたが、補助を使ったため、この問題は後でもう一度出題します。':'ほかの問題の完了状態は維持します。この問題だけ一巡後にもう一度出題します。'}</p><button className="button primary" onClick={next}>次の問題へ</button></div>}
     </article>
     <section className="card"><h2>{session.requiredCount}問完了のルール</h2><p>開始時に固定した{session.requiredCount}問すべてに自力で正解すると「いったん克服」です。誤答や補助利用があっても正解済み問題は維持し、未正解問題だけを周回します。</p></section>
   </>
