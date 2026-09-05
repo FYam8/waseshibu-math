@@ -298,6 +298,25 @@ assert.equal(staleResult.session.currentStreak,0,'stale submission must not adva
 assert.equal(staleResult.qualifying,false,'stale submission must not qualify for mastery')
 assert.equal(mod.loadLevel2History(staleTabStore).attempts.length,1,'the learner answer itself must remain in immutable history')
 
+// If another tab has already completed the same fixed session, an older view of
+// a completed question must not reopen the session or duplicate mastery progress.
+const completedTabStore=new MemoryStorage()
+let completedTabStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',completedTabStore)
+const oldCompletedView=completedTabStep
+while(completedTabStep.session.status!=='completed'){
+  const completedTabResult=record(completedTabStep,true,completedTabStore)
+  completedTabStep=completedTabResult.completed?{...completedTabStep,session:completedTabResult.session}:mod.selectLevel2Question('2024-Q5-1','angles-circles',completedTabStore)
+}
+const masteryCount=mod.loadLevel2History(completedTabStore).masteryEvents.length
+const ignoredAssistance=mod.markLevel2Assistance(oldCompletedView.key,oldCompletedView.session.sessionId,oldCompletedView.question.id,{usedHint:true,usedExplanation:false,revealedAnswer:false},completedTabStore)
+assert.equal(ignoredAssistance.status,'completed','a stale hint must not reopen a completed session')
+assert.equal(ignoredAssistance.pendingAssistance,null,'a stale hint must not taint a completed question')
+const completedTabStaleResult=record(oldCompletedView,true,completedTabStore)
+assert.equal(completedTabStaleResult.stale,true,'an answer for an already completed question must be treated as stale progress')
+assert.equal(completedTabStaleResult.session.status,'completed','a stale answer must preserve completed session state')
+assert.equal(mod.loadLevel2History(completedTabStore).masteryEvents.length,masteryCount,'a stale answer must not duplicate mastery events')
+assert.equal(mod.loadLevel2History(completedTabStore).attempts.length,3,'the stale learner answer must still remain in immutable history')
+
 // Workload-based targets are frozen at session start: Q1=4, Q2/Q3=3, Q4/Q5=2.
 for(const [sourceId,expected] of [['2024-Q1-1',4],['2024-Q2-1',3],['2024-Q5-1',2]]){
   const workloadStore=new MemoryStorage()

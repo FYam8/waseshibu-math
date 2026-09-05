@@ -156,7 +156,9 @@ export type RecordLevel2Input={key:string;sessionId:string;question:Level2Questi
 export function markLevel2Assistance(key:string,sessionId:string,questionId:string,assistance:Omit<PendingAssistance,'questionId'>,storage:StorageWrite=localStorage){
   const history=loadLevel2History(storage),session=history.sessions[key]
   if(!session)return undefined
-  if(session.sessionId!==sessionId||!session.fixedQuestionIds.includes(questionId))return session
+  // 別タブですでに完了したセッション／問題へ、古い画面から補助操作が
+  // 届いても、完了状態や正解済み状態を再び active に戻さない。
+  if(session.sessionId!==sessionId||session.status==='completed'||session.completedQuestionIds.includes(questionId)||!session.fixedQuestionIds.includes(questionId))return session
   const old=session.pendingAssistance?.questionId===questionId?session.pendingAssistance:null
   const next={...session,status:'active' as const,pendingAssistance:{questionId,
     usedHint:!!(old?.usedHint||assistance.usedHint),usedExplanation:!!(old?.usedExplanation||assistance.usedExplanation),revealedAnswer:!!(old?.revealedAnswer||assistance.revealedAnswer)},updatedAt:now()}
@@ -165,7 +167,9 @@ export function markLevel2Assistance(key:string,sessionId:string,questionId:stri
 export function recordLevel2Attempt(input:RecordLevel2Input,storage:StorageWrite=localStorage){
   const history=loadLevel2History(storage),session=history.sessions[input.key]
   if(!session)throw new Error('学習セッションが見つかりません')
-  const stale=session.sessionId!==input.sessionId||!session.fixedQuestionIds.includes(input.question.id)
+  // 解答そのものは履歴へ残すが、別タブで完了済みになった問題を現行の
+  // 固定セット進捗や克服イベントへ二重反映しない。
+  const stale=session.sessionId!==input.sessionId||session.status==='completed'||session.completedQuestionIds.includes(input.question.id)||!session.fixedQuestionIds.includes(input.question.id)
   const pending=!stale&&session.pendingAssistance?.questionId===input.question.id?session.pendingAssistance:null
   const usedHint=!!(input.usedHint||pending?.usedHint),usedExplanation=!!(input.usedExplanation||pending?.usedExplanation),revealedAnswer=!!(input.revealedAnswer||pending?.revealedAnswer)
   const at=now(),qualifying=!stale&&input.firstSubmission&&input.correct&&!usedHint&&!usedExplanation&&!revealedAnswer
