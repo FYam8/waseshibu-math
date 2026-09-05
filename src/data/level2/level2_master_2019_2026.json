@@ -4335,18 +4335,18 @@
       "27"
     ],
     "explanation": "BCは直径なのでBC=10。OからAまで5、AH=3よりOH=4。ADはBCに平行な弦なのでAD=8。よって面積は(10+8)×3÷2=27。",
-    "problemFigure": "assets/2025/2025_q5_stage1.png",
+    "problemFigure": "assets/2025/2025_q5_stage1_problem_simple.png",
     "hintFigure": null,
-    "explanationFigure": "assets/2025/2025_q5_stage1.png",
+    "explanationFigure": "assets/2025/2025_q5_stage1_explanation_audited.png",
     "suggestedFieldId": "coordinates",
     "sourceSkill": "円と台形の面積",
-    "contentRevision": 1,
+    "contentRevision": 2,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "d1f739ef7fbb890c",
+    "contentHash": "3ddda8b762945c77",
     "taskHash": "cab1a5c7342faabf",
-    "renderHash": "876d36d9bed13537"
+    "renderHash": "039acde4572d59d8"
   },
   {
     "id": "L2-2025-Q5-2",
@@ -4363,18 +4363,18 @@
       "60/13"
     ],
     "explanation": "O=(0,0), B=(5,0), C=(-5,0)と置くとA=(4,3),D=(-4,3)。ACとODを連立するとE=(-20/13,15/13)。座標から△AOEの面積は |4×15/13-3×(-20/13)|÷2=60/13。",
-    "problemFigure": "assets/2025/2025_q5_stage2.png",
+    "problemFigure": "assets/2025/2025_q5_stage2_problem_simple.png",
     "hintFigure": "assets/2025/2025_q5_stage2.png",
     "explanationFigure": "assets/2025/2025_q5_stage2.png",
     "suggestedFieldId": "coordinates",
     "sourceSkill": "円・座標・交点の面積",
-    "contentRevision": 3,
+    "contentRevision": 4,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "c275f677825fc32c",
+    "contentHash": "dfab7bb4b5c0da49",
     "taskHash": "0b6c30bc8d4f84c7",
-    "renderHash": "2151ae4cdf9d43c5"
+    "renderHash": "bb4f24d4401a57e0"
   },
   {
     "id": "L2-2025-Q5-3",
