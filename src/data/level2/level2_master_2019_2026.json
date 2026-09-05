@@ -2236,16 +2236,16 @@
       "B=(1,10)"
     ],
     "explanation": "Bはx=1上かつm上なのでy=10/1=10。",
-    "problemFigure": "assets/2022/2022_q2_base.svg",
+    "problemFigure": "assets/2022/2022_q2_1.png",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 2,
+    "contentRevision": 3,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "bd718a48f0898b4a",
+    "contentHash": "031ddcc318284bf3",
     "taskHash": "4ae5f84263d94921",
-    "renderHash": "1a71bab07fc1598e"
+    "renderHash": "e37fa8c2661950c9"
   },
   {
     "id": "L2-2022-Q2-2",
@@ -2269,14 +2269,14 @@
     "explanation": "ABCDは幅t、高さ10/t−t²/3の長方形。△CDQは底辺CDが同じ高さで、x方向の高さをx_Qとすると面積は1/2×CD×x_Q。長方形と等しいのでx_Q=2t。l上だからy_Q=(1/3)(2t)²=4t²/3。",
     "problemFigure": "assets/2022/2022_q2_with_q.svg",
     "hintFigure": null,
-    "explanationFigure": null,
-    "contentRevision": 2,
+    "explanationFigure": "assets/2022/2022_q2_2_explanation.png",
+    "contentRevision": 3,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "6aa97e5b5339a55c",
+    "contentHash": "02190282aaf04f40",
     "taskHash": "ff3358fd9952ec76",
-    "renderHash": "5663d41a784e18e9"
+    "renderHash": "38a84123a040b668"
   },
   {
     "id": "L2-2022-Q2-3",
@@ -2295,16 +2295,16 @@
       "30"
     ],
     "explanation": "Pのx座標をpとすると(1/3)p²=10/pよりp³=30。PH=pなので立方体の体積はp³=30。",
-    "problemFigure": "assets/2022/2022_q2_with_h.svg",
+    "problemFigure": "assets/2022/2022_q2_3.png",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 2,
+    "contentRevision": 3,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "87d78fbcd588fbd9",
+    "contentHash": "ecf8ce2ed693e26d",
     "taskHash": "7b64b45f1f42fdbe",
-    "renderHash": "f3d0650a21f6a811"
+    "renderHash": "1f5207450ca26632"
   },
   {
     "id": "L2-2022-Q3-1",
@@ -2590,16 +2590,16 @@
       "1"
     ],
     "explanation": "底面BRSEを対角線BSで分けると、四角すいC-BRSEは三角すいC-BRSと三角すいC-BSEに分かれる。△CBRはCB=2、CR=1の直角三角形で面積1、SはDHの中点なので底面ABCDからの高さは1。よって三角すいC-BRSの体積は1/3。次に三角すいC-BDEは、底面△BCDの面積が2、高さが2なので体積4/3。B,C,E,Hは同一平面上にあり、SはDHの中点だから、Sから平面BCEまでの高さはDからの高さの1/2。したがって三角すいC-BSEの体積は(4/3)×1/2=2/3。合計して1。",
-    "problemFigure": "assets/2022/2022_q5_cube.png",
+    "problemFigure": "assets/2022/2022_q5_pyramid.png",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 2,
+    "contentRevision": 3,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "3cc7a0e9504f5e83",
+    "contentHash": "ef1d0a36056815c0",
     "taskHash": "902d23bae7ec719a",
-    "renderHash": "f9dafd5e90bb9934"
+    "renderHash": "76912e190b6aadb9"
   },
   {
     "id": "L2-2023-Q1-1",
@@ -3039,7 +3039,7 @@
     "explanation": "MはBD上にあるので∠ABM=∠ABD=∠ACD。さらに作図より∠BAM=∠CADだから△ABM∽△ACD。次に∠DAM=∠CAB、∠ADM=∠ADB=∠ACBより△ADM∽△ACB。",
     "problemFigure": "assets/2023/2023_q4_proof.svg",
     "hintFigure": null,
-    "explanationFigure": null,
+    "explanationFigure": "assets/2023/2023_q4_1_explanation.png",
     "answerSpec": {
       "type": "similarTrianglePairs",
       "orderIndependent": true,
@@ -3072,12 +3072,12 @@
       "allowEquivalentCyclicOrReversedNotation": true
     },
     "gradingRevision": 1,
-    "contentRevision": 2,
+    "contentRevision": 3,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "4a269274ffd28de7",
+    "contentHash": "a8e1d5902faa56c7",
     "taskHash": "7247a5fa8fd7b59c",
-    "renderHash": "7edabe125432ecaf"
+    "renderHash": "44583a6b2341339c"
   },
   {
     "id": "L2-2023-Q4-2",
