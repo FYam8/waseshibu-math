@@ -5,9 +5,11 @@ import { loadAttempts, loadExamScores, loadPreferences } from './storage'
 import { canWriteLearningData, notifyWriteBlocked } from './version'
 import { loadGuidedProgressState, loadGuidedReviews } from './guidedReview'
 import { gradeInTarget, storedExamItems, weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
+import practicePool from './data/level2/practice_pool_index.json'
 
 const ROUTE_KEY='waseshibu-math-learning-route-v1'
 const LEVEL2_HISTORY_KEY='waseshibu-math-level2-history-v1'
+const CURRENT_PRACTICE_IDS=new Set(practicePool.fields.flatMap(field=>field.masteryEligibleQuestionIds))
 
 export function hasCurrentPracticeMastery(field:string,after:string){
   try{
@@ -15,7 +17,7 @@ export function hasCurrentPracticeMastery(field:string,after:string){
     const raw=JSON.parse(localStorage.getItem(LEVEL2_HISTORY_KEY)||'null') as {masteryEvents?:Array<{fieldId?:string;achievedAt?:string;questionIds?:string[];requiredCount?:number}>}|null
     return !!raw?.masteryEvents?.some(event=>{
       const questionIds=[...new Set(event.questionIds||[])]
-      return event.fieldId===fieldId&&(event.achievedAt||'')>after&&questionIds.length>=(event.requiredCount||4)&&questionIds.every(id=>!/^L2-20(?:19|20|21)-/.test(id))
+      return event.fieldId===fieldId&&(event.achievedAt||'')>after&&questionIds.length>=(event.requiredCount||4)&&questionIds.every(id=>CURRENT_PRACTICE_IDS.has(id))
     })
   }catch{return false}
 }

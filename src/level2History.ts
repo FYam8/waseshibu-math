@@ -105,13 +105,9 @@ export function selectLevel2Question(sourceQuestionId:string|null,requestedField
   if(!field)throw new Error('対応する分野の問題プールがありません')
   const ids=field.masteryEligibleQuestionIds.filter(id=>level2QuestionById.has(id))
   const directId=session.directLevel2QuestionId
-  if(session.status==='completed'){
-    const completedQuestionId=session.lastQuestionId||session.fixedQuestionIds.at(-1)||session.completedQuestionIds.at(-1)
-    const completedQuestion=completedQuestionId?level2QuestionById.get(completedQuestionId):undefined
-    if(!completedQuestion)throw new Error('完了済みセッションの問題が見つかりません')
-    return {question:completedQuestion,presentationId:uuid(),session,key:ensured.key}
-  }
-  if(session.fixedQuestionIds.length<session.requiredCount){
+  const validFixedQuestionIds=session.fixedQuestionIds.filter(id=>ids.includes(id))
+  const completedOutsideFixed=session.completedQuestionIds.some(id=>!validFixedQuestionIds.includes(id))
+  if(validFixedQuestionIds.length!==session.requiredCount||validFixedQuestionIds.length!==session.fixedQuestionIds.length||completedOutsideFixed){
     const ordered=orderedCandidates(ids,history,session,storage)
     const retained=session.completedQuestionIds.filter(id=>ids.includes(id))
     // 旧形式・不完全なimportで固定セットが途中までしかない場合も、
@@ -121,7 +117,7 @@ export function selectLevel2Question(sourceQuestionId:string|null,requestedField
     const fixed=uniqueIds([...retained,...retainedFixed,...directFirst,...ordered.filter(id=>!directFirst.includes(id)&&!retained.includes(id)&&!retainedFixed.includes(id)&&id!==session.lastQuestionId),...(session.lastQuestionId&&ids.includes(session.lastQuestionId)?[session.lastQuestionId]:[])]).slice(0,session.requiredCount)
     if(!fixed.length)throw new Error('出題可能な問題がありません')
     const completedQuestionIds=retained.filter(id=>fixed.includes(id))
-    session={...session,requiredCount:fixed.length,fixedQuestionIds:fixed,bagRemaining:fixed.filter(id=>!completedQuestionIds.includes(id)),
+    session={...session,requiredCount:fixed.length,fixedQuestionIds:fixed,bagRemaining:fixed.filter(id=>!completedQuestionIds.includes(id)),status:'active',
       currentStreak:completedQuestionIds.length,currentStreakQuestionIds:completedQuestionIds,completedQuestionIds,retryQuestionIds:[]}
     if(session.completedQuestionIds.length>=session.requiredCount){
       session={...session,currentStreak:session.requiredCount,currentStreakQuestionIds:session.completedQuestionIds,status:'completed',updatedAt:now()}
@@ -129,8 +125,17 @@ export function selectLevel2Question(sourceQuestionId:string|null,requestedField
         history.masteryEvents.push({fieldId:session.fieldIdAtSessionStart,achievedAt:session.updatedAt,fieldAssignmentRevision:LEVEL2_ASSIGNMENT_SET_REVISION,questionIds:session.completedQuestionIds,requiredCount:session.requiredCount,label:'いったん克服'})
       }
       history.sessions[ensured.key]=session;saveLevel2History(history,storage)
-      return {question:level2QuestionById.get(session.lastQuestionId||session.completedQuestionIds.at(-1)!)!,presentationId:uuid(),session,key:ensured.key}
+      const completedQuestionId=session.lastQuestionId&&session.fixedQuestionIds.includes(session.lastQuestionId)?session.lastQuestionId:session.completedQuestionIds.at(-1)
+      const completedQuestion=completedQuestionId?level2QuestionById.get(completedQuestionId):undefined
+      if(!completedQuestion)throw new Error('完了済みセッションの問題が見つかりません')
+      return {question:completedQuestion,presentationId:uuid(),session,key:ensured.key}
     }
+  }
+  if(session.status==='completed'){
+    const completedQuestionId=session.lastQuestionId&&session.fixedQuestionIds.includes(session.lastQuestionId)?session.lastQuestionId:session.fixedQuestionIds.at(-1)||session.completedQuestionIds.at(-1)
+    const completedQuestion=completedQuestionId?level2QuestionById.get(completedQuestionId):undefined
+    if(!completedQuestion)throw new Error('完了済みセッションの問題が見つかりません')
+    return {question:completedQuestion,presentationId:uuid(),session,key:ensured.key}
   }
   let bag=session.bagRemaining.filter(id=>session.fixedQuestionIds.includes(id)&&!session.completedQuestionIds.includes(id))
   if(!bag.length)bag=session.retryQuestionIds.filter(id=>session.fixedQuestionIds.includes(id)&&!session.completedQuestionIds.includes(id))

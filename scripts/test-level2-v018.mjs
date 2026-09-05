@@ -77,7 +77,7 @@ assert.match(pastPapersUi,/q\.subquestions\.some\(sub=>keyFor\(q,sub\.no\)===rem
 assert.match(pastPapersUi,/onPointerDown=\{e=>e\.preventDefault\(\)\}/,'past-paper keypad must not blur the selected answer field on touch')
 
 const out=path.join(os.tmpdir(),`waseshibu-level2-${process.pid}.mjs`)
-await build({stdin:{contents:`export * from ${JSON.stringify(path.resolve('src/level2History.ts'))};export * from ${JSON.stringify(path.resolve('src/level2ProgressView.ts'))};export {isAcceptedLevel2Answer} from ${JSON.stringify(path.resolve('src/level2Answer.ts'))};export * from ${JSON.stringify(path.resolve('src/data/level2Data.ts'))};`,resolveDir:process.cwd(),loader:'ts'},bundle:true,platform:'node',format:'esm',outfile:out,define:{'import.meta.env.BASE_URL':'"./"'}})
+await build({stdin:{contents:`export * from ${JSON.stringify(path.resolve('src/level2History.ts'))};export * from ${JSON.stringify(path.resolve('src/level2ProgressView.ts'))};export {hasCurrentPracticeMastery} from ${JSON.stringify(path.resolve('src/learningRoute.ts'))};export {isAcceptedLevel2Answer} from ${JSON.stringify(path.resolve('src/level2Answer.ts'))};export * from ${JSON.stringify(path.resolve('src/data/level2Data.ts'))};`,resolveDir:process.cwd(),loader:'ts'},bundle:true,platform:'node',format:'esm',outfile:out,define:{'import.meta.env.BASE_URL':'"./"'}})
 const mod=await import(pathToFileURL(out).href+`?t=${Date.now()}`)
 for(const q of [...core,...support]){
   assert.equal(mod.isAcceptedLevel2Answer(q.answer,q),true,`${q.id} canonical answer must pass`)
@@ -202,6 +202,28 @@ assert.equal(partialFixedStep.question.id,'L2-2024-Q5-1','reload must keep the a
 assert.equal(partialFixedStep.session.fixedQuestionIds[0],'L2-2024-Q5-1','partial fixed set must preserve its existing first question')
 assert.equal(partialFixedStep.session.fixedQuestionIds.length,2,'partial fixed set must be filled to its frozen target')
 assert.equal(new Set(partialFixedStep.session.fixedQuestionIds).size,2,'partial fixed set must be filled with a distinct question')
+
+const retiredFixedStore=new MemoryStorage()
+retiredFixedStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify({schemaVersion:1,attempts:[{attemptId:'kept'}],questionStats:{},masteryEvents:[],sessions:{'source:2024-Q5-1':{
+  sessionId:'retired-fixed',triggerSourceQuestionId:'2024-Q5-1',directLevel2QuestionId:'L2-2024-Q5-1',fieldIdAtSessionStart:'angles-circles',fieldAssignmentRevisionAtSessionStart:1,
+  requiredCount:2,fixedQuestionIds:['REMOVED-QUESTION','L2-2024-Q5-1'],completedQuestionIds:[],retryQuestionIds:['REMOVED-QUESTION'],currentStreak:0,currentStreakQuestionIds:[],bestStreak:0,status:'active',
+  lastQuestionId:'REMOVED-QUESTION',lastPresentedIds:['REMOVED-QUESTION'],bagRemaining:['REMOVED-QUESTION','L2-2024-Q5-1'],updatedAt:'2026-09-02T00:00:00.000Z'
+}}}))
+const repairedRetiredStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',retiredFixedStore)
+assert.ok(repairedRetiredStep.question,'a removed fixed question ID must never open an undefined problem')
+assert.equal(repairedRetiredStep.session.fixedQuestionIds.length,2,'a removed fixed question must be replaced to keep the frozen workload')
+assert.equal(repairedRetiredStep.session.fixedQuestionIds.includes('REMOVED-QUESTION'),false,'removed question IDs must leave the active fixed set')
+assert.equal(mod.loadLevel2History(retiredFixedStore).attempts.length,1,'repairing the active set must retain historical attempts')
+
+const unknownMasteryStore=new MemoryStorage()
+unknownMasteryStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify({schemaVersion:1,attempts:[],questionStats:{},sessions:{},masteryEvents:[{
+  fieldId:'angles-circles',achievedAt:'2026-09-02T00:00:00.000Z',fieldAssignmentRevision:1,
+  questionIds:['REMOVED-QUESTION-1','REMOVED-QUESTION-2'],requiredCount:2,label:'いったん克服'
+}]}))
+const originalLocalStorage=globalThis.localStorage
+globalThis.localStorage=unknownMasteryStore
+assert.equal(mod.hasCurrentPracticeMastery('円・角度','2026-09-01T00:00:00.000Z'),false,'unknown question IDs must not certify route mastery')
+globalThis.localStorage=originalLocalStorage
 
 const legacyHeavyCompleteStore=new MemoryStorage()
 legacyHeavyCompleteStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify({schemaVersion:1,attempts:[],questionStats:{},masteryEvents:[],sessions:{'source:2024-Q5-1':{
