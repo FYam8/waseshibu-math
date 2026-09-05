@@ -17,8 +17,9 @@ export default function Remediation(){
   const requestedField=params.get('field')||resolveLevel2FieldId(topic)||resolveLevel2FieldId(classifyRemediationField(topic).title)||'expressions'
   const latestSourceAttemptAt=sourceQuestion?loadAttempts().filter(a=>a.questionId===`exam-${sourceQuestion}`&&a.status!=='correct').sort((a,b)=>b.at.localeCompare(a.at))[0]?.at:undefined
   const [presentation,setPresentation]=useState<Presentation>(()=>selectLevel2Question(sourceQuestion||null,requestedField,localStorage,latestSourceAttemptAt))
+  const pending=presentation.session.pendingAssistance?.questionId===presentation.question.id?presentation.session.pendingAssistance:null
   const [answer,setAnswer]=useState(''),[result,setResult]=useState<boolean|null>(null)
-  const [usedHint,setUsedHint]=useState(false),[usedExplanation,setUsedExplanation]=useState(false),[revealedAnswer,setRevealedAnswer]=useState(false)
+  const [usedHint,setUsedHint]=useState(!!pending?.usedHint),[usedExplanation,setUsedExplanation]=useState(!!pending?.usedExplanation),[revealedAnswer,setRevealedAnswer]=useState(!!pending?.revealedAnswer)
   const [session,setSession]=useState(presentation.session),[finished,setFinished]=useState(presentation.session.status==='completed')
   const q=presentation.question,fieldId=session.fieldIdAtSessionStart||currentFieldId(q.id),field=level2FieldById.get(fieldId)
   const isOfficial=q.bankType==='past-paper'
@@ -37,8 +38,8 @@ export default function Remediation(){
     const selected=selectLevel2Question(sourceQuestion||null,requestedField)
     setPresentation(selected);setSession(selected.session);setAnswer('');setResult(null);setUsedHint(false);setUsedExplanation(false);setRevealedAnswer(false)
   }
-  const useHint=()=>{setUsedHint(true);const next=markLevel2Assistance(presentation.key);if(next)setSession(next)}
-  const reveal=()=>{setUsedExplanation(true);setRevealedAnswer(true);const next=markLevel2Assistance(presentation.key);if(next)setSession(next)}
+  const useHint=()=>{setUsedHint(true);const next=markLevel2Assistance(presentation.key,q.id,{usedHint:true,usedExplanation:false,revealedAnswer:false});if(next)setSession(next)}
+  const reveal=()=>{setUsedExplanation(true);setRevealedAnswer(true);const next=markLevel2Assistance(presentation.key,q.id,{usedHint:false,usedExplanation:true,revealedAnswer:true});if(next)setSession(next)}
   const restart=()=>{const selected=selectLevel2Question(sourceQuestion||null,requestedField,localStorage,latestSourceAttemptAt,true);setPresentation(selected);setSession(selected.session);setAnswer('');setResult(null);setUsedHint(false);setUsedExplanation(false);setRevealedAnswer(false);setFinished(false)}
   if(finished)return <section className="card mastery-card"><span className="eyebrow">MASTERED FOR NOW</span><h1>{session.requiredCount}/{session.requiredCount}問完了</h1><p><b>{field?.label||topic}</b>は、いったん克服しました。開始時に固定した{session.requiredCount}問すべてに自力で正解した履歴を保存しています。</p><p className="muted">後の過去問で再度間違えた場合は、新しい固定セットで弱点補強を開始します。</p><div className="actions"><Link className="button primary" to={source?`/reinforce?source=${source}`:'/mistakes'}>{source?'弱点補強へ戻る':'次の弱点へ'}</Link><button className="button" onClick={restart}>新しいセットで再練習</button><Link className="button" to="/">ホームへ</Link></div></section>
   const problemFigure=level2FigureUrl(q.problemFigure),hintFigure=level2FigureUrl(q.hintFigure),explanationFigure=level2FigureUrl(q.explanationFigure)

@@ -270,8 +270,22 @@ assert.equal(mod.loadLevel2History(storage).attempts.length,6,'wrong reset must 
 selected=mod.selectLevel2Question(null,'factoring',storage)
 result=mod.recordLevel2Attempt({key:selected.key,question:selected.question,presentationId:selected.presentationId,answer:selected.question.answer,correct:true,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:'factoring'},storage)
 assert.equal(result.session.currentStreak,1)
-const assisted=mod.markLevel2Assistance(selected.key,storage)
+const assisted=mod.markLevel2Assistance(selected.key,selected.question.id,{usedHint:true,usedExplanation:false,revealedAnswer:false},storage)
 assert.equal(assisted.currentStreak,1,'hint/reveal must not erase completed problems')
+
+const assistedReloadStore=new MemoryStorage()
+let assistedReloadStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',assistedReloadStore)
+mod.markLevel2Assistance(assistedReloadStep.key,assistedReloadStep.question.id,{usedHint:true,usedExplanation:false,revealedAnswer:false},assistedReloadStore)
+assistedReloadStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',assistedReloadStore)
+assert.equal(assistedReloadStep.session.pendingAssistance?.usedHint,true,'reload must retain assistance used before grading')
+let assistedReloadResult=record(assistedReloadStep,true,assistedReloadStore)
+assert.equal(assistedReloadResult.qualifying,false,'a correct answer after reloading a used hint must not qualify as independent')
+assert.equal(assistedReloadResult.attempt.usedHintBeforeAnswer,true,'the immutable attempt must record assistance used before reload')
+assert.equal(assistedReloadResult.session.currentStreak,0,'assisted answer after reload must remain unresolved')
+assert.equal(assistedReloadResult.session.pendingAssistance,null,'submitted assistance state must clear for the next independent retry')
+assistedReloadStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',assistedReloadStore)
+assistedReloadResult=record(assistedReloadStep,true,assistedReloadStore)
+assert.equal(assistedReloadResult.qualifying,true,'a later fresh independent retry must be allowed to complete the problem')
 
 // Workload-based targets are frozen at session start: Q1=4, Q2/Q3=3, Q4/Q5=2.
 for(const [sourceId,expected] of [['2024-Q1-1',4],['2024-Q2-1',3],['2024-Q5-1',2]]){

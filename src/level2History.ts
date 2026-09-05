@@ -12,11 +12,12 @@ export type Level2Attempt={
   practiceFieldIdAtAttempt:string|null;questionBank:Level2Bank;answer:string
 }
 export type QuestionStats={attemptCount:number;correctCount:number;qualifyingCorrectCount:number;lastAttemptAt:string|null;lastResult:boolean|null}
+export type PendingAssistance={questionId:string;usedHint:boolean;usedExplanation:boolean;revealedAnswer:boolean}
 export type Level2Session={
   sessionId:string;triggerSourceQuestionId:string|null;directLevel2QuestionId:string|null;fieldIdAtSessionStart:string
   fieldAssignmentRevisionAtSessionStart:number;currentStreak:number;currentStreakQuestionIds:string[];bestStreak:number
   status:'active'|'completed';sourceAttemptAt?:string;lastQuestionId:string|null;lastPresentedIds:string[];bagRemaining:string[];updatedAt:string
-  requiredCount:number;fixedQuestionIds:string[];completedQuestionIds:string[];retryQuestionIds:string[]
+  requiredCount:number;fixedQuestionIds:string[];completedQuestionIds:string[];retryQuestionIds:string[];pendingAssistance:PendingAssistance|null
 }
 export type MasteryEvent={fieldId:string;achievedAt:string;fieldAssignmentRevision:number;questionIds:string[];requiredCount?:number;label:'いったん克服'}
 export type Level2History={schemaVersion:1;attempts:Level2Attempt[];questionStats:Record<string,QuestionStats>;sessions:Record<string,Level2Session>;masteryEvents:MasteryEvent[]}
@@ -36,6 +37,10 @@ export function loadLevel2History(storage:StorageRead=localStorage):Level2Histor
       if(!value||typeof value!=='object'||Array.isArray(value))continue
       const session=value as Level2Session
       const currentStreakQuestionIds=uniqueIds(session.currentStreakQuestionIds)
+      const pending=session.pendingAssistance
+      const pendingAssistance=pending&&typeof pending==='object'&&typeof pending.questionId==='string'?{
+        questionId:pending.questionId,usedHint:pending.usedHint===true,usedExplanation:pending.usedExplanation===true,revealedAnswer:pending.revealedAnswer===true
+      }:null
       sessions[key]={...session,
         currentStreakQuestionIds,
         lastPresentedIds:uniqueIds(session.lastPresentedIds),
@@ -43,7 +48,7 @@ export function loadLevel2History(storage:StorageRead=localStorage):Level2Histor
         requiredCount:Math.max(1,Math.min(4,Number(session.requiredCount)||requiredPracticeCount(session.triggerSourceQuestionId,session.fieldIdAtSessionStart))),
         fixedQuestionIds:uniqueIds(session.fixedQuestionIds),
         completedQuestionIds:Array.isArray(session.completedQuestionIds)?uniqueIds(session.completedQuestionIds):currentStreakQuestionIds,
-        retryQuestionIds:uniqueIds(session.retryQuestionIds)
+        retryQuestionIds:uniqueIds(session.retryQuestionIds),pendingAssistance
       }
     }
     return {schemaVersion:1,attempts:Array.isArray(raw.attempts)?raw.attempts:[],questionStats:raw.questionStats&&typeof raw.questionStats==='object'?raw.questionStats:{},sessions,masteryEvents:Array.isArray(raw.masteryEvents)?raw.masteryEvents:[]}
@@ -59,7 +64,7 @@ function sessionKey(sourceQuestionId:string|null,fieldId:string){return sourceQu
 function freshSession(sourceQuestionId:string|null,fieldId:string,sourceAttemptAt?:string):Level2Session{
   const direct=sourceQuestionId?directQuestionForSource(sourceQuestionId):undefined
   return {sessionId:uuid(),triggerSourceQuestionId:sourceQuestionId,directLevel2QuestionId:direct?.id||null,fieldIdAtSessionStart:fieldId,
-    fieldAssignmentRevisionAtSessionStart:direct?assignmentRevision(direct.id):LEVEL2_ASSIGNMENT_SET_REVISION,currentStreak:0,currentStreakQuestionIds:[],bestStreak:0,status:'active',sourceAttemptAt,lastQuestionId:null,lastPresentedIds:[],bagRemaining:[],requiredCount:requiredPracticeCount(sourceQuestionId,fieldId),fixedQuestionIds:[],completedQuestionIds:[],retryQuestionIds:[],updatedAt:now()}
+    fieldAssignmentRevisionAtSessionStart:direct?assignmentRevision(direct.id):LEVEL2_ASSIGNMENT_SET_REVISION,currentStreak:0,currentStreakQuestionIds:[],bestStreak:0,status:'active',sourceAttemptAt,lastQuestionId:null,lastPresentedIds:[],bagRemaining:[],requiredCount:requiredPracticeCount(sourceQuestionId,fieldId),fixedQuestionIds:[],completedQuestionIds:[],retryQuestionIds:[],pendingAssistance:null,updatedAt:now()}
 }
 
 export function ensureLevel2Session(sourceQuestionId:string|null,requestedFieldId:string,forceNew=false,storage:StorageWrite=localStorage,latestSourceAttemptAt?:string){
@@ -70,7 +75,7 @@ export function ensureLevel2Session(sourceQuestionId:string|null,requestedFieldI
   // 2019〜2021由来の旧Level2はバックログへ残すが、新しい公式過去問の
   // 4/4へ旧問題の連続記録を持ち越さない。履歴本体・bestStreakは削除しない。
   if(session.currentStreakQuestionIds.some(id=>/^L2-20(?:19|20|21)-/.test(id))){
-    session={...session,currentStreak:0,currentStreakQuestionIds:[],status:'active',fixedQuestionIds:[],completedQuestionIds:[],retryQuestionIds:[],
+    session={...session,currentStreak:0,currentStreakQuestionIds:[],status:'active',fixedQuestionIds:[],completedQuestionIds:[],retryQuestionIds:[],pendingAssistance:null,
       directLevel2QuestionId:direct?.id||null,lastQuestionId:/^L2-20(?:19|20|21)-/.test(session.lastQuestionId||'')?null:session.lastQuestionId,
       lastPresentedIds:session.lastPresentedIds.filter(id=>!/^L2-20(?:19|20|21)-/.test(id)),
       bagRemaining:session.bagRemaining.filter(id=>!/^L2-20(?:19|20|21)-/.test(id)),updatedAt:now()}
@@ -118,6 +123,7 @@ export function selectLevel2Question(sourceQuestionId:string|null,requestedField
     if(!fixed.length)throw new Error('出題可能な問題がありません')
     const completedQuestionIds=retained.filter(id=>fixed.includes(id))
     session={...session,requiredCount:fixed.length,fixedQuestionIds:fixed,bagRemaining:fixed.filter(id=>!completedQuestionIds.includes(id)),status:'active',
+      pendingAssistance:session.pendingAssistance&&fixed.includes(session.pendingAssistance.questionId)?session.pendingAssistance:null,
       currentStreak:completedQuestionIds.length,currentStreakQuestionIds:completedQuestionIds,completedQuestionIds,retryQuestionIds:[]}
     if(session.completedQuestionIds.length>=session.requiredCount){
       session={...session,currentStreak:session.requiredCount,currentStreakQuestionIds:session.completedQuestionIds,status:'completed',updatedAt:now()}
@@ -147,25 +153,29 @@ export function selectLevel2Question(sourceQuestionId:string|null,requestedField
 }
 
 export type RecordLevel2Input={key:string;question:Level2Question;presentationId:string;answer:string;correct:boolean;usedHint:boolean;usedExplanation:boolean;revealedAnswer:boolean;firstSubmission:boolean;practiceFieldId:string|null}
-export function markLevel2Assistance(key:string,storage:StorageWrite=localStorage){
+export function markLevel2Assistance(key:string,questionId:string,assistance:Omit<PendingAssistance,'questionId'>,storage:StorageWrite=localStorage){
   const history=loadLevel2History(storage),session=history.sessions[key]
   if(!session)return undefined
-  const next={...session,status:'active' as const,updatedAt:now()}
+  const old=session.pendingAssistance?.questionId===questionId?session.pendingAssistance:null
+  const next={...session,status:'active' as const,pendingAssistance:{questionId,
+    usedHint:!!(old?.usedHint||assistance.usedHint),usedExplanation:!!(old?.usedExplanation||assistance.usedExplanation),revealedAnswer:!!(old?.revealedAnswer||assistance.revealedAnswer)},updatedAt:now()}
   history.sessions[key]=next;saveLevel2History(history,storage);return next
 }
 export function recordLevel2Attempt(input:RecordLevel2Input,storage:StorageWrite=localStorage){
   const history=loadLevel2History(storage),session=history.sessions[input.key]
   if(!session)throw new Error('学習セッションが見つかりません')
-  const at=now(),qualifying=input.firstSubmission&&input.correct&&!input.usedHint&&!input.usedExplanation&&!input.revealedAnswer
+  const pending=session.pendingAssistance?.questionId===input.question.id?session.pendingAssistance:null
+  const usedHint=!!(input.usedHint||pending?.usedHint),usedExplanation=!!(input.usedExplanation||pending?.usedExplanation),revealedAnswer=!!(input.revealedAnswer||pending?.revealedAnswer)
+  const at=now(),qualifying=input.firstSubmission&&input.correct&&!usedHint&&!usedExplanation&&!revealedAnswer
   const questionBank:Level2Bank=input.question.bankType==='field-support'?'field-support':input.question.bankType==='past-paper'?'past-paper':'core160'
-  const attempt:Level2Attempt={attemptId:uuid(),questionId:input.question.id,presentationId:input.presentationId,weaknessSessionId:session.sessionId,answeredAt:at,submissionIndex:1,isFirstSubmissionForPresentation:input.firstSubmission,isCorrect:input.correct,usedHintBeforeAnswer:input.usedHint,usedExplanationBeforeAnswer:input.usedExplanation,revealedAnswerBeforeAnswer:input.revealedAnswer,contentRevisionAtAttempt:input.question.contentRevision||1,gradingRevisionAtAttempt:input.question.gradingRevision||1,fieldIdAtAttempt:currentFieldId(input.question.id),fieldAssignmentRevisionAtAttempt:assignmentRevision(input.question.id),practiceFieldIdAtAttempt:input.practiceFieldId,questionBank,answer:input.answer}
+  const attempt:Level2Attempt={attemptId:uuid(),questionId:input.question.id,presentationId:input.presentationId,weaknessSessionId:session.sessionId,answeredAt:at,submissionIndex:1,isFirstSubmissionForPresentation:input.firstSubmission,isCorrect:input.correct,usedHintBeforeAnswer:usedHint,usedExplanationBeforeAnswer:usedExplanation,revealedAnswerBeforeAnswer:revealedAnswer,contentRevisionAtAttempt:input.question.contentRevision||1,gradingRevisionAtAttempt:input.question.gradingRevision||1,fieldIdAtAttempt:currentFieldId(input.question.id),fieldAssignmentRevisionAtAttempt:assignmentRevision(input.question.id),practiceFieldIdAtAttempt:input.practiceFieldId,questionBank,answer:input.answer}
   const old=history.questionStats[input.question.id]||{attemptCount:0,correctCount:0,qualifyingCorrectCount:0,lastAttemptAt:null,lastResult:null}
   history.attempts.push(attempt)
   history.questionStats[input.question.id]={attemptCount:old.attemptCount+1,correctCount:old.correctCount+(input.correct?1:0),qualifyingCorrectCount:old.qualifyingCorrectCount+(qualifying?1:0),lastAttemptAt:at,lastResult:input.correct}
   const completedIds=qualifying&&!session.completedQuestionIds.includes(input.question.id)?[...session.completedQuestionIds,input.question.id]:session.completedQuestionIds
   const retryIds=qualifying?session.retryQuestionIds.filter(id=>id!==input.question.id):[...session.retryQuestionIds.filter(id=>id!==input.question.id),input.question.id]
   const progress=completedIds.length,best=Math.max(session.bestStreak,progress),completed=progress>=session.requiredCount
-  history.sessions[input.key]={...session,currentStreak:progress,currentStreakQuestionIds:completedIds,completedQuestionIds:completedIds,retryQuestionIds:retryIds,bagRemaining:session.bagRemaining.filter(id=>id!==input.question.id),bestStreak:best,status:completed?'completed':'active',updatedAt:at}
+  history.sessions[input.key]={...session,currentStreak:progress,currentStreakQuestionIds:completedIds,completedQuestionIds:completedIds,retryQuestionIds:retryIds,bagRemaining:session.bagRemaining.filter(id=>id!==input.question.id),pendingAssistance:pending?null:session.pendingAssistance,bestStreak:best,status:completed?'completed':'active',updatedAt:at}
   if(completed)history.masteryEvents.push({fieldId:session.fieldIdAtSessionStart,achievedAt:at,fieldAssignmentRevision:LEVEL2_ASSIGNMENT_SET_REVISION,questionIds:completedIds,requiredCount:session.requiredCount,label:'いったん克服'})
   saveLevel2History(history,storage)
   return {attempt,session:history.sessions[input.key],qualifying,completed}

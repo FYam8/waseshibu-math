@@ -42,6 +42,7 @@
     "fixedQuestionIds": ["q1", "q2", "q3"],
     "completedQuestionIds": [],
     "retryQuestionIds": [],
+    "pendingAssistance": null,
     "bestStreak": 0,
     "status": "active"
   },
