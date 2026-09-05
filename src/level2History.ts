@@ -25,6 +25,7 @@ type StorageWrite=Pick<Storage,'getItem'|'setItem'>
 const blank=():Level2History=>({schemaVersion:1,attempts:[],questionStats:{},sessions:{},masteryEvents:[]})
 const uuid=()=>typeof crypto!=='undefined'&&'randomUUID'in crypto?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2)}`
 const now=()=>new Date().toISOString()
+const uniqueIds=(value:unknown)=>Array.isArray(value)?[...new Set(value.filter((id):id is string=>typeof id==='string'))]:[]
 
 export function loadLevel2History(storage:StorageRead=localStorage):Level2History{
   try{
@@ -34,14 +35,15 @@ export function loadLevel2History(storage:StorageRead=localStorage):Level2Histor
     if(raw.sessions&&typeof raw.sessions==='object'&&!Array.isArray(raw.sessions))for(const [key,value] of Object.entries(raw.sessions as Record<string,unknown>)){
       if(!value||typeof value!=='object'||Array.isArray(value))continue
       const session=value as Level2Session
+      const currentStreakQuestionIds=uniqueIds(session.currentStreakQuestionIds)
       sessions[key]={...session,
-        currentStreakQuestionIds:Array.isArray(session.currentStreakQuestionIds)?session.currentStreakQuestionIds:[],
-        lastPresentedIds:Array.isArray(session.lastPresentedIds)?session.lastPresentedIds:[],
-        bagRemaining:Array.isArray(session.bagRemaining)?session.bagRemaining:[],
+        currentStreakQuestionIds,
+        lastPresentedIds:uniqueIds(session.lastPresentedIds),
+        bagRemaining:uniqueIds(session.bagRemaining),
         requiredCount:Math.max(1,Math.min(4,Number(session.requiredCount)||requiredPracticeCount(session.triggerSourceQuestionId,session.fieldIdAtSessionStart))),
-        fixedQuestionIds:Array.isArray(session.fixedQuestionIds)?session.fixedQuestionIds:[],
-        completedQuestionIds:Array.isArray(session.completedQuestionIds)?session.completedQuestionIds:(Array.isArray(session.currentStreakQuestionIds)?session.currentStreakQuestionIds:[]),
-        retryQuestionIds:Array.isArray(session.retryQuestionIds)?session.retryQuestionIds:[]
+        fixedQuestionIds:uniqueIds(session.fixedQuestionIds),
+        completedQuestionIds:Array.isArray(session.completedQuestionIds)?uniqueIds(session.completedQuestionIds):currentStreakQuestionIds,
+        retryQuestionIds:uniqueIds(session.retryQuestionIds)
       }
     }
     return {schemaVersion:1,attempts:Array.isArray(raw.attempts)?raw.attempts:[],questionStats:raw.questionStats&&typeof raw.questionStats==='object'?raw.questionStats:{},sessions,masteryEvents:Array.isArray(raw.masteryEvents)?raw.masteryEvents:[]}
@@ -115,7 +117,9 @@ export function selectLevel2Question(sourceQuestionId:string|null,requestedField
     const directFirst=directId&&ids.includes(directId)&&!retained.includes(directId)&&!session.lastQuestionId?[directId]:[]
     const fixed=[...retained,...directFirst,...ordered.filter(id=>!directFirst.includes(id)&&!retained.includes(id)&&id!==session.lastQuestionId),...(session.lastQuestionId&&ids.includes(session.lastQuestionId)?[session.lastQuestionId]:[])].slice(0,session.requiredCount)
     if(!fixed.length)throw new Error('出題可能な問題がありません')
-    session={...session,requiredCount:fixed.length,fixedQuestionIds:fixed,bagRemaining:fixed.filter(id=>!retained.includes(id)),completedQuestionIds:retained.filter(id=>fixed.includes(id)),retryQuestionIds:[]}
+    const completedQuestionIds=retained.filter(id=>fixed.includes(id))
+    session={...session,requiredCount:fixed.length,fixedQuestionIds:fixed,bagRemaining:fixed.filter(id=>!completedQuestionIds.includes(id)),
+      currentStreak:completedQuestionIds.length,currentStreakQuestionIds:completedQuestionIds,completedQuestionIds,retryQuestionIds:[]}
     if(session.completedQuestionIds.length>=session.requiredCount){
       session={...session,currentStreak:session.requiredCount,currentStreakQuestionIds:session.completedQuestionIds,status:'completed',updatedAt:now()}
       if(!history.masteryEvents.some(event=>event.fieldId===session.fieldIdAtSessionStart&&event.achievedAt===session.updatedAt)){
@@ -162,7 +166,10 @@ export function recordLevel2Attempt(input:RecordLevel2Input,storage:StorageWrite
 export function resetLevel2Weakness(sourceQuestionId:string,fieldId:string,storage:StorageWrite=localStorage,latestSourceAttemptAt?:string){return ensureLevel2Session(sourceQuestionId,fieldId,true,storage,latestSourceAttemptAt)}
 
 export function hasCurrentLevel2Mastery(fieldId:string,after:string,storage:StorageRead=localStorage){
-  return loadLevel2History(storage).masteryEvents.some(event=>event.fieldId===fieldId&&event.achievedAt>after&&event.questionIds.length>=(event.requiredCount||4)&&event.questionIds.every(id=>level2QuestionById.has(id)))
+  return loadLevel2History(storage).masteryEvents.some(event=>{
+    const questionIds=[...new Set(event.questionIds)]
+    return event.fieldId===fieldId&&event.achievedAt>after&&questionIds.length>=(event.requiredCount||4)&&questionIds.every(id=>level2QuestionById.has(id))
+  })
 }
 
 export function inProgressLevel2Sessions(storage:StorageRead=localStorage){

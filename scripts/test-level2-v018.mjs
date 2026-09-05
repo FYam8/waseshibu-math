@@ -176,6 +176,21 @@ legacyHeavyStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify({schemaVe
 assert.equal(mod.loadLevel2SessionSummaries(legacyHeavyStore)[0].requiredCount,2,'Today/ETA summary must match the two-question target before a legacy session is opened')
 assert.equal(mod.selectLevel2Question('2024-Q5-1','angles-circles',legacyHeavyStore).session.requiredCount,2,'legacy heavy session without requiredCount must migrate to two questions')
 
+const duplicateLegacyStore=new MemoryStorage()
+duplicateLegacyStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify({schemaVersion:1,attempts:[],questionStats:{},masteryEvents:[{
+  fieldId:'angles-circles',achievedAt:'2026-09-02T00:00:00.000Z',fieldAssignmentRevision:1,
+  questionIds:['L2-2024-Q5-1','L2-2024-Q5-1'],requiredCount:2,label:'いったん克服'
+}],sessions:{'source:2024-Q5-1':{
+  sessionId:'duplicate-legacy',triggerSourceQuestionId:'2024-Q5-1',directLevel2QuestionId:'L2-2024-Q5-1',fieldIdAtSessionStart:'angles-circles',fieldAssignmentRevisionAtSessionStart:1,
+  currentStreak:2,currentStreakQuestionIds:['L2-2024-Q5-1','L2-2024-Q5-1'],bestStreak:2,status:'active',lastQuestionId:'L2-2024-Q5-1',lastPresentedIds:['L2-2024-Q5-1'],bagRemaining:[],updatedAt:'2026-09-02T00:00:00.000Z'
+}}}))
+assert.equal(mod.loadLevel2SessionSummaries(duplicateLegacyStore)[0].completedQuestionIds.length,1,'duplicate legacy IDs must count as one in Today/ETA')
+assert.equal(mod.hasCurrentLevel2Mastery('angles-circles','2026-09-01T00:00:00.000Z',duplicateLegacyStore),false,'duplicate mastery IDs must not certify completion')
+const duplicateLegacyStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',duplicateLegacyStore)
+assert.equal(duplicateLegacyStep.session.status,'active','one repeated ID must not complete a two-question set')
+assert.equal(duplicateLegacyStep.session.currentStreak,1,'normalized progress must equal the one distinct completed question')
+assert.equal(new Set(duplicateLegacyStep.session.fixedQuestionIds).size,2,'rebuilt fixed set must contain two distinct questions')
+
 const legacyHeavyCompleteStore=new MemoryStorage()
 legacyHeavyCompleteStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify({schemaVersion:1,attempts:[],questionStats:{},masteryEvents:[],sessions:{'source:2024-Q5-1':{
   sessionId:'legacy-heavy-progress',triggerSourceQuestionId:'2024-Q5-1',directLevel2QuestionId:'L2-2024-Q5-1',fieldIdAtSessionStart:'angles-circles',fieldAssignmentRevisionAtSessionStart:1,

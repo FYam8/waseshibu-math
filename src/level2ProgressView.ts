@@ -16,7 +16,7 @@ export function loadLevel2SessionSummaries(storage:Pick<Storage,'getItem'>=local
     return Object.values(raw.sessions).flatMap(value=>{
       if(!value||typeof value!=='object')return []
       const session=value as Record<string,unknown>
-      const completed=Array.isArray(session.completedQuestionIds)?session.completedQuestionIds.map(String):Array.isArray(session.currentStreakQuestionIds)?session.currentStreakQuestionIds.map(String):[]
+      const completed=[...new Set(Array.isArray(session.completedQuestionIds)?session.completedQuestionIds.map(String):Array.isArray(session.currentStreakQuestionIds)?session.currentStreakQuestionIds.map(String):[])]
       const triggerSourceQuestionId=typeof session.triggerSourceQuestionId==='string'?session.triggerSourceQuestionId:null
       const fieldIdAtSessionStart=typeof session.fieldIdAtSessionStart==='string'?session.fieldIdAtSessionStart:''
       return [{

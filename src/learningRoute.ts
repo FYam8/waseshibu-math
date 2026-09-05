@@ -13,7 +13,10 @@ export function hasCurrentPracticeMastery(field:string,after:string){
   try{
     const fieldId=(()=>{const id=classifyRemediationField(field).id;return id==='radicals'?'square-roots':id==='motion'?'coordinates':id})()
     const raw=JSON.parse(localStorage.getItem(LEVEL2_HISTORY_KEY)||'null') as {masteryEvents?:Array<{fieldId?:string;achievedAt?:string;questionIds?:string[];requiredCount?:number}>}|null
-    return !!raw?.masteryEvents?.some(event=>event.fieldId===fieldId&&(event.achievedAt||'')>after&&(event.questionIds?.length||0)>=(event.requiredCount||4)&&event.questionIds!.every(id=>!/^L2-20(?:19|20|21)-/.test(id)))
+    return !!raw?.masteryEvents?.some(event=>{
+      const questionIds=[...new Set(event.questionIds||[])]
+      return event.fieldId===fieldId&&(event.achievedAt||'')>after&&questionIds.length>=(event.requiredCount||4)&&questionIds.every(id=>!/^L2-20(?:19|20|21)-/.test(id))
+    })
   }catch{return false}
 }
 
