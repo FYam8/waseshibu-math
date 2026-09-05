@@ -63,6 +63,16 @@ for(const [sourceQuestionId,explanationFigure] of Object.entries(explanationOnly
   assert.equal(q.contentHash,hash({context:q.context,prompt:q.prompt,answer:q.answer,acceptedAnswers:q.acceptedAnswers,explanation:q.explanation,problemFigure:q.problemFigure,hintFigure:q.hintFigure,explanationFigure:q.explanationFigure,problemTable:q.problemTable}),`${sourceQuestionId} contentHash must include the explanation-only figure timing`)
   assert.equal(q.renderHash,hash({context:q.context,prompt:q.prompt,problemFigure:q.problemFigure,hintFigure:q.hintFigure,explanationFigure:q.explanationFigure,problemTable:q.problemTable}),`${sourceQuestionId} renderHash must include the explanation-only figure timing`)
 }
+{
+  const q=core.find(item=>item.sourceQuestionId==='2025-Q5-1')
+  assert.ok(q,'2025-Q5-1 must remain in the Level2 master')
+  assert.equal(q.problemFigure,'assets/2025/2025_q5_stage1_problem_simple.png','2025-Q5-1 must keep the simplified problem figure')
+  assert.equal(q.explanationFigure,'assets/2025/2025_q5_stage1.png','2025-Q5-1 explanation must use the complete, non-overlapping construction')
+  assert.ok(q.contentRevision>=3,'2025-Q5-1 explanation-figure correction must increment contentRevision')
+  const hash=value=>crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0,16)
+  assert.equal(q.contentHash,hash({context:q.context,prompt:q.prompt,answer:q.answer,acceptedAnswers:q.acceptedAnswers,explanation:q.explanation,problemFigure:q.problemFigure,hintFigure:q.hintFigure,explanationFigure:q.explanationFigure,problemTable:q.problemTable}),'2025-Q5-1 contentHash must include the corrected explanation figure')
+  assert.equal(q.renderHash,hash({context:q.context,prompt:q.prompt,problemFigure:q.problemFigure,hintFigure:q.hintFigure,explanationFigure:q.explanationFigure,problemTable:q.problemTable}),'2025-Q5-1 renderHash must include the corrected explanation figure')
+}
 const requiredProblemTables=['2021-Q4-1','2021-Q4-2','2021-Q4-3','2022-Q3-3']
 for(const sourceQuestionId of requiredProblemTables){
   const q=core.find(item=>item.sourceQuestionId===sourceQuestionId)

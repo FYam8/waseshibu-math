@@ -4337,16 +4337,16 @@
     "explanation": "BCは直径なのでBC=10。OからAまで5、AH=3よりOH=4。ADはBCに平行な弦なのでAD=8。よって面積は(10+8)×3÷2=27。",
     "problemFigure": "assets/2025/2025_q5_stage1_problem_simple.png",
     "hintFigure": null,
-    "explanationFigure": "assets/2025/2025_q5_stage1_explanation_audited.png",
+    "explanationFigure": "assets/2025/2025_q5_stage1.png",
     "suggestedFieldId": "coordinates",
     "sourceSkill": "円と台形の面積",
-    "contentRevision": 2,
+    "contentRevision": 3,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "3ddda8b762945c77",
+    "contentHash": "148367a619917328",
     "taskHash": "cab1a5c7342faabf",
-    "renderHash": "039acde4572d59d8"
+    "renderHash": "a5df203f4bc90e77"
   },
   {
     "id": "L2-2025-Q5-2",
