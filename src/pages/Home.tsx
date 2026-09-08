@@ -91,6 +91,7 @@ export default function Home(){
         :<>
           <div className="today-complete">
             <b>{remediationResume?'✓ 今日の予定分は完了しました':'✓ 本日の必須課題は完了です'}</b>
+            <p>ここで終えても大丈夫です。追加の学習は任意です。</p>
             <p>{remediationResume?`学習全体には続きがあります。途中の類題は ${preferredRemediation?.completedQuestionIds.length||0}/${preferredRemediation?.requiredCount||0} で保存済みです。次回も同じ固定セットから再開できます。`:'今日の必須課題は完了です。学習全体に続きがある場合は「次のアクション」から進められます。'}</p>
             <div className="actions">
               <Link className="button" to={optionalNext?.to||'/years'}>{optionalNext?'時間があれば次のアクションへ':'時間があれば先へ進む'}</Link>
