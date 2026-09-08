@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import MathAnswerInput from '../components/MathAnswerInput'
-import { isAcceptedAnswer } from '../answer'
-import { loadPrepState, prepQuestions, runExamIntegrityCheck, savePrepState } from '../preflight'
+import { isAcceptedPrepAnswer, loadPrepState, prepQuestions, runExamIntegrityCheck, savePrepState } from '../preflight'
 
 export default function PrepCheck(){
   const navigate=useNavigate(),integrity=runExamIntegrityCheck()
@@ -11,7 +10,7 @@ export default function PrepCheck(){
   const persist=(next:typeof state)=>{setState(next);savePrepState(next)}
   const submit=()=>{
     if(!answer.trim()||result===true)return
-    const correct=isAcceptedAnswer(answer,q.answer,q.acceptedAnswers),next={...state,answers:{...state.answers,[q.id]:answer},tries:{...state.tries,[q.id]:tries+1}}
+    const correct=isAcceptedPrepAnswer(answer,q),next={...state,answers:{...state.answers,[q.id]:answer},tries:{...state.tries,[q.id]:tries+1}}
     persist(next);setResult(correct)
   }
   const next=()=>{

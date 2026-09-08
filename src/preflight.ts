@@ -3,6 +3,7 @@ import { examAnswers, isExamAnswerCorrect } from './data/examAnswers'
 import type { MajorQuestion } from './types'
 import { normalizePrepRecord } from './dataMigration'
 import { canWriteLearningData, notifyWriteBlocked } from './version'
+import { isAcceptedAnswer, normalizeAnswer } from './answer'
 
 export const PREP_KEY='waseshibu-math-prep-check-v1'
 export const PREP_VERSION=1
@@ -15,6 +16,17 @@ export const prepQuestions:PrepQuestion[]=[
   {id:'prep-4',prompt:'√12 を a√b の形に簡単にしてください。',answer:'2√3',acceptedAnswers:['2sqrt(3)','2*√3'],hint:'12 = 4 × 3 と分けます。',explanation:'√12 = √(4×3) = 2√3です。sqrt(3)入力にも対応します。'},
   {id:'prep-5',prompt:'x + y = 3、x − y = 1 の解を座標 (x,y) で入力してください。',answer:'(2,1)',acceptedAnswers:['2,1','x=2,y=1'],hint:'2つの式を加えると2x=4です。',explanation:'x=2、y=1なので、座標は(2,1)です。全角の括弧・数字・カンマにも対応します。'}
 ]
+
+export function isAcceptedPrepAnswer(input:string,question:PrepQuestion){
+  // This item explicitly asks for simplified a√b form, not just equal value.
+  // Keep all other preparation items and their existing input allowances intact.
+  if(question.id==='prep-4'){
+    const canonical=(value:string)=>normalizeAnswer(value).replace(/√\((\d+)\)/g,'√$1')
+    const actual=canonical(input)
+    return [question.answer,...(question.acceptedAnswers||[])].some(value=>canonical(value)===actual)
+  }
+  return isAcceptedAnswer(input,question.answer,question.acceptedAnswers)
+}
 
 export type PrepState={version:number;index:number;answers:Record<string,string>;tries:Record<string,number>;completed:boolean;skipped:boolean;updatedAt:string}
 const emptyPrep=():PrepState=>({version:PREP_VERSION,index:0,answers:{},tries:{},completed:false,skipped:false,updatedAt:new Date(0).toISOString()})

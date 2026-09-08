@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run test:past-paper-figures && npm run test:level2 && npm run test:sync-separation-runtime && npm run test:user-perspective && npm run test:user-perspective:v0176 && tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs",
+    "build": "npm run test:prep-answer-format && npm run test:past-paper-figures && npm run test:level2 && npm run test:sync-separation-runtime && npm run test:user-perspective && npm run test:user-perspective:v0176 && tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs",
+    "test:prep-answer-format": "node scripts/test-prep-answer-format.mjs",
     "preview": "vite preview",
     "self-check": "node scripts/self-check.mjs",
     "verify-critical": "node scripts/verify-critical.mjs",
