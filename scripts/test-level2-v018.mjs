@@ -374,6 +374,24 @@ assert.equal(mod.isAcceptedLevel2Answer('3/9',fraction),false,'unreduced fractio
 assert.equal(mod.isAcceptedLevel2Answer('-1+√3',radical),true,'equivalent simplified radical order must pass')
 assert.equal(mod.isAcceptedLevel2Answer('4:6',ratio),false,'non-simplest ratio must fail')
 assert.equal(mod.isAcceptedLevel2Answer('2:3',ratio),true)
+// S10: paired positive/negative controls. These are product grading checks,
+// not official marking rules or evidence of a learner's improvement.
+const finalAnswerCases=[
+  ['S10-F01','4/6',{...fraction,answer:'2/3'},false],
+  ['S10-F02','2/3',{...fraction,answer:'2/3'},true],
+  ['S10-R01','√8',{...fraction,answer:'2√2'},false],
+  ['S10-R02','2√2',{...fraction,answer:'2√2'},true],
+  ['S10-P01','6:9',ratio,false],
+  ['S10-P02','2:3',ratio,true],
+  ['S10-E01','2',{...fraction,answer:'2,3',answerSpec:{type:'unorderedSolutionSet',elements:['2','3']}},false],
+  ['S10-E02','3,2',{...fraction,answer:'2,3',answerSpec:{type:'unorderedSolutionSet',elements:['2','3']}},true],
+  ['S10-E03','2,3,4',{...fraction,answer:'2,3',answerSpec:{type:'unorderedSolutionSet',elements:['2','3']}},false],
+  ['S10-E04','2,2',{...fraction,answer:'2,3',answerSpec:{type:'unorderedSolutionSet',elements:['2','3']}},false],
+]
+for(const [id,input,question,expected] of finalAnswerCases){
+  assert.equal(mod.isAcceptedLevel2Answer(input,question),expected,`${id}: ${input}`)
+}
+console.log(`PASS: S10 ${finalAnswerCases.length} final-answer boundary cases (not learner outcomes)`)
 assert.equal(mod.isAcceptedLevel2Answer('x=-4/3,-12',unordered),true,'unordered solutions must accept any order')
 assert.equal(mod.isAcceptedLevel2Answer('オ・ア・エ・ウ',choices),true,'unordered choices must accept any order')
 assert.equal(mod.isAcceptedLevel2Answer('ACD~ABM,ACB~ADM',triangles),true,'equivalent triangle-pair order/direction must pass')
