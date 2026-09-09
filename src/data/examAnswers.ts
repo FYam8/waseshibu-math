@@ -1,4 +1,4 @@
-import { isAcceptedAnswer } from '../answer'
+import { hasNonCanonicalFinalForm, isAcceptedAnswer, normalizeAnswer, trailingAnswerUnit } from '../answer'
 
 export type ExamAnswer={answer:string;acceptedAnswers?:string[]}
 const E=(answer:string,...acceptedAnswers:string[]):ExamAnswer=>({answer,acceptedAnswers})
@@ -52,5 +52,19 @@ export const examAnswers:Record<string,ExamAnswer>={
 export function getExamAnswer(questionId:string){return examAnswers[questionId]}
 export function isExamAnswerCorrect(questionId:string,input:string){
   const expected=examAnswers[questionId]
-  return !!expected&&isAcceptedAnswer(input,expected.answer,expected.acceptedAnswers)
+  if(!expected)return false
+  const listed=[expected.answer,...(expected.acceptedAnswers||[])]
+  const normalized=normalizeAnswer(input)
+  if(listed.map(normalizeAnswer).includes(normalized)){
+    const inputUnit=trailingAnswerUnit(input)
+    const allowedUnits=new Set(listed.map(trailingAnswerUnit).filter((unit):unit is string=>!!unit))
+    return !inputUnit||allowedUnits.has(inputUnit)
+  }
+  if(hasNonCanonicalFinalForm(normalized))return false
+  const inputUnit=trailingAnswerUnit(input)
+  if(inputUnit){
+    const allowedUnits=new Set(listed.map(trailingAnswerUnit).filter((unit):unit is string=>!!unit))
+    if(!allowedUnits.has(inputUnit))return false
+  }
+  return isAcceptedAnswer(input,expected.answer,expected.acceptedAnswers)
 }
