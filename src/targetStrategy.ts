@@ -68,7 +68,7 @@ export function rankWeakFields(target:TargetScore,items:StrategyItem[]){
 export function buildTargetStrategy(target:TargetScore,score:number,items:StrategyItem[]):ExamTargetStrategy{
   const candidates=items.filter(item=>item.status!=='correct'&&gradeInTarget(target,item.grade)).sort((a,b)=>itemRank(target,a)-itemRank(target,b)||a.key.localeCompare(b.key)).slice(0,3).map(item=>({key:item.key,label:`大問${item.major}（${item.subNo}） ${item.topic}`,grade:item.grade,points:Math.round(item.points),reason:candidateReason(target,item)}))
   const recoverablePoints=candidates.reduce((sum,item)=>sum+item.points,0),gap=Math.max(0,target-score),projectedScore=Math.min(100,score+recoverablePoints),reached=gap===0
-  const summary=reached?`目標${target}点に到達しています。次は同じ得点を再現できるよう、優先問題の取りこぼしを直します。`:!candidates.length?(items.length?`目標方針内の優先問題は取れています。次の段階の問題を増やすか、時間配分を見直します。`:`得点だけの記録では回収問題を特定できません。次の年度をアプリで自動採点すると、具体的な候補を表示します。`):projectedScore>=target?`上の回収候補を取り直せれば、目標${target}点に届く見込みです。`:`まず上の回収候補を直し、残りは弱点3分野の補強で埋めます。`
+  const summary=reached?`目標${target}点に到達しています。次は同じ得点を再現できるよう、優先問題の取りこぼしを直します。`:!candidates.length?(items.length?`目標方針内の優先問題は取れています。次の段階の問題を増やすか、時間配分を見直します。`:`得点だけの記録では回収問題を特定できません。次の年度をアプリで自動採点すると、具体的な候補を表示します。`):projectedScore>=target?`次の3問をすべて正解した場合は目標${target}点に届きます。まず1問ずつ解き直して、回収できるか確認します。`:`まず次の3問を解き直して回収できるか確認し、残りは弱点3分野の補強で埋めます。`
   return {target,score,gap,reached,projectedScore,recoverablePoints,candidates,summary,timePlan:profiles[target].timePlan}
 }
 
