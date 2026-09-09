@@ -1,23 +1,5 @@
-import { isAcceptedAnswer, normalizeAnswer } from './answer'
+import { hasNonCanonicalFinalForm, isAcceptedAnswer, normalizeAnswer } from './answer'
 import type { Level2Question } from './data/level2Data'
-
-const gcd=(a:number,b:number):number=>b?gcd(b,a%b):Math.abs(a)
-function hasUnreducedFraction(value:string){
-  for(const match of value.matchAll(/(-?\d+)\/(\d+)/g)){
-    const a=Number(match[1]),b=Number(match[2]);if(b===0||gcd(a,b)!==1)return true
-  }
-  return false
-}
-function hasNonSimplestRatio(value:string){
-  const m=value.match(/^(-?\d+):(-?\d+)$/);return !!m&&gcd(Number(m[1]),Number(m[2]))!==1
-}
-function hasRationalizableDenominator(value:string){return /\/[^,]*√/.test(value)}
-function hasReducibleRadical(value:string){
-  for(const match of value.matchAll(/√\(?([0-9]+)\)?/g)){
-    const n=Number(match[1]);for(let k=2;k*k<=n;k++)if(n%(k*k)===0)return true
-  }
-  return false
-}
 
 function unorderedElements(value:string,type:string){
   const cleaned=normalizeAnswer(value).replace(/^[a-z]=/i,'')
@@ -55,7 +37,7 @@ function sameTrianglePairs(input:string,pairs:Array<{left:string[];right:string[
 export function isAcceptedLevel2Answer(input:string,question:Level2Question){
   const normalized=normalizeAnswer(input),listed=[question.answer,...(question.acceptedAnswers||[])].map(normalizeAnswer)
   if(listed.includes(normalized))return true
-  if(hasUnreducedFraction(normalized)||hasNonSimplestRatio(normalized)||hasRationalizableDenominator(normalized)||hasReducibleRadical(normalized))return false
+  if(hasNonCanonicalFinalForm(normalized))return false
   const spec=question.answerSpec
   if(spec?.elements&&['unorderedSolutionSet','unorderedSet','unorderedChoiceSet'].includes(spec.type))return sameUnorderedElements(input,spec.elements,spec.type)
   if(spec?.type==='similarTrianglePairs'&&spec.pairs)return sameTrianglePairs(input,spec.pairs)
