@@ -88,7 +88,9 @@ export default function GuidedReview(){
           {dependencies.length>0&&<div className="notice-box dependency-box"><b>前問の結果を使う場合</b><p>自分の前問の値で続けるか、正答値を使ってこの小問の考え方だけ確認するか選べます。</p><div className="actions"><button className={`button ${dependencyMode==='own'?'primary':''}`} onClick={()=>{setDependencyMode('own');updateGuidedProgress(q.id,{dependencyMode:'own'})}}>自分の前問の答えを使う</button><button className={`button ${dependencyMode==='official'?'primary':''}`} onClick={()=>{setDependencyMode('official');updateGuidedProgress(q.id,{dependencyMode:'official'})}}>正答値を使う</button></div>{dependencyMode==='official'&&dependencies.map(d=><p key={d.questionId}><b>{d.questionId}</b> の正答値：<strong>{d.officialValue}</strong></p>)}</div>}
           <div className="guided-step">
             <span className="eyebrow">STEP {stepIndex+1} / {steps.length}</span><h2>{current.title}</h2><p>{current.prompt}</p>
-            <textarea value={responses[current.id]||''} onChange={e=>setResponses(v=>({...v,[current.id]:e.target.value}))} placeholder="自分の途中式・考え方を入力" rows={5}/>{currentResponse&&!currentResponseValid&&<p className="muted">このSTEPで必要な数値・式・着眼点をもう少し具体的に入力してください。</p>}
+            <textarea value={responses[current.id]||''} onChange={e=>setResponses(v=>({...v,[current.id]:e.target.value}))} placeholder="自分の途中式・考え方を入力" rows={5}/>
+            <p className="muted">この欄は途中式の記録用です。入力内容の数学的な正誤は自動判定しません。</p>
+            {currentResponse&&!currentResponseValid&&<p className="muted">このSTEPで必要な数値・式・着眼点をもう少し具体的に入力してください。</p>}
             {hintLevel>=1&&<div className="notice-box"><b>ヒント1</b><p>{current.hint1}</p></div>}
             {hintLevel>=2&&<div className="notice-box"><b>さらにヒント</b><p>{current.hint2}</p></div>}
             {hintLevel>=3&&<div className="answer-reveal compact"><span>このSTEPの確認</span><strong>{current.reveal}</strong></div>}
