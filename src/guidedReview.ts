@@ -50,13 +50,13 @@ const meaningfulTokens=(text:string)=>{
 export function validateGuidedStepResponse(step:GuidedStep,value:string){
   const answer=normalizeStepText(value)
   if(!answer||STEP_RESPONSE_BANNED.has(answer))return false
-  const expected=meaningfulTokens(`${step.title} ${step.prompt} ${step.reveal}`)
+  // STEP番号や「途中式」という共通ラベルではなく、この問題固有の内容との
+  // 関連を確認する。式らしいだけの入力（例: 999=999）は学習記録にしない。
+  const expected=meaningfulTokens(`${step.hint1} ${step.hint2} ${step.reveal}`)
   // 数字1個でも、そのSTEPで本当に必要な値なら許可する（例：2）。無関係な123は通さない。
   if(expected.some(token=>token===answer||answer.includes(token)))return true
-  // 同値式や自然な途中式を完全一致で落とさない。最低限、式として意味のある構造を要求する。
-  if(/[=<>:]/.test(answer)&&/[0-9a-z√]/.test(answer))return true
-  if(/[+\-*/×÷]/.test(answer)&&/[0-9a-z√]/.test(answer)&&answer.length>=3)return true
-  // 日本語説明は短すぎる相づちを除き、STEPの語彙と1語以上重なることを求める。
+  // 同値式は問題固有の数値・文字と重なる場合に上で受理する。日本語説明は
+  // 短すぎる相づちを除き、STEPの語彙と1語以上重なることを求める。
   const words=meaningfulTokens(value).filter(x=>/[ぁ-んァ-ヶ一-龠]/.test(x))
   const expectedWords=expected.filter(x=>/[ぁ-んァ-ヶ一-龠]/.test(x))
   return answer.length>=4&&words.some(word=>expectedWords.some(exp=>exp.includes(word)||word.includes(exp)))
