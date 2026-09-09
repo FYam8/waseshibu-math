@@ -37,6 +37,6 @@ assert.match(homeSource,/x\.major===1&&x\.status!=='correct'&&gradeInTarget/,'S5
 assert.match(strategySource,/\(item\.major===1\?-1:0\)/,'S5-Q1-008: 回収候補で大問1を優先していない')
 assert.match(strategySource,/easyCauses\.has\(item\.cause\|\|''\)\?-1:0/,'S5-Q1-008: 本来取れた原因を回収候補で優先していない')
 assert.match(strategySource,/得点だけの記録では回収問題を特定できません/,'S5-Q1-009: 得点内訳なしに回収可能な問題を断定している')
-assert.match(papersSource,/時間配分と回収点は学習上の目安です/,'S5-Q1-010: 回収点を公式配点・保証値のように表示している')
+assert.match(papersSource,/表示点は優先問題の配点合計から出した条件付き上限/,'S5-Q1-010: 回収点を公式配点・保証値のように表示している')
 
 console.log('PASS: S5-Q1-001..010 大問1の8問構成、2019境界、具体的な自己申告分類、小問時間、回収候補の根拠を検証')
