@@ -6,6 +6,7 @@ import {
 import { strategyForStoredExam, targetGoalLabel, targetProfile, weakFieldsForStoredExam } from '../targetStrategy'
 import { latestMainCheckExam } from '../learningRoute'
 import { loadGuidedProgressState } from '../guidedReview'
+import { assessScoreStability } from '../scoreGuidance'
 
 export default function Report() {
   const [version,setVersion]=useState(0)
@@ -14,6 +15,7 @@ export default function Report() {
   const attempts=useMemo(()=>loadAttempts(),[version])
   const examScores=useMemo(()=>loadExamScores(),[version])
   const prefs=loadPreferences()
+  const scoreStability=assessScoreStability(examScores)
 
   const scored=attempts.filter(a=>a.status!=='deferred')
   const correct=scored.filter(a=>a.status==='correct').length
@@ -117,6 +119,13 @@ export default function Report() {
         <article className="card stat"><b>{reviewResult??'--'}</b><span>直近の弱点復習8問</span></article>
         <article className="card stat"><b>{deferred}</b><span>見送り記録</span></article>
       </section>
+
+      {scoreStability.kind==='seventy-to-seventy-five'&&<section className="card score-stability-guidance">
+        <div className="section-head"><div><span className="eyebrow">SCORE STABILITY · LAST 4</span><h2>直近4回：{scoreStability.scores.join(' → ')}点</h2></div><b>幅 {scoreStability.spread}点</b></div>
+        <p>70〜75点帯が4回続いています。{scoreStability.stretchGoalNote}</p>
+        <div className="todo-list">{scoreStability.checks.map((item,i)=><div key={item}><b>{i+1}</b><span>{item}</span></div>)}</div>
+        <p className="muted">{scoreStability.dataLimitNote}</p>
+      </section>}
 
       <section className={`card target-result ${targetStrategy?.reached?'reached':''}`}>
         <div className="section-head"><div><span className="eyebrow">{targetGoalLabel(prefs.target)}</span><h2>{targetStrategy?(targetStrategy.reached?`${targetGoalLabel(prefs.target)}目標に到達`:`目標まであと${targetStrategy.gap}点`):`${targetGoalLabel(prefs.target)}戦略`}</h2></div>{targetStrategy&&<b className="target-projection">{targetStrategy.candidates.length?`優先${targetStrategy.candidates.length}問をすべて正解した場合 約${targetStrategy.projectedScore}点`:'小問別データなし'}</b>}</div>
