@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import {spawnSync} from 'node:child_process'
+import {createRequire} from 'node:module'
 
 const modelingSource=fs.readFileSync('src/modelingHint.ts','utf8')
 const remediationSource=fs.readFileSync('src/pages/Remediation.tsx','utf8')
@@ -24,4 +28,17 @@ assert.match(practiceSource,/modelingHintForField\(field\.id\)/,'S3-MODEL-004: �
 assert.match(guidedSource,/modelingHintForTopic\(modelingHintSubject\)/,'S3-MODEL-005: 過去問Guidedのタイトル・topicに適用されていない')
 assert.match(guidedSource,/hasStructuredOpening\?modelingHint:solution\.firstNotice/,'S3-MODEL-007: 6項目より先に個別解法を表示している')
 
-console.log('PASS: S3-MODEL-001..007 文章題は6項目を整理してから立式し、非文章題・正答データ・採点には影響しない')
+const temp=fs.mkdtempSync(path.join(os.tmpdir(),'waseshibu-modeling-hint-'))
+const emptyTypes=path.join(temp,'types');fs.mkdirSync(emptyTypes)
+const built=spawnSync('tsc',['src/modelingHint.ts','--outDir',temp,'--module','commonjs','--target','ES2022','--lib','ES2022,DOM','--typeRoots',emptyTypes,'--skipLibCheck','--strict'],{encoding:'utf8'})
+if(built.status!==0)throw new Error(`modelingHint compile failed\n${built.stdout}\n${built.stderr}`)
+const require=createRequire(import.meta.url),modeling=require(path.join(temp,'modelingHint.js'))
+
+assert.equal(modeling.modelingHintKindForTopic('小問集合（8問） 二次関数の変化の割合'),'generic','S3-MODEL-008: 関数用語の「割合」を文章題扱いしない')
+assert.equal(modeling.modelingHintKindForTopic('小問集合（8問） 座標の対称移動'),'generic','S3-MODEL-009: 座標変換の「移動」を文章題扱いしない')
+assert.equal(modeling.modelingHintKindForTopic('移動と速さ'),'word-problem','S3-MODEL-010: 速さの文章題を除外しない')
+assert.equal(modeling.modelingHintKindForTopic('三角形上の移動ルールと場合の数'),'probability-counting','S3-MODEL-011: 場合の数を文章題へ誤分類しない')
+assert.equal(modeling.modelingHintKindForTopic('歩行距離と飲水量 比例関係'),'word-problem','S3-MODEL-012: 実データ2022-Q3-1の数量文章題に適用する')
+assert.equal(modeling.modelingHintKindForTopic('歩行距離と飲水量 1kmあたりの量を逆算'),'word-problem','S3-MODEL-013: 実データ2022-Q3-2-iの数量文章題に適用する')
+
+console.log('PASS: S3-MODEL-001..013 文章題は6項目を整理してから立式し、実データへの未適用と非文章題への過剰適用を防ぐ')
