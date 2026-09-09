@@ -119,11 +119,12 @@ export default function Report() {
       </section>
 
       <section className={`card target-result ${targetStrategy?.reached?'reached':''}`}>
-        <div className="section-head"><div><span className="eyebrow">{targetGoalLabel(prefs.target)}</span><h2>{targetStrategy?(targetStrategy.reached?`${targetGoalLabel(prefs.target)}目標に到達`:`目標まであと${targetStrategy.gap}点`):`${targetGoalLabel(prefs.target)}戦略`}</h2></div>{targetStrategy&&<b className="target-projection">回収目安 約{targetStrategy.projectedScore}点</b>}</div>
+        <div className="section-head"><div><span className="eyebrow">{targetGoalLabel(prefs.target)}</span><h2>{targetStrategy?(targetStrategy.reached?`${targetGoalLabel(prefs.target)}目標に到達`:`目標まであと${targetStrategy.gap}点`):`${targetGoalLabel(prefs.target)}戦略`}</h2></div>{targetStrategy&&<b className="target-projection">{targetStrategy.candidates.length?`優先${targetStrategy.candidates.length}問をすべて正解した場合 約${targetStrategy.projectedScore}点`:'小問別データなし'}</b>}</div>
         <p>{targetStrategy?.summary||targetProfile(prefs.target).summary}</p>
-        {!!unresolvedRecoveryCandidates.length&&<><h3>未解決・学習中の得点回収候補</h3><div className="recovery-list">{unresolvedRecoveryCandidates.map((item,i)=><article key={item.key}><strong>{i+1}</strong><div><b>{item.label}</b><small>優先度{item.grade}・約{item.points}点　{item.reason}</small></div></article>)}</div></>}
+        {!!unresolvedRecoveryCandidates.length&&<><h3>次に確認する3問（未解決・学習中）</h3><div className="recovery-list">{unresolvedRecoveryCandidates.map((item,i)=><article key={item.key}><strong>{i+1}</strong><div><b>{item.label}</b><small>優先度{item.grade}・約{item.points}点　{item.reason}</small></div></article>)}</div></>}
         {!!consolidatedRecoveryCandidates.length&&<><h3>克服済み・定着確認候補</h3><div className="recovery-list">{consolidatedRecoveryCandidates.map((item,i)=><article key={item.key}><strong>✓</strong><div><b>{item.label}</b><small>克服済み。次年度や任意復習で定着を確認します。</small></div></article>)}</div></>}
         <div className="time-plan"><b>目標別の時間配分</b><div>{(targetStrategy?.timePlan||targetProfile(prefs.target).timePlan).map(item=><span key={item.label} style={{flex:item.percent}}>{item.label}<small>{item.percent}%</small></span>)}</div></div>
+        {targetStrategy&&<p className="muted">表示点は優先問題の配点合計から出した条件付き上限で、すでに回収可能と確認された点ではありません。補強直後の固定類題とは別に、1〜2週間後にも未見の別年度または異設定問題を補助なしで再測定します。</p>}
       </section>
 
       <section className="card">
