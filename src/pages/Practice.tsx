@@ -4,6 +4,7 @@ import { classifyRemediationField, remediationFields } from '../data/remediation
 import { createRecordId, loadAttempts, loadDaily, saveAttempt, saveDaily } from '../storage'
 import { isAcceptedAnswer } from '../answer'
 import MathAnswerInput from '../components/MathAnswerInput'
+import { modelingHintForField } from '../modelingHint'
 
 const mistakeTags = ['知識不足','解法未習得','読み落とし','計算ミス','符号ミス','場合分け不足','時間不足','答え方の不備']
 
@@ -15,7 +16,7 @@ const practiceQuestions:PracticeQuestion[]=remediationFields.flatMap(field=>fiel
   topic:field.title,
   grade:'A',
   sourcePattern:'18分野・基礎確認バンク',
-  hint1:'過去問で使った公式・条件整理を思い出しましょう。',
+  hint1:modelingHintForField(field.id),
   hint2:q.explanation,
   explanation:q.explanation
 })))

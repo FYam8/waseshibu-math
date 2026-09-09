@@ -9,6 +9,7 @@ import {
 } from '../guidedReview'
 import { loadPreferences } from '../storage'
 import { gradeAdvice, targetGoalLabel } from '../targetStrategy'
+import { modelingHintForTopic } from '../modelingHint'
 
 export default function GuidedReview(){
   const [params]=useSearchParams(),questionId=params.get('q')||''
@@ -29,6 +30,7 @@ export default function GuidedReview(){
 
   if(!q||!solution)return <section className="card warning-card"><h1>問題専用解説を特定できませんでした</h1><p>間違い直し一覧から開き直してください。</p><Link className="button primary" to="/mistakes">間違い直しへ</Link></section>
   const steps=solution.steps,current=steps[Math.min(stepIndex,steps.length-1)],hintLevel=hintLevels[current?.id]||0
+  const modelingHint=modelingHintForTopic(q.topic),isWordProblem=modelingHint.startsWith('【登場する量】')
   const currentResponse=responses[current?.id]||'',currentResponseValid=!!current&&validateGuidedStepResponse(current,currentResponse)
   const progress=loadGuidedProgress(q.id)
   const dependencies=solution.context.dependsOn||[]
@@ -87,6 +89,7 @@ export default function GuidedReview(){
           <div className="guided-progress dynamic">{steps.map((s,i)=><button key={s.id} className={i<=stepIndex?'active':''} onClick={()=>setStepIndex(i)}>{i+1}</button>)}</div>
           {dependencies.length>0&&<div className="notice-box dependency-box"><b>前問の結果を使う場合</b><p>自分の前問の値で続けるか、正答値を使ってこの小問の考え方だけ確認するか選べます。</p><div className="actions"><button className={`button ${dependencyMode==='own'?'primary':''}`} onClick={()=>{setDependencyMode('own');updateGuidedProgress(q.id,{dependencyMode:'own'})}}>自分の前問の答えを使う</button><button className={`button ${dependencyMode==='official'?'primary':''}`} onClick={()=>{setDependencyMode('official');updateGuidedProgress(q.id,{dependencyMode:'official'})}}>正答値を使う</button></div>{dependencyMode==='official'&&dependencies.map(d=><p key={d.questionId}><b>{d.questionId}</b> の正答値：<strong>{d.officialValue}</strong></p>)}</div>}
           <div className="guided-step">
+            {isWordProblem&&<div className="notice-box"><b>式を作る前の整理</b><p>{modelingHint}</p></div>}
             <span className="eyebrow">STEP {stepIndex+1} / {steps.length}</span><h2>{current.title}</h2><p>{current.prompt}</p>
             <textarea value={responses[current.id]||''} onChange={e=>setResponses(v=>({...v,[current.id]:e.target.value}))} placeholder="自分の途中式・考え方を入力" rows={5}/>
             <p className="muted">この欄は途中式の記録用です。入力内容の数学的な正誤は自動判定しません。</p>
