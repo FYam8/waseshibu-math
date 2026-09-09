@@ -9,6 +9,13 @@ export const examPages:Record<number,number[][]>={
 
 export const answerPages:Record<number,number>={2019:2,2020:2,2021:1,2022:1,2023:1,2024:1,2025:1,2026:1}
 
+export const examScopeNotes:Partial<Record<number,string>>={
+  2019:'この年度の問題冊子には「本試験範囲に三平方の定理は含まれません」と明記されています。解説・復習でも三平方の定理を主解法にしません。',
+  2020:'この年度の問題冊子には「本試験範囲に三平方の定理は含まれません」と明記されています。解説・復習でも三平方の定理を主解法にしません。'
+}
+
+export function examScopeNote(year?:number){return year===undefined?undefined:examScopeNotes[year]}
+
 export function examRole(year:number){
   if(year===2024)return '診断テスト'
   if(year===2025)return '改善確認テスト'
