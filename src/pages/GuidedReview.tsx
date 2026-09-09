@@ -10,6 +10,7 @@ import {
 import { loadPreferences } from '../storage'
 import { gradeAdvice, targetGoalLabel } from '../targetStrategy'
 import { modelingHintForTopic, modelingHintKindForTopic } from '../modelingHint'
+import { examScopeNote } from '../data/examConfig'
 
 export default function GuidedReview(){
   const [params]=useSearchParams(),questionId=params.get('q')||''
@@ -35,6 +36,7 @@ export default function GuidedReview(){
   const currentResponse=responses[current?.id]||'',currentResponseValid=!!current&&validateGuidedStepResponse(current,currentResponse)
   const progress=loadGuidedProgress(q.id)
   const dependencies=solution.context.dependsOn||[]
+  const scopeNote=examScopeNote(q.year)
 
   const persistLegacy=(outcome?:GuidedOutcome,seen=progress.finalAnswerSeen,used=Object.values(hintLevels).some(v=>v>0))=>{
     const values=Object.values(responses)
@@ -81,6 +83,7 @@ export default function GuidedReview(){
 
   return <>
     <div className="page-head"><div><span className="eyebrow">GUIDED SOLUTION · {targetGoalLabel(prefs.target)}</span><h1>{q.year}年度 大問{q.major}（{q.subNo}）</h1><p className="muted">{q.topic}・優先度{q.grade}　{gradeAdvice(prefs.target,q.grade)}</p></div><Link className="button" to="/mistakes">間違い直しへ戻る</Link></div>
+    {scopeNote&&<div className="notice-box exam-scope-notice"><b>この年度の試験範囲</b><p>{scopeNote}</p></div>}
     <div className="one-question-banner"><b>今はこの1問だけ</b><span>ほかの小問・ほかの正答は表示しません。</span><em>{guidedOutcomeLabel(mastery)}</em></div>
     <div className="guided-review-grid">
       <section className="card guided-problem"><div className="section-head"><div><span className="eyebrow">FOCUSED PROBLEM</span><h2>{q.title}</h2></div><b>（{q.subNo}）</b></div><FocusedQuestionView year={q.year} major={q.major} subIndex={q.subIndex} subCount={q.subCount} subNo={q.subNo} topic={q.topic}/></section>
