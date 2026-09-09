@@ -98,3 +98,4 @@ FAIL。文章題の最初の支援は一般的な一文だけで、一定量・�
 - PR検証: Verify math app `#180` 成功
 - 統合コミット: `617c5effe2d22092ab0c3ed920212aec577eed33`
 - 公開回帰 `S3-INFRA-001`: PagesのNode 20でテストが `.ts` を直接importして失敗。製品コードではなくテストをNode 20互換のソース検査へ変更し、再公開対象とした。
+- 互換修正PR: `#10`、検証 Verify math app `#184` 成功、統合コミット `a0b51d7ec247297d0c256cd4331fbffc599d72ee`
