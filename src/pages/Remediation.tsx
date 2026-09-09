@@ -10,6 +10,7 @@ import { updateGuidedProgress } from '../guidedReview'
 import FocusedQuestionView from '../components/FocusedQuestionView'
 import { isExamAnswerCorrect } from '../data/examAnswers'
 import { modelingHintForField } from '../modelingHint'
+import { examScopeNote } from '../data/examConfig'
 
 type Presentation={question:Level2Question;presentationId:string;session:Level2Session;key:string}
 
@@ -24,6 +25,7 @@ export default function Remediation(){
   const [session,setSession]=useState(presentation.session),[finished,setFinished]=useState(presentation.session.status==='completed')
   const q=presentation.question,fieldId=session.fieldIdAtSessionStart||currentFieldId(q.id),field=level2FieldById.get(fieldId)
   const isOfficial=q.bankType==='past-paper'
+  const scopeNote=examScopeNote(q.officialYear||q.sourceYear)
 
   const submit=()=>{
     if(result!==null||!answer.trim()||finished)return
@@ -46,6 +48,7 @@ export default function Remediation(){
   const problemFigure=level2FigureUrl(q.problemFigure),hintFigure=level2FigureUrl(q.hintFigure),explanationFigure=level2FigureUrl(q.explanationFigure)
   return <>
     <div className="page-head"><div><span className="eyebrow">PRACTICE · OFFICIAL + LEVEL 2</span><h1>{field?.label||topic}</h1><p className="muted">開始時に固定した{session.requiredCount}問を、未正解の問題だけ周回します。</p></div><div className="streak-badge">完了 {session.currentStreak}/{session.requiredCount}</div></div>
+    {scopeNote&&<div className="notice-box exam-scope-notice"><b>出典年度の試験範囲</b><p>{scopeNote}</p></div>}
     <div className="progress-track"><i style={{width:`${session.currentStreak/session.requiredCount*100}%`}}/></div>
     <article className="card practice-card">
       <div className="qtop"><div><span className="eyebrow">{isOfficial?'公式過去問':q.bankType==='field-support'?'FIELD SUPPORT':'CORE LEVEL 2'}</span><h2>{isOfficial?`${q.officialYear}年度 大問${q.officialMajor}（${q.officialSubNo}）`:q.id}</h2></div><span className="progress-pill">完了 {session.currentStreak}/{session.requiredCount}</span></div>
