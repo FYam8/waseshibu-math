@@ -21,7 +21,7 @@ for(const topic of ['売買量と収支の方程式','3変数の数量関係','�
 for(const topic of ['因数分解','円周角','確率'])assert.doesNotMatch(topic,topicPattern,`S3-MODEL-006: ${topic} を文章題扱いしない`)
 assert.match(remediationSource,/modelingHintForField\(fieldId\)/,'S3-MODEL-003: 固定類題の文章題ヒントに適用されていない')
 assert.match(practiceSource,/modelingHintForField\(field\.id\)/,'S3-MODEL-004: 日次練習の文章題ヒントに適用されていない')
-assert.match(guidedSource,/modelingHintForTopic\(q\.topic\)/,'S3-MODEL-005: 過去問Guidedの文章題導入に適用されていない')
+assert.match(guidedSource,/modelingHintForTopic\(modelingHintSubject\)/,'S3-MODEL-005: 過去問Guidedのタイトル・topicに適用されていない')
 assert.match(guidedSource,/hasStructuredOpening\?modelingHint:solution\.firstNotice/,'S3-MODEL-007: 6項目より先に個別解法を表示している')
 
 console.log('PASS: S3-MODEL-001..007 文章題は6項目を整理してから立式し、非文章題・正答データ・採点には影響しない')

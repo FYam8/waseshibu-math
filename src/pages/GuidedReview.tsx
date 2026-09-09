@@ -30,7 +30,8 @@ export default function GuidedReview(){
 
   if(!q||!solution)return <section className="card warning-card"><h1>問題専用解説を特定できませんでした</h1><p>間違い直し一覧から開き直してください。</p><Link className="button primary" to="/mistakes">間違い直しへ</Link></section>
   const steps=solution.steps,current=steps[Math.min(stepIndex,steps.length-1)],hintLevel=hintLevels[current?.id]||0
-  const modelingHint=modelingHintForTopic(q.topic),modelingHintKind=modelingHintKindForTopic(q.topic),hasStructuredOpening=modelingHintKind!=='generic'
+  const modelingHintSubject=`${q.title} ${q.topic}`
+  const modelingHint=modelingHintForTopic(modelingHintSubject),modelingHintKind=modelingHintKindForTopic(modelingHintSubject),hasStructuredOpening=modelingHintKind!=='generic'
   const currentResponse=responses[current?.id]||'',currentResponseValid=!!current&&validateGuidedStepResponse(current,currentResponse)
   const progress=loadGuidedProgress(q.id)
   const dependencies=solution.context.dependsOn||[]
