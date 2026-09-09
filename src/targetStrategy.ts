@@ -4,6 +4,7 @@ import { classifyRemediationField } from './data/remediation'
 import type { Attempt, ExamScore, Grade, MajorQuestion } from './types'
 
 export type TargetScore=60|70|75
+export type SelectionPlan={firstRound:string;defer:string;returnLast:string;discard:string}
 export type StrategyItem={key:string;major:number;subNo:string;topic:string;grade:Grade;status:'correct'|'wrong'|'unanswered';points:number;cause?:string;flagged?:boolean}
 export type RecoveryCandidate={key:string;label:string;grade:Grade;points:number;reason:string}
 export type ExamTargetStrategy={target:TargetScore;score:number;gap:number;reached:boolean;projectedScore:number;recoverablePoints:number;candidates:RecoveryCandidate[];summary:string;timePlan:{label:string;percent:number}[]}
@@ -18,6 +19,26 @@ const profiles:Record<TargetScore,{summary:string;timePlan:{label:string;percent
 export const targetProfile=(target:TargetScore)=>profiles[target]
 export const targetGoalLabel=(target:TargetScore)=>target===60?'A 60点':target===70?'B 70点':'C 75点'
 export const targetGoalLetter=(target:TargetScore)=>target===60?'A':target===70?'B':'C'
+export function selectionPlan(target:TargetScore):SelectionPlan{
+  if(target===60)return {
+    firstRound:'問題ランクA。大問1と、大問2〜5の短い標準問題から解く。',
+    defer:'問題ランクB。A問題を一巡した後、時間が残れば取り組む。',
+    returnLast:'「迷い」を付けたA問題と、途中まで進めたA問題に戻る。',
+    discard:'問題ランクC。60点を安定させる段階では着手しなくてよい。'
+  }
+  if(target===70)return {
+    firstRound:'問題ランクA。大問1を含め、確実に回収する。',
+    defer:'問題ランクB。方針が立たなければ一度飛ばし、A問題を先に終える。',
+    returnLast:'「迷い」を付けたA・B問題と、途中まで進めたB問題に戻る。',
+    discard:'問題ランクC。A・B問題の回収と見直しが終わるまでは着手しない。'
+  }
+  return {
+    firstRound:'問題ランクA・B。大問1を含め、先に確実な得点を回収する。',
+    defer:'問題ランクC。A・B問題を一巡してから、取れそうな問題だけ選ぶ。',
+    returnLast:'「迷い」を付けたA・B問題と、方針が立ったC問題に戻る。',
+    discard:'方針が立たないC問題。見直し時間を残すため深追いしない。'
+  }
+}
 export const gradeInTarget=(target:TargetScore,grade:Grade)=>grade==='A'||(grade==='B'&&target>=70)||(grade==='C'&&target>=75)
 export function gradeAdvice(target:TargetScore,grade:Grade){
   if(grade==='A')return '目標点にかかわらず最優先'
