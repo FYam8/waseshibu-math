@@ -105,7 +105,7 @@ export default function GuidedReview(){
               {hintLevel<1&&<button className="button" onClick={()=>setHint(1)}>ヒント1</button>}
               {hintLevel>=1&&hintLevel<2&&<button className="button" onClick={()=>setHint(2)}>さらにヒント</button>}
               {hintLevel>=2&&hintLevel<3&&<button className="button" onClick={()=>setHint(3)}>STEPの答え</button>}
-              <button className={`button ${stepAssessments[current.id]==='matched'?'primary':''}`} disabled={!currentResponseValid} onClick={()=>assessStep('matched')}>自分でも同じ考えになった</button>
+              <button className={`button ${stepAssessments[current.id]==='matched'?'primary':''}`} disabled={!currentResponseValid} onClick={()=>assessStep('matched')}>自分の考えを記録した（正誤未確認）</button>
               <button className={`button ${stepAssessments[current.id]==='guided'?'primary':''}`} disabled={hintLevel<1||(!currentResponseValid&&hintLevel<3)} onClick={()=>assessStep('guided')}>ヒント・確認を見て分かった</button>
               <button className={`button ${stepAssessments[current.id]==='unclear'?'primary':''}`} onClick={()=>assessStep('unclear')}>まだ分からない</button>
               {stepIndex<steps.length-1?<button className="button primary" disabled={!stepAssessments[current.id]||stepAssessments[current.id]==='unclear'||(stepAssessments[current.id]==='matched'&&!currentResponseValid)||(stepAssessments[current.id]==='guided'&&hintLevel<3&&!currentResponseValid)} onClick={completeStep}>次のSTEPへ</button>:<button className="button primary" disabled={!stepAssessments[current.id]||stepAssessments[current.id]==='unclear'||(stepAssessments[current.id]==='matched'&&!currentResponseValid)||(stepAssessments[current.id]==='guided'&&hintLevel<3&&!currentResponseValid)} onClick={()=>{completeStep();setMode('retry');setFinalAnswer('');setResult(null)}}>解説を閉じて自力再現へ</button>}
@@ -119,3 +119,4 @@ export default function GuidedReview(){
     </div>
   </>
 }
+
