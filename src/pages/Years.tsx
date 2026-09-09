@@ -4,7 +4,7 @@ import type { MajorQuestion } from '../types'
 import { Link } from 'react-router-dom'
 import { oldQuestionAssignmentState, yearRole } from '../learningRoute'
 import { loadPreferences } from '../storage'
-import { gradeAdvice, gradeInTarget, targetProfile } from '../targetStrategy'
+import { gradeAdvice, gradeInTarget, selectionPlan, targetProfile } from '../targetStrategy'
 
 const domainLabel: Record<string,string> = {
   mixed:'小問集合', function:'関数・座標', probability:'確率', geometry:'図形',
@@ -18,6 +18,7 @@ export default function Years() {
   const [year,setYear]=useState(2026)
   const selected=useMemo(()=>data.filter(q=>q.year===year),[data,year])
   const target=loadPreferences().target
+  const solveOrder=selectionPlan(target)
   const selectedIds=selected.flatMap(q=>q.subquestions.map(s=>`${q.id}-${s.no}`))
   const usage=selectedIds.map(id=>oldQuestionAssignmentState(id))
   const reserved=usage.filter(x=>x==='reserved').length
@@ -51,6 +52,17 @@ export default function Years() {
         <span><b className="legend-b">B</b> 70点なら追加</span>
         <span><b className="legend-c">C</b> 方針が立たなければ後回し</span>
       </div>
+
+      <section className="card selection-plan">
+        <div className="section-head"><div><span className="eyebrow">PROBLEM SELECTION · {target} POINTS</span><h2>{target}点を狙う解く順番</h2></div></div>
+        <div className="review-order selection-order">
+          <div><b>1</b><span>1周目で解く</span><small>{solveOrder.firstRound}</small></div>
+          <div><b>2</b><span>後回し</span><small>{solveOrder.defer}</small></div>
+          <div><b>3</b><span>最後に戻る</span><small>{solveOrder.returnLast}</small></div>
+          <div><b>4</b><span>現時点では捨ててもよい</span><small>{solveOrder.discard}</small></div>
+        </div>
+        <p className="muted">学習目標のA/B/C（60/70/75点）と、各小問の問題ランクA/B/Cは別の表示です。問題ランクは学校公式ではなく、このアプリの学習上の優先度です。</p>
+      </section>
 
       <div className="question-list">
         {selected.map(q=>(
