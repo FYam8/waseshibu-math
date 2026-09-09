@@ -5,7 +5,7 @@ import MathAnswerInput from '../components/MathAnswerInput'
 import FocusedQuestionView from '../components/FocusedQuestionView'
 import {
   assessGuidedStep,guidedOutcomeLabel,guidedQuestion,loadGuidedProgress,loadGuidedReview,recordGuidedFinal,
-  recordGuidedStep,revealGuidedFinalAnswer,saveGuidedReview,updateGuidedProgress,validateGuidedStepResponse,type GuidedOutcome
+  guidedHint2ForDisplay,recordGuidedStep,revealGuidedFinalAnswer,saveGuidedReview,updateGuidedProgress,validateGuidedStepResponse,type GuidedOutcome
 } from '../guidedReview'
 import { loadPreferences } from '../storage'
 import { gradeAdvice, targetGoalLabel } from '../targetStrategy'
@@ -99,7 +99,7 @@ export default function GuidedReview(){
             <p className="muted">この欄は途中式の記録用です。入力内容の数学的な正誤は自動判定しません。</p>
             {currentResponse&&!currentResponseValid&&<p className="muted">このSTEPで必要な数値・式・着眼点をもう少し具体的に入力してください。</p>}
             {hintLevel>=1&&<div className="notice-box"><b>ヒント1</b><p>{current.hint1}</p></div>}
-            {hintLevel>=2&&<div className="notice-box"><b>さらにヒント</b><p>{current.hint2}</p></div>}
+            {hintLevel>=2&&<div className="notice-box"><b>さらにヒント</b><p>{guidedHint2ForDisplay(current,[solution.finalAnswer.answer,...solution.finalAnswer.acceptedAnswers])}</p></div>}
             {hintLevel>=3&&<div className="answer-reveal compact"><span>このSTEPの確認</span><strong>{current.reveal}</strong></div>}
             <div className="actions">
               {hintLevel<1&&<button className="button" onClick={()=>setHint(1)}>ヒント1</button>}
