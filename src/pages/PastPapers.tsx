@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import questions from '../data/questions.json'
-import { examPages, examRole, pointsFor } from '../data/examConfig'
+import { examPages, examRole, examScopeNote, pointsFor } from '../data/examConfig'
 import ExamMarkReview from '../components/ExamMarkReview'
 import { createRecordId, loadExamScores, loadPreferences, saveAttempt, saveExamScore } from '../storage'
 import { REQUIRED_MAIN_YEAR_SEQUENCE, markYearSolved, nextLearningAction, nextRequiredStageYear, requiredYearPurpose, yearExposureState } from '../learningRoute'
@@ -63,6 +63,7 @@ export default function PastPapers(){
   const inputs=useRef<Record<string,HTMLInputElement|null>>({})
   const focusedInputKey=useRef<string>('')
   const q=majors[majorIndex]
+  const scopeNote=examScopeNote(year)
   const allSubs=majors.flatMap(m=>m.subquestions.map(s=>({major:m,sub:s,key:keyFor(m,s.no)})))
   const entered=allSubs.filter(x=>(answers[x.key]||'').trim()).length
   const statusFor=(key:string):AutoStatus=>{
@@ -125,6 +126,7 @@ export default function PastPapers(){
 
   return <>
     <div className="exam-compact-head"><div><span className="eyebrow">STEP 解く</span><h1>{year}年度｜{examRole(year)}</h1></div><div><b>入力 {entered}/{allSubs.length}</b><Link to="/years">演習一覧</Link></div></div>
+    {scopeNote&&<div className="notice-box exam-scope-notice"><b>この年度の試験範囲</b><p>{scopeNote}</p></div>}
     <div className="major-tabs" aria-label="大問選択">{majors.map((m,i)=><button key={m.id} className={i===majorIndex?'active':''} onClick={()=>changeMajor(i)}>大問{m.major}<small>{m.subquestions.length}小問</small></button>)}</div>
     <div className={`exam-workspace ${answerOpen?'answer-open':''}`}>
       <section className="problem-pane card"><div className="section-head"><div><span className="eyebrow">PROBLEM · EXAM MODE</span><h2>大問 {q.major}　{q.title}</h2></div><b>{q.major===1?(year===2019?45:40):year===2019&&q.major===2?10:15}点</b></div><p className="muted">本番演習中は、実際の試験と同じように問題ページ全体を表示します。</p><div className="exam-images">{(examPages[year]?.[q.major-1]||[]).map(page=><img key={page} src={paperImage(year,page)} alt={`${year}年度 大問${q.major} 問題ページ${page}`} loading="eager" />)}</div></section>
