@@ -24,6 +24,13 @@ if(!guided.validateGuidedStepResponse(step2,'y=k/x'))throw new Error('equivalent
 if(guided.validateGuidedStepResponse(step2,'999'))throw new Error('unrelated number should fail')
 if(guided.validateGuidedStepResponse(step2,'999=999'))throw new Error('unrelated equation should fail')
 
+// This is a relevance gate, not an algebra checker. A sign error can still be
+// recorded, so the UI must not imply that the intermediate work was graded.
+const signErrorStep=guided.getGuidedSolution('2024-Q1-1').steps[0]
+if(!guided.validateGuidedStepResponse(signErrorStep,'(9-12)=3'))throw new Error('relevant sign-error work should remain recordable')
+const guidedUi=fs.readFileSync(path.join(root,'src/pages/GuidedReview.tsx'),'utf8')
+if(!guidedUi.includes('この欄は途中式の記録用です。入力内容の数学的な正誤は自動判定しません。'))throw new Error('Guided UI must disclose that intermediate work is not auto-graded')
+
 let checked=0
 for(const solution of Object.values(solutions))for(const guidedStep of solution.steps){
   checked++
@@ -35,4 +42,4 @@ for(const solution of Object.values(solutions))for(const guidedStep of solution.
   if(guided.validateGuidedStepResponse(guidedStep,unrelated))throw new Error(`${solution.questionId}/${guidedStep.id}: unrelated equation passed`)
 }
 
-console.log(`PASS: Guided STEP rejects filler and unrelated equations while accepting required numbers/equivalent formulas (${checked} steps across ${Object.keys(solutions).length} questions)`)
+console.log(`PASS: Guided STEP relevance gate rejects filler/unrelated equations, keeps relevant work recordable, and discloses no intermediate grading (${checked} steps across ${Object.keys(solutions).length} questions)`)
