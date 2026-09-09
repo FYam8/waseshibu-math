@@ -16,7 +16,7 @@ assert.match(home,/inProgressLevel2Sessions/,'Home must inspect canonical persis
 assert.match(home,/preferredRemediation\?\.completedQuestionIds\.length/,'Home must show direct fixed-set resume progress')
 assert.match(home,/今日の予定分は完了しました/,'Today completion wording must not imply all learning is finished while remediation continues')
 
-assert.match(report,/未解決・学習中の得点回収候補/,'Unresolved recovery candidates must be labeled accurately')
+assert.match(report,/次に確認する3問（未解決・学習中）/,'Unresolved recovery candidates must be labeled accurately')
 assert.match(report,/克服済み・定着確認候補/,'Consolidated candidates must be separated')
 assert.match(report,/任意演習 参考スコア/,'2019-2021 optional full-year scores must display as reference')
 
