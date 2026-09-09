@@ -40,6 +40,37 @@ export type GuidedStep={
   response:{type:'self-check'|'text'}
 }
 
+const normalizeHintText=(value:string)=>value.normalize('NFKC').replace(/\s+/g,'').replace(/[。．…]/g,'')
+const containsAnswerToken=(text:string,answer:string)=>{
+  const source=normalizeHintText(text),target=normalizeHintText(answer)
+  if(target.length<2)return false
+  let index=source.indexOf(target)
+  while(index>=0){
+    const before=source[index-1]||'',after=source[index+target.length]||''
+    const joinedLeft=/\d/.test(target[0])&&/\d/.test(before)
+    const joinedRight=/\d/.test(target[target.length-1])&&/\d/.test(after)
+    if(!joinedLeft&&!joinedRight)return true
+    index=source.indexOf(target,index+1)
+  }
+  return false
+}
+
+// Some legacy hint2 entries quote the STEP reveal verbatim. Keep the audited
+// source data intact, but do not show that confirmation one level early.
+export function guidedHint2ForDisplay(step:GuidedStep,finalAnswers:string[]=[]){
+  const quoted=step.hint2.match(/^このSTEPでは「([\s\S]*?)…?」となる理由を確認します。?$/)?.[1]
+  if(quoted){
+    const hint=normalizeHintText(quoted),reveal=normalizeHintText(step.reveal)
+    if(hint===reveal||hint.startsWith(reveal)||reveal.startsWith(hint)){
+      return 'ヒント1の着眼点を使って、条件を式・場合分け・対応関係のどれに直すか決め、1行だけ書いてください。'
+    }
+  }
+  if(finalAnswers.some(answer=>containsAnswerToken(step.hint2,answer))){
+    return 'ヒント1の着眼点を使って、途中式を1段だけ進めてください。最終答案はまだ確定せず、式の形・場合分け・対応関係を確認します。'
+  }
+  return step.hint2
+}
+
 const STEP_RESPONSE_BANNED=new Set(['あ','い','う','適当','てきとう','わからない','分からない','不明','?','？','123','abc','aaa','test'])
 const normalizeStepText=(value:string)=>value.normalize('NFKC').replace(/\s+/g,'').toLowerCase()
 const meaningfulTokens=(text:string)=>{
