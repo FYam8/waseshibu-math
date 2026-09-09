@@ -9,6 +9,7 @@ import { createRecordId, loadAttempts, saveAttempt } from '../storage'
 import { updateGuidedProgress } from '../guidedReview'
 import FocusedQuestionView from '../components/FocusedQuestionView'
 import { isExamAnswerCorrect } from '../data/examAnswers'
+import { modelingHintForField } from '../modelingHint'
 
 type Presentation={question:Level2Question;presentationId:string;session:Level2Session;key:string}
 
@@ -55,7 +56,7 @@ export default function Remediation(){
         {problemFigure&&<figure className="level2-figure"><img src={problemFigure} alt={`${q.id}の問題図`}/></figure>}
       </>}
       <MathAnswerInput value={answer} onChange={setAnswer} onEnter={submit} disabled={result!==null} autoFocus/>
-      {usedHint&&<div className="hint"><b>ヒント：</b>条件と求めるものを分け、対応する公式・性質を1つずつ確認しましょう。{hintFigure&&hintFigure!==problemFigure&&<figure className="level2-figure"><img src={hintFigure} alt={`${q.id}のヒント図`}/></figure>}</div>}
+      {usedHint&&<div className="hint"><b>ヒント：</b>{modelingHintForField(fieldId)}{hintFigure&&hintFigure!==problemFigure&&<figure className="level2-figure"><img src={hintFigure} alt={`${q.id}のヒント図`}/></figure>}</div>}
       {(usedExplanation||revealedAnswer)&&result===null&&<div className="answer-reveal"><span>解説・正答を確認しました</span><strong>{q.answer}</strong><p>{q.explanation}</p>{explanationFigure&&explanationFigure!==problemFigure&&<figure className="level2-figure"><img src={explanationFigure} alt={`${q.id}の解説図`}/></figure>}</div>}
       {result===null?<div className="actions"><button className="button primary" onClick={submit} disabled={!answer.trim()}>採点する</button><button className="button" onClick={useHint}>ヒント</button><button className="button" onClick={reveal}>答え・解説を見る</button></div>:
         <div className={`result ${result?'ok':'ng'}`}><h3>{result?'○ 正解':'× 不正解'}</h3><p><b>正答：</b>{q.answer}</p><p>{q.explanation}</p>{explanationFigure&&explanationFigure!==problemFigure&&<figure className="level2-figure"><img src={explanationFigure} alt={`${q.id}の解説図`}/></figure>}<p className="muted">{staleSubmission?'別の画面で新しいセットが開始されたため、この解答は履歴だけ保存し、現在のセットの進捗には加えていません。':result&&!usedHint&&!usedExplanation&&!revealedAnswer?'この問題は完了です。正解済み問題は再出題しません。':result?'履歴は保存しましたが、補助を使ったため、この問題は後でもう一度出題します。':'ほかの問題の完了状態は維持します。この問題だけ一巡後にもう一度出題します。'}</p><button className="button primary" onClick={next}>次の問題へ</button></div>}
