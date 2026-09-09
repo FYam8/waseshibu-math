@@ -137,6 +137,35 @@ function splitTopLevel(value:string,delimiter:string){
 
 const close=(a:number,b:number)=>Math.abs(a-b)<=1e-9*Math.max(1,Math.abs(a),Math.abs(b))
 
+const gcd=(a:number,b:number):number=>b?gcd(b,a%b):Math.abs(a)
+
+export function hasNonCanonicalFinalForm(value:string){
+  const normalized=normalizeAnswer(value)
+  for(const match of normalized.matchAll(/(-?\d+)\/(\d+)/g)){
+    const a=Number(match[1]),b=Number(match[2])
+    if(b===0||gcd(a,b)!==1)return true
+  }
+  const ratio=normalized.match(/^(-?\d+):(-?\d+)$/)
+  if(ratio&&gcd(Number(ratio[1]),Number(ratio[2]))!==1)return true
+  if(/\/[^,]*√/.test(normalized))return true
+  for(const match of normalized.matchAll(/√\(?([0-9]+)\)?/g)){
+    const n=Number(match[1])
+    for(let k=2;k*k<=n;k++)if(n%(k*k)===0)return true
+  }
+  return false
+}
+
+const trailingUnitPattern=/(平方センチメートル|平方cm|cm[²2]|m[²2]|cm|m|円|度|°|秒)$/i
+export function trailingAnswerUnit(value:string){
+  const match=value.normalize('NFKC').toLowerCase().trim().replace(/\s+/g,'').match(trailingUnitPattern)
+  if(!match)return null
+  const unit=match[1].toLowerCase()
+  if(unit==='度'||unit==='°')return '°'
+  if(unit==='平方センチメートル'||unit==='平方cm'||unit==='cm2'||unit==='cm²')return 'cm²'
+  if(unit==='m2'||unit==='m²')return 'm²'
+  return unit
+}
+
 function numericEquivalent(a:string,b:string){
   const va=evalExpression(a,{}),vb=evalExpression(b,{})
   return va!==null&&vb!==null&&close(va,vb)
