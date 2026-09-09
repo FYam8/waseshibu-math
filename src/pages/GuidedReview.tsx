@@ -9,7 +9,7 @@ import {
 } from '../guidedReview'
 import { loadPreferences } from '../storage'
 import { gradeAdvice, targetGoalLabel } from '../targetStrategy'
-import { modelingHintForTopic } from '../modelingHint'
+import { modelingHintForTopic, modelingHintKindForTopic } from '../modelingHint'
 
 export default function GuidedReview(){
   const [params]=useSearchParams(),questionId=params.get('q')||''
@@ -30,7 +30,7 @@ export default function GuidedReview(){
 
   if(!q||!solution)return <section className="card warning-card"><h1>問題専用解説を特定できませんでした</h1><p>間違い直し一覧から開き直してください。</p><Link className="button primary" to="/mistakes">間違い直しへ</Link></section>
   const steps=solution.steps,current=steps[Math.min(stepIndex,steps.length-1)],hintLevel=hintLevels[current?.id]||0
-  const modelingHint=modelingHintForTopic(q.topic),isWordProblem=modelingHint.startsWith('【登場する量】')
+  const modelingHint=modelingHintForTopic(q.topic),modelingHintKind=modelingHintKindForTopic(q.topic),hasStructuredOpening=modelingHintKind!=='generic'
   const currentResponse=responses[current?.id]||'',currentResponseValid=!!current&&validateGuidedStepResponse(current,currentResponse)
   const progress=loadGuidedProgress(q.id)
   const dependencies=solution.context.dependsOn||[]
@@ -84,12 +84,12 @@ export default function GuidedReview(){
     <div className="guided-review-grid">
       <section className="card guided-problem"><div className="section-head"><div><span className="eyebrow">FOCUSED PROBLEM</span><h2>{q.title}</h2></div><b>（{q.subNo}）</b></div><FocusedQuestionView year={q.year} major={q.major} subIndex={q.subIndex} subCount={q.subCount} subNo={q.subNo} topic={q.topic}/></section>
       <section className="card guided-panel">
-        {mode==='choose'&&<><h2>この1問をどう直しますか？</h2><div className="notice-box"><b>最初に気づきたいこと</b><p>{solution.firstNotice}</p></div><div className="guided-choice"><button className="button primary" onClick={()=>{setMode('guided');setStepIndex(0)}}>問題専用STEPで理解する</button><button className="button" onClick={()=>setMode('retry')}>もう一度自力で解く</button><button className="button" onClick={revealAnswer}>この1問の答え・解説を見る</button></div></>}
+        {mode==='choose'&&<><h2>この1問をどう直しますか？</h2><div className="notice-box"><b>{hasStructuredOpening?(modelingHintKind==='word-problem'?'式を作る前の整理':'数え始める前の確認'):'最初に気づきたいこと'}</b><p>{hasStructuredOpening?modelingHint:solution.firstNotice}</p></div><div className="guided-choice"><button className="button primary" onClick={()=>{setMode('guided');setStepIndex(0)}}>問題専用STEPで理解する</button><button className="button" onClick={()=>setMode('retry')}>もう一度自力で解く</button><button className="button" onClick={revealAnswer}>この1問の答え・解説を見る</button></div></>}
         {mode==='guided'&&<>
           <div className="guided-progress dynamic">{steps.map((s,i)=><button key={s.id} className={i<=stepIndex?'active':''} onClick={()=>setStepIndex(i)}>{i+1}</button>)}</div>
           {dependencies.length>0&&<div className="notice-box dependency-box"><b>前問の結果を使う場合</b><p>自分の前問の値で続けるか、正答値を使ってこの小問の考え方だけ確認するか選べます。</p><div className="actions"><button className={`button ${dependencyMode==='own'?'primary':''}`} onClick={()=>{setDependencyMode('own');updateGuidedProgress(q.id,{dependencyMode:'own'})}}>自分の前問の答えを使う</button><button className={`button ${dependencyMode==='official'?'primary':''}`} onClick={()=>{setDependencyMode('official');updateGuidedProgress(q.id,{dependencyMode:'official'})}}>正答値を使う</button></div>{dependencyMode==='official'&&dependencies.map(d=><p key={d.questionId}><b>{d.questionId}</b> の正答値：<strong>{d.officialValue}</strong></p>)}</div>}
           <div className="guided-step">
-            {isWordProblem&&<div className="notice-box"><b>式を作る前の整理</b><p>{modelingHint}</p></div>}
+            {hasStructuredOpening&&<div className="notice-box"><b>{modelingHintKind==='word-problem'?'式を作る前の整理':'数え始める前の確認'}</b><p>{modelingHint}</p></div>}
             <span className="eyebrow">STEP {stepIndex+1} / {steps.length}</span><h2>{current.title}</h2><p>{current.prompt}</p>
             <textarea value={responses[current.id]||''} onChange={e=>setResponses(v=>({...v,[current.id]:e.target.value}))} placeholder="自分の途中式・考え方を入力" rows={5}/>
             <p className="muted">この欄は途中式の記録用です。入力内容の数学的な正誤は自動判定しません。</p>
