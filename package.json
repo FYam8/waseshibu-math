@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run test:prep-answer-format && npm run test:guided-validation && npm run test:modeling-hints && npm run test:probability-hints && npm run test:q1-diagnosis && npm run test:selection-strategy && npm run test:past-paper-figures && npm run test:level2 && npm run test:sync-separation-runtime && npm run test:user-perspective && npm run test:user-perspective:v0176 && tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs",
+    "build": "npm run test:prep-answer-format && npm run test:guided-validation && npm run test:modeling-hints && npm run test:probability-hints && npm run test:q1-diagnosis && npm run test:selection-strategy && npm run test:transfer-evidence && npm run test:past-paper-figures && npm run test:level2 && npm run test:sync-separation-runtime && npm run test:user-perspective && npm run test:user-perspective:v0176 && tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs",
     "test:prep-answer-format": "node scripts/test-prep-answer-format.mjs",
     "preview": "vite preview",
     "self-check": "node scripts/self-check.mjs",
@@ -31,6 +31,7 @@
     "test:probability-hints": "node scripts/test-probability-counting-hints.mjs",
     "test:q1-diagnosis": "node scripts/test-q1-loss-diagnosis.mjs",
     "test:selection-strategy": "node scripts/test-problem-selection-strategy.mjs",
+    "test:transfer-evidence": "node scripts/test-transfer-evidence.mjs",
     "test:v0178-state": "node scripts/test-v0178-state-regressions.mjs",
     "audit:core-skill": "node scripts/audit-core-skill-v0178.mjs",
     "test:v0178-required20": "node scripts/test-v0178-required-20.mjs",
