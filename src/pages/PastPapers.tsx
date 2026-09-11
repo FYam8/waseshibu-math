@@ -4,7 +4,7 @@ import questions from '../data/questions.json'
 import { examPages, examRole, examScopeNote, pointsFor } from '../data/examConfig'
 import ExamMarkReview from '../components/ExamMarkReview'
 import { createRecordId, loadExamScores, loadPreferences, saveAttempt, saveExamScore } from '../storage'
-import { REQUIRED_MAIN_YEAR_SEQUENCE, markYearSolved, nextLearningAction, nextRequiredStageYear, requiredYearPurpose, yearExposureState } from '../learningRoute'
+import { REQUIRED_MAIN_YEAR_SEQUENCE, markRequiredYearComplete, markYearSolved, nextLearningAction, nextRequiredStageYear, requiredYearPurpose, yearExposureState } from '../learningRoute'
 import { isExamAnswerCorrect } from '../data/examAnswers'
 import { cleanAnswerInput } from '../answer'
 import { runExamIntegrityCheck } from '../preflight'
@@ -25,7 +25,6 @@ function readDraft(year:number):Partial<Draft>{
     const all=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}'),raw=all[String(year)]
     if(!raw)return {}
     if(raw.answers)return raw
-    // v1互換: 年度キー直下に answers のRecordだけを保存していた旧ドラフト。
     return {answers:raw}
   }catch{return {}}
 }
@@ -105,6 +104,8 @@ export default function PastPapers(){
       const diagnosis=x.status==='correct'?'correct':cause==='時間不足'?'time':cause==='現時点では難しい'?'difficult':cause?'recoverable':undefined
       saveAttempt({id:createRecordId(`exam-${x.key}`),questionId:`exam-${x.key}`,mode:'multi',topic:x.sub.topic,status:x.status==='correct'?'correct':x.status==='unanswered'?'deferred':'wrong',mistakeTag:cause||undefined,diagnosis,answer:answers[x.key]||'',flagged:!!flags[x.key],seconds:questionSeconds[x.key],at:now})
     })
+    const targetWrong=items.some(item=>item.status!=='correct'&&gradeInTarget(target,item.grade))
+    if(REQUIRED_MAIN_YEAR_SEQUENCE.includes(year as (typeof REQUIRED_MAIN_YEAR_SEQUENCE)[number])&&!targetWrong)markRequiredYearComplete(year,target)
     try{const all=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');delete all[String(year)];localStorage.setItem(DRAFT_KEY,JSON.stringify(all))}catch{/* no-op */}
     void createRestorePoint('exam_complete').catch(()=>{/* saved result remains */})
     setSavedResult(result);setPhase('result');window.scrollTo({top:0,behavior:'smooth'})
