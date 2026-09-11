@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { backupStats, collectBackup, parseBackup, restoreBackup, type BackupPackage } from '../dataBackup'
 import { createRestorePoint, downloadRestorePoint, listRestorePoints, restoreFromPoint, type RestorePoint } from '../safetyStorage'
 import { createDiagnosticReport, downloadDiagnosticReport, protectionSummary } from '../diagnostics'
+import { syncRequiredYearCompletionLocks } from '../learningRoute'
 
 function download(pkg:BackupPackage){
   const blob=new Blob([JSON.stringify(pkg,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a')
@@ -23,10 +24,10 @@ export default function DataManager(){
   const apply=async(mode:'replace'|'merge')=>{
     if(!incoming)return
     setError('')
-    try{await createRestorePoint('before_import');download(collectBackup());restoreBackup(localStorage,incoming,mode);setDone(mode==='replace'?'読み込んだデータへ入れ替えました。':'現在データと統合しました。');setIncoming(null);refreshPoints();window.dispatchEvent(new CustomEvent('waseshibu-route-change'))}catch(e){setError(e instanceof Error?e.message:'復元できませんでした')}
+    try{await createRestorePoint('before_import');download(collectBackup());restoreBackup(localStorage,incoming,mode);syncRequiredYearCompletionLocks();setDone(mode==='replace'?'読み込んだデータへ入れ替えました。':'現在データと統合しました。');setIncoming(null);refreshPoints();window.dispatchEvent(new CustomEvent('waseshibu-route-change'))}catch(e){setError(e instanceof Error?e.message:'復元できませんでした')}
   }
   const makePoint=async()=>{setError('');try{await createRestorePoint('manual');setDone('現在の状態を復元ポイントとして保存しました。');refreshPoints()}catch(e){setError(e instanceof Error?e.message:'復元ポイントを作成できませんでした')}}
-  const restorePoint=async(point:RestorePoint)=>{if(!window.confirm(`${new Date(point.createdAt).toLocaleString('ja-JP')} の状態へ戻しますか？\n現在の状態も復元ポイントへ残します。`))return;setError('');try{await restoreFromPoint(point.id);setDone('選んだ時点へ復元しました。現在の状態も復元ポイントに残しています。');refreshPoints();window.dispatchEvent(new CustomEvent('waseshibu-route-change'))}catch(e){setError(e instanceof Error?e.message:'復元できませんでした')}}
+  const restorePoint=async(point:RestorePoint)=>{if(!window.confirm(`${new Date(point.createdAt).toLocaleString('ja-JP')} の状態へ戻しますか？\n現在の状態も復元ポイントに残します。`))return;setError('');try{await restoreFromPoint(point.id);syncRequiredYearCompletionLocks();setDone('選んだ時点へ復元しました。現在の状態も復元ポイントに残しています。');refreshPoints();window.dispatchEvent(new CustomEvent('waseshibu-route-change'))}catch(e){setError(e instanceof Error?e.message:'復元できませんでした')}}
   const nowStats=backupStats(current),inStats=incoming?backupStats(incoming):null
   const protection=protectionSummary(current,points),formatDate=(value:string|null)=>value?new Date(value).toLocaleString('ja-JP'):'まだありません'
   const diagnostic=async()=>{setError('');setDiagnosing(true);try{downloadDiagnosticReport(await createDiagnosticReport());setDone('診断情報を保存しました。解答内容や氏名は含まれていません。')}catch(e){setError(e instanceof Error?e.message:'診断情報を作成できませんでした')}finally{setDiagnosing(false)}}
