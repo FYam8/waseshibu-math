@@ -49,6 +49,16 @@ function uniqueById(local:unknown,incoming:unknown){
   return [...new Map([...a,...b].filter(isObject).map(x=>[String(x.id||JSON.stringify(x)),x])).values()]
 }
 
+function mergeCompletedCore(local:unknown,incoming:unknown){
+  const a=isObject(local)?local:{},b=isObject(incoming)?incoming:{},result:Record<string,number[]>={}
+  for(const key of ['60','70','75']){
+    const left=Array.isArray(a[key])?a[key].filter(Number.isInteger):[]
+    const right=Array.isArray(b[key])?b[key].filter(Number.isInteger):[]
+    result[key]=[...new Set([...left,...right])]
+  }
+  return result
+}
+
 export function mergeBackupValue(key:BackupKey,local:unknown,incoming:unknown){
   if(key.endsWith('attempts')||key.endsWith('exam-scores'))return uniqueById(local,incoming)
   if(key===LEVEL2_HISTORY_STORAGE_KEY){
@@ -69,7 +79,7 @@ export function mergeBackupValue(key:BackupKey,local:unknown,incoming:unknown){
       const localPlan:any=reinforcement[planKey],next:any=incomingPlan
       reinforcement[planKey]=localPlan?.examId===next?.examId?{...localPlan,...next,completedQuestionIds:[...new Set([...(localPlan.completedQuestionIds||[]),...(next.completedQuestionIds||[])])]}:next
     }
-    return {...a,...b,solvedYears:[...new Set([...(a.solvedYears||[]),...(b.solvedYears||[])])],usedOldQuestionIds:[...new Set([...(a.usedOldQuestionIds||[]),...(b.usedOldQuestionIds||[])])],reinforcement,updatedAt:new Date().toISOString()}
+    return {...a,...b,solvedYears:[...new Set([...(a.solvedYears||[]),...(b.solvedYears||[])])],usedOldQuestionIds:[...new Set([...(a.usedOldQuestionIds||[]),...(b.usedOldQuestionIds||[])])],reinforcement,completedCoreByTarget:mergeCompletedCore(a.completedCoreByTarget,b.completedCoreByTarget),updatedAt:new Date().toISOString()}
   }
   return incoming
 }
