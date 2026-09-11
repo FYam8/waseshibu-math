@@ -4,6 +4,7 @@ import { classifyRemediationField } from './data/remediation'
 import { loadAttempts, loadExamScores, loadPreferences } from './storage'
 import { canWriteLearningData, notifyWriteBlocked } from './version'
 import { loadGuidedProgressState, loadGuidedReviews } from './guidedReview'
+import { loadLevel2SessionSummaries } from './level2ProgressView'
 import { gradeInTarget, storedExamItems, weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
 import practicePool from './data/level2/practice_pool_index.json'
 
@@ -26,6 +27,9 @@ export function hasCurrentPracticeMastery(field:string,after:string){
 // 年代順ではなく、診断→2段階の改善確認→実戦確認→最終確認の役割順で進める。
 export const REQUIRED_MAIN_YEAR_SEQUENCE=[2024,2023,2022,2025,2026] as const
 export type RequiredMainYear=(typeof REQUIRED_MAIN_YEAR_SEQUENCE)[number]
+type TargetCompletionKey='60'|'70'|'75'
+const completionTargets=[60,70,75] as const
+const targetCompletionKey=(target:TargetScore)=>String(target) as TargetCompletionKey
 
 export function requiredYearPurpose(year:number){
   if(year===2024)return '診断'
@@ -50,12 +54,24 @@ export type LearningRouteState={
   solvedYears:number[]
   usedOldQuestionIds:string[]
   reinforcement:Record<string,ReinforcementPlan>
+  completedCoreByTarget:Partial<Record<TargetCompletionKey,number[]>>
   updatedAt:string
 }
 
 export type SourceMistakeProgress={requiredIds:string[];completedIds:string[];remainingIds:string[];complete:boolean}
+export type SourcePracticeProgress={requiredIds:string[];completedIds:string[];remainingIds:string[];complete:boolean}
 
-const empty=():LearningRouteState=>({solvedYears:[],usedOldQuestionIds:[],reinforcement:{},updatedAt:new Date(0).toISOString()})
+const empty=():LearningRouteState=>({solvedYears:[],usedOldQuestionIds:[],reinforcement:{},completedCoreByTarget:{},updatedAt:new Date(0).toISOString()})
+
+function normalizeCompletedCore(value:unknown):LearningRouteState['completedCoreByTarget']{
+  const raw=value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{}
+  const result:LearningRouteState['completedCoreByTarget']={}
+  for(const target of completionTargets){
+    const key=targetCompletionKey(target),items=raw[key]
+    if(Array.isArray(items))result[key]=[...new Set(items.filter((year):year is number=>Number.isInteger(year)&&REQUIRED_MAIN_YEAR_SEQUENCE.includes(year as RequiredMainYear)))]
+  }
+  return result
+}
 
 export function loadLearningRoute():LearningRouteState{
   try{
@@ -65,6 +81,7 @@ export function loadLearningRoute():LearningRouteState{
       solvedYears:Array.isArray(raw.solvedYears)?raw.solvedYears.filter(Number.isInteger):[],
       usedOldQuestionIds:Array.isArray(raw.usedOldQuestionIds)?raw.usedOldQuestionIds.map(String):[],
       reinforcement:raw.reinforcement&&typeof raw.reinforcement==='object'?raw.reinforcement:{},
+      completedCoreByTarget:normalizeCompletedCore(raw.completedCoreByTarget),
       updatedAt:typeof raw.updatedAt==='string'?raw.updatedAt:new Date(0).toISOString()
     }
   }catch{return empty()}
@@ -74,6 +91,23 @@ export function saveLearningRoute(state:LearningRouteState){
   if(!canWriteLearningData()){notifyWriteBlocked();return}
   localStorage.setItem(ROUTE_KEY,JSON.stringify({...state,updatedAt:new Date().toISOString()}))
   window.dispatchEvent(new CustomEvent('waseshibu-route-change'))
+}
+
+export function isRequiredYearLocked(year:number,target:TargetScore=loadPreferences().target){
+  return !!loadLearningRoute().completedCoreByTarget[targetCompletionKey(target)]?.includes(year)
+}
+
+export function markRequiredYearComplete(year:number,target:TargetScore=loadPreferences().target){
+  if(!REQUIRED_MAIN_YEAR_SEQUENCE.includes(year as RequiredMainYear))return
+  const state=loadLearningRoute(),next={...state.completedCoreByTarget}
+  let changed=false
+  for(const t of completionTargets){
+    if(t>target)continue
+    const key=targetCompletionKey(t),years=new Set(next[key]||[])
+    if(!years.has(year)){years.add(year);changed=true}
+    next[key]=[...years]
+  }
+  if(changed)saveLearningRoute({...state,completedCoreByTarget:next})
 }
 
 export function markYearSolved(year:number){
@@ -156,6 +190,7 @@ export function oldQuestionAssignmentState(id:string):OldQuestionAssignmentState
 }
 
 export function sourceMistakeProgress(year:number,target:TargetScore=loadPreferences().target):SourceMistakeProgress{
+  if(isRequiredYearLocked(year,target))return {requiredIds:[],completedIds:[],remainingIds:[],complete:true}
   const exam=latestExam(year)
   if(!exam)return {requiredIds:[],completedIds:[],remainingIds:[],complete:false}
   const attempts=loadAttempts(),reviews=loadGuidedReviews(),progress=loadGuidedProgressState()
@@ -166,6 +201,24 @@ export function sourceMistakeProgress(year:number,target:TargetScore=loadPrefere
     // v0.15以前の学習履歴も完了判定に残す。
     const legacy=reviews[id]
     return !!legacy&&legacy.updatedAt>=exam.at&&(legacy.outcome==='independent'||legacy.outcome==='reproduced')
+  })
+  const completed=new Set(completedIds),remainingIds=requiredIds.filter(id=>!completed.has(id))
+  return {requiredIds,completedIds,remainingIds,complete:remainingIds.length===0}
+}
+
+export function sourcePracticeProgress(year:number,target:TargetScore=loadPreferences().target):SourcePracticeProgress{
+  if(isRequiredYearLocked(year,target))return {requiredIds:[],completedIds:[],remainingIds:[],complete:true}
+  const exam=latestExam(year)
+  if(!exam)return {requiredIds:[],completedIds:[],remainingIds:[],complete:false}
+  const source=sourceMistakeProgress(year,target),sessions=loadLevel2SessionSummaries(),progress=loadGuidedProgressState()
+  const requiredIds=source.requiredIds
+  const completedIds=requiredIds.filter(id=>{
+    const currentSession=sessions
+      .filter(session=>session.triggerSourceQuestionId===id&&(!session.sourceAttemptAt||session.sourceAttemptAt>=exam.at))
+      .sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))[0]
+    if(currentSession?.status==='completed'&&currentSession.completedQuestionIds.length>=currentSession.requiredCount)return true
+    const current=progress[id]
+    return !!current&&current.updatedAt>=exam.at&&current.mastery==='consolidated'
   })
   const completed=new Set(completedIds),remainingIds=requiredIds.filter(id=>!completed.has(id))
   return {requiredIds,completedIds,remainingIds,complete:remainingIds.length===0}
@@ -200,7 +253,6 @@ export function firstUnresolvedSource(target:TargetScore=loadPreferences().targe
   }
   return null
 }
-
 
 function practicePlanComplete(exam:ExamScore,target:TargetScore,plan:ReinforcementPlan|undefined,attempts=loadAttempts(),fields=weakFieldsForStoredExam(target,exam,attempts)){
   if(!fields.length)return true
@@ -241,9 +293,7 @@ export function ensureReinforcementPlan(exam:ExamScore,target:TargetScore=loadPr
     return stamped
   }
 
-  // 「予約」と「実際に解いた」を分離する。
-  // 他の現行補強プランに予約されている問題、または実際に露出した問題だけを候補から外す。
-  // 目標変更で現在プランから外れた未実施予約は、再び候補へ戻せる。
+  // 旧年度の別枠演習は履歴互換のため予約機能を残すが、本線完了条件には使わない。
   const reservedByOther=new Set<string>()
   for(const [planKey,plan] of Object.entries(state.reinforcement)){
     if(planKey===key)continue
@@ -269,7 +319,6 @@ export function ensureReinforcementPlan(exam:ExamScore,target:TargetScore=loadPr
   const activeSelectedIds=new Set(Object.values(fields).flat())
   const retainedCompleted=existing?.examId===exam.id?existing.completedQuestionIds.filter(id=>activeSelectedIds.has(id)&&successfullyUsed.has(id)):[]
   const plan:ReinforcementPlan={examId:exam.id,sourceYear:exam.year,target,fields,completedQuestionIds:retainedCompleted,createdAt:new Date().toISOString(),requiresSourceReview:!legacyDone}
-  // 旧版で2022/2023を補強問題として使った履歴も消さない。ただし今後の予約候補は2019〜2021だけ。
   const completedHistory=new Set(state.usedOldQuestionIds)
   for(const id of plan.completedQuestionIds)completedHistory.add(id)
   saveLearningRoute({...state,usedOldQuestionIds:[...completedHistory],reinforcement:{...state.reinforcement,[key]:plan}})
@@ -287,28 +336,22 @@ export function markOldQuestionCompleted(sourceYear:number,id:string){
 }
 
 export function reinforcementPracticeComplete(year:number,target:TargetScore=loadPreferences().target){
-  const exam=latestExam(year)
-  if(!exam)return false
-  const attempts=loadAttempts(),fields=weakFieldsForStoredExam(target,exam,attempts)
-  return practicePlanComplete(exam,target,loadLearningRoute().reinforcement[String(year)],attempts,fields)
+  return sourcePracticeProgress(year,target).complete
 }
 
 export function reinforcementComplete(year:number,target:TargetScore=loadPreferences().target){
   const exam=latestExam(year)
   if(!exam)return false
-  const attempts=loadAttempts(),fields=weakFieldsForStoredExam(target,exam,attempts)
-  if(!fields.length)return true
-  const plan=loadLearningRoute().reinforcement[String(year)]
-  if(!practicePlanComplete(exam,target,plan,attempts,fields))return false
-  // v0.13以前ですでに旧方式の補強を完了していた利用者は完了のまま維持します。
-  if(plan?.requiresSourceReview===false||plan?.requiresSourceReview===undefined)return true
-  return sourceMistakeProgress(year,target).complete
+  return sourceMistakeProgress(year,target).complete&&sourcePracticeProgress(year,target).complete
 }
 
-// 2022〜2026の必須5年度。各年度は「年度通し → 未解決元問題 → 補強」を完了してから次へ進む。
+// 2022〜2026の必須5年度。各年度は「年度通し → 未解決元問題 → 固定類題」を完了してから次へ進む。
 export function requiredYearComplete(year:number,target:TargetScore=loadPreferences().target){
+  if(isRequiredYearLocked(year,target))return true
   const exam=latestExam(year)
-  return !!exam&&sourceMistakeProgress(year,target).complete&&reinforcementComplete(year,target)
+  const complete=!!exam&&sourceMistakeProgress(year,target).complete&&sourcePracticeProgress(year,target).complete
+  if(complete)markRequiredYearComplete(year,target)
+  return complete
 }
 
 function completedCheckpointYears(target:TargetScore=loadPreferences().target){
@@ -323,7 +366,7 @@ export function nextCheckpointYear(){
   return null
 }
 
-// 現在の必須年度。未実施だけでなく、元問題修正・補強が残る年度もここに留まる。
+// 現在の必須年度。未実施だけでなく、元問題修正・固定類題が残る年度もここに留まる。
 export function nextRequiredStageYear(target:TargetScore=loadPreferences().target):RequiredMainYear|null{
   for(const year of REQUIRED_MAIN_YEAR_SEQUENCE){
     if(!requiredYearComplete(year,target))return year
@@ -331,15 +374,15 @@ export function nextRequiredStageYear(target:TargetScore=loadPreferences().targe
   return null
 }
 
-// 旧API名は維持するが、v0.17.9では必須5年度の進行位置（1〜12）を表す。
+// 旧API名は維持するが、v0.18.1では必須5年度の進行位置（1〜12）を表す。
 export function currentLearningStep(){
   const target=loadPreferences().target
   for(let i=0;i<REQUIRED_MAIN_YEAR_SEQUENCE.length;i++){
     const year=REQUIRED_MAIN_YEAR_SEQUENCE[i]
     const exam=latestExam(year)
     const base=i===0?1:4+(i-1)*2
-    if(!exam)return base
-    if(!sourceMistakeProgress(year,target).complete||!reinforcementComplete(year,target))return base+1
+    if(!exam&&!isRequiredYearLocked(year,target))return base
+    if(!requiredYearComplete(year,target))return base+1
   }
   return 12
 }
@@ -347,7 +390,7 @@ export function currentLearningStep(){
 // Homeでは6フェーズ：2024診断、2024補強、2023、2022、2025、2026。
 export function currentLearningPhase(){
   const target=loadPreferences().target
-  if(!latestExam(2024))return 1
+  if(!latestExam(2024)&&!isRequiredYearLocked(2024,target))return 1
   if(!requiredYearComplete(2024,target))return 2
   if(!requiredYearComplete(2023,target))return 3
   if(!requiredYearComplete(2022,target))return 4
@@ -357,7 +400,7 @@ export function currentLearningPhase(){
 
 export function routeStepDone(step:number){
   const target=loadPreferences().target
-  if(step===1)return !!latestExam(2024)
+  if(step===1)return !!latestExam(2024)||isRequiredYearLocked(2024,target)
   if(step===2)return requiredYearComplete(2024,target)
   if(step===3)return requiredYearComplete(2023,target)
   if(step===4)return requiredYearComplete(2022,target)
@@ -365,7 +408,6 @@ export function routeStepDone(step:number){
   if(step===6)return requiredYearComplete(2026,target)
   return false
 }
-
 
 export type YearExposureState='untouched'|'partially_exposed'|'fully_attempted'
 export type YearRole='main-check'|'reinforcement-pool'|'different-structure'
@@ -380,7 +422,6 @@ export function yearExposureState(year:number):YearExposureState{
   const exam=latestExam(year)
   if(exam)return 'fully_attempted'
   const attempts=loadAttempts()
-  // 過去問ページでは年度全体の問題が表示されるため、開いた履歴だけでも初見性は失われる。
   const opened=attempts.some(a=>a.questionId===`exposure-${year}`)
   const attemptedIds=new Set(attempts.flatMap(a=>{
     if(a.questionId.startsWith('target-')){
@@ -438,8 +479,8 @@ export function nextLearningAction(target:TargetScore=loadPreferences().target):
   }
 
   // 年度の新しさではなく、固定された学習上の役割順を正本にする。
-  // 後の年度を先に開いたドラフトがあっても、手前の必須年度・未解決・補強を飛ばさない。
   for(const year of REQUIRED_MAIN_YEAR_SEQUENCE){
+    if(requiredYearComplete(year,target))continue
     const exam=latestExam(year)
     const purpose=requiredYearPurpose(year)
 
@@ -462,16 +503,16 @@ export function nextLearningAction(target:TargetScore=loadPreferences().target):
         purpose:`${purpose}後の元問題修正`
       }
     }
-    if(!reinforcementComplete(year,target)){
+    const practice=sourcePracticeProgress(year,target)
+    if(!practice.complete){
       return {
         to:`/reinforce?source=${year}`,
-        label:`${year}年度の類題・2019〜2021年度で補強する`,
+        label:`${year}年度の固定類題 ${practice.completedIds.length}/${practice.requiredIds.length}セットを進める`,
         purpose:`${purpose}後の弱点補強`
       }
     }
   }
 
-  // 必須5年度完了後だけ、任意年度や残存ドラフトへ進む。
   const coreDraft=drafts.find(([year])=>REQUIRED_MAIN_YEAR_SEQUENCE.includes(Number(year) as RequiredMainYear))
   return coreDraft?actionForDraft(coreDraft):{to:'/years',label:'2022〜2026年度の必須5年完了・任意演習へ進む',purpose:'維持・追加演習'}
 }
