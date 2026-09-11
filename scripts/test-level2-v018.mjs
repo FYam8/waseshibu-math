@@ -96,7 +96,8 @@ assert.match(remediationUi,/isOfficial\?isExamAnswerCorrect/,'official practice 
 assert.match(remediationUi,/isOfficial\?`target-\$\{q\.id\}`:q\.id/,'official practice history must use the canonical target-prefixed ID')
 for(const symbol of ['≦','≧','＜','＞','＝'])assert.ok(mathAnswerInputUi.includes(`label:'${symbol}'`),`math keypad must provide ${symbol}`)
 for(const symbol of ['≦','≧','＜','＞','＝'])assert.ok(pastPapersUi.includes(`['${symbol}'`),`past-paper keypad must provide ${symbol}`)
-assert.match(reinforcementUi,/<MathAnswerInput value=\{answers\[item\.id\]\|\|''\}/,'official reinforcement must use the math keypad')
+assert.match(remediationUi,/<MathAnswerInput value=\{answer\}/,'fixed-practice answer entry must use the math keypad')
+assert.doesNotMatch(reinforcementUi,/<MathAnswerInput/,'reinforcement progress list must delegate answer entry to Remediation')
 assert.match(mathAnswerInputUi,/onPointerDown=\{e=>e\.preventDefault\(\)\}/,'math keypad must retain the active input cursor on touch')
 assert.match(pastPapersUi,/focusedInputKey=useRef<string>/,'past-paper keypad must remember the selected answer field')
 assert.match(pastPapersUi,/q\.subquestions\.some\(sub=>keyFor\(q,sub\.no\)===remembered\)/,'remembered field must be limited to the visible major question')
@@ -131,7 +132,6 @@ assert.ok(rangeRuntime,'range-answer Level2 question must remain selectable')
 assert.equal(mod.isAcceptedLevel2Answer('0≦y≦32',rangeRuntime),true,'Japanese inequality symbols must pass')
 assert.equal(mod.isAcceptedLevel2Answer('0<=y<=32',rangeRuntime),true,'ASCII inequality symbols must pass')
 
-// A saved 3/4 streak containing backlog questions must not complete a new official question.
 const migratedStore=new MemoryStorage()
 migratedStore.setItem(mod.LEVEL2_HISTORY_STORAGE_KEY,JSON.stringify({schemaVersion:1,attempts:[],questionStats:{},masteryEvents:[],sessions:{'field:coordinates':{
   sessionId:'old-session',triggerSourceQuestionId:null,directLevel2QuestionId:null,fieldIdAtSessionStart:'coordinates',fieldAssignmentRevisionAtSessionStart:7,
@@ -141,8 +141,6 @@ const migrated=mod.selectLevel2Question(null,'coordinates',migratedStore)
 assert.equal(migrated.session.currentStreak,0,'backlog streak must restart at 0/4')
 assert.equal(mod.loadLevel2History(migratedStore).attempts.length,0,'backlog migration must retain attempt history without fabricating attempts')
 
-// A correct official question is deferred behind unchanged originals, but remains a fallback
-// so a four-distinct-question streak is still possible in a four-item field.
 const priorityStore=new MemoryStorage()
 priorityStore.setItem('waseshibu-math-attempts',JSON.stringify([{id:'p1',questionId:'target-2020-Q1-1',status:'correct',at:'2026-09-03T00:00:00.000Z'}]))
 let priorityStep=mod.selectLevel2Question(null,'expressions',priorityStore)
@@ -155,7 +153,6 @@ for(let i=0;i<4;i++){
 }
 assert.equal(new Set(priorityIds).size,4)
 assert.equal(priorityIds[3],'2020-Q1-1','correct official question may return only after the other three distinct questions')
-// A wrong answer preserves already completed items and continues through the fixed set.
 for(const wrongAt of [2,3,4]){
   const rotationStore=new MemoryStorage()
   let step=mod.selectLevel2Question('2024-Q1-6','expressions',rotationStore,'2026-09-05T00:00:00.000Z')
@@ -176,8 +173,6 @@ for(const wrongAt of [2,3,4]){
   assert.equal(rotationHistory.attempts.length,wrongAt,`position ${wrongAt}: every attempt must be retained`)
   assert.equal(rotationHistory.sessions[step.key].currentStreak,wrongAt-1,`position ${wrongAt}: completed problems must remain complete`)
 }
-// An older saved session may have lastQuestionId but no shuffle-bag arrays.
-// It must resume away from the last/first question instead of treating it as new.
 const legacyStore=new MemoryStorage()
 let legacyStep=mod.selectLevel2Question('2024-Q1-6','expressions',legacyStore,'2026-09-05T01:00:00.000Z')
 const legacyFirst=legacyStep.question.id
@@ -284,7 +279,7 @@ const firstAfterReactivation=selected.question.id
 let result=mod.recordLevel2Attempt({key:selected.key,sessionId:selected.session.sessionId,question:selected.question,presentationId:selected.presentationId,answer:selected.question.answer,correct:true,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:selected.session.fieldIdAtSessionStart},storage)
 selected=mod.selectLevel2Question('2024-Q1-6','expressions',storage)
 const wrongQuestion=selected.question.id
-  result=mod.recordLevel2Attempt({key:selected.key,sessionId:selected.session.sessionId,question:selected.question,presentationId:selected.presentationId,answer:'wrong',correct:false,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:selected.session.fieldIdAtSessionStart},storage)
+result=mod.recordLevel2Attempt({key:selected.key,sessionId:selected.session.sessionId,question:selected.question,presentationId:selected.presentationId,answer:'wrong',correct:false,usedHint:false,usedExplanation:false,revealedAnswer:false,firstSubmission:true,practiceFieldId:selected.session.fieldIdAtSessionStart},storage)
 const expectedNextQuestion=result.session.bagRemaining[0]
 assert.equal(result.session.currentStreak,1)
 selected=mod.selectLevel2Question('2024-Q1-6','expressions',storage)
@@ -324,8 +319,6 @@ assert.equal(staleResult.session.currentStreak,0,'stale submission must not adva
 assert.equal(staleResult.qualifying,false,'stale submission must not qualify for mastery')
 assert.equal(mod.loadLevel2History(staleTabStore).attempts.length,1,'the learner answer itself must remain in immutable history')
 
-// If another tab has already completed the same fixed session, an older view of
-// a completed question must not reopen the session or duplicate mastery progress.
 const completedTabStore=new MemoryStorage()
 let completedTabStep=mod.selectLevel2Question('2024-Q5-1','angles-circles',completedTabStore)
 const oldCompletedView=completedTabStep
@@ -343,7 +336,6 @@ assert.equal(completedTabStaleResult.session.status,'completed','a stale answer 
 assert.equal(mod.loadLevel2History(completedTabStore).masteryEvents.length,masteryCount,'a stale answer must not duplicate mastery events')
 assert.equal(mod.loadLevel2History(completedTabStore).attempts.length,3,'the stale learner answer must still remain in immutable history')
 
-// Workload-based targets are frozen at session start: Q1=4, Q2/Q3=3, Q4/Q5=2.
 for(const [sourceId,expected] of [['2024-Q1-1',4],['2024-Q2-1',3],['2024-Q5-1',2]]){
   const workloadStore=new MemoryStorage()
   let workloadStep=mod.selectLevel2Question(sourceId,'expressions',workloadStore)
@@ -374,8 +366,6 @@ assert.equal(mod.isAcceptedLevel2Answer('3/9',fraction),false,'unreduced fractio
 assert.equal(mod.isAcceptedLevel2Answer('-1+√3',radical),true,'equivalent simplified radical order must pass')
 assert.equal(mod.isAcceptedLevel2Answer('4:6',ratio),false,'non-simplest ratio must fail')
 assert.equal(mod.isAcceptedLevel2Answer('2:3',ratio),true)
-// S10: paired positive/negative controls. These are product grading checks,
-// not official marking rules or evidence of a learner's improvement.
 const finalAnswerCases=[
   ['S10-F01','4/6',{...fraction,answer:'2/3'},false],
   ['S10-F02','2/3',{...fraction,answer:'2/3'},true],
