@@ -38,7 +38,6 @@ const now = () => new Date().toISOString()
 const allowWrite=()=>{const allowed=canWriteLearningData();if(!allowed)notifyWriteBlocked();return allowed}
 
 function nextResetVersion(current:number) {
-  // 既存データとの互換性を維持するため、resetVersionは従来どおり単調増加させる。
   return Math.max(current + 1, Date.now())
 }
 
@@ -150,6 +149,7 @@ export function savePreferences(prefs: Omit<Preferences,'updatedAt'> & Partial<P
   if (!allowWrite()) return
   const full: Preferences = {...prefs, updatedAt: prefs.updatedAt || now()}
   localStorage.setItem(PREF_KEY, JSON.stringify(full))
+  if(typeof window!=='undefined'&&typeof CustomEvent!=='undefined')window.dispatchEvent(new CustomEvent('waseshibu-preferences-change'))
 }
 
 export function loadDaily(): DailyState | null {
