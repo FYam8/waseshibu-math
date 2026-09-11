@@ -5,8 +5,9 @@ import { classifyRemediationField } from '../data/remediation'
 import { currentFieldId, level2FieldById, level2FigureUrl, resolveLevel2FieldId, type Level2Question } from '../data/level2Data'
 import { isAcceptedLevel2Answer } from '../level2Answer'
 import { markLevel2Assistance, recordLevel2Attempt, selectLevel2Question, type Level2Session } from '../level2History'
-import { createRecordId, loadAttempts, saveAttempt } from '../storage'
+import { createRecordId, loadAttempts, loadPreferences, saveAttempt } from '../storage'
 import { updateGuidedProgress } from '../guidedReview'
+import { markRequiredYearComplete, sourceMistakeProgress, sourcePracticeProgress } from '../learningRoute'
 import FocusedQuestionView from '../components/FocusedQuestionView'
 import { isExamAnswerCorrect } from '../data/examAnswers'
 import { modelingHintForField } from '../modelingHint'
@@ -33,7 +34,14 @@ export default function Remediation(){
     const recorded=recordLevel2Attempt({key:presentation.key,sessionId:presentation.session.sessionId,question:q,presentationId:presentation.presentationId,answer,correct,usedHint,usedExplanation,revealedAnswer,firstSubmission:true,practiceFieldId:fieldId})
     saveAttempt({id:createRecordId(isOfficial?'past-practice':'level2'),questionId:isOfficial?`target-${q.id}`:q.id,mode:'multi',topic:field?.label||topic,status:correct?'correct':'wrong',mistakeTag:correct?undefined:'解法未習得',answer,at:recorded.attempt.answeredAt})
     if(sourceQuestion&&!recorded.stale)updateGuidedProgress(sourceQuestion,recorded.completed?{practiceStreak:4,mastery:'consolidated'}:{practiceStreak:recorded.session.currentStreak})
-    if(recorded.completed)saveAttempt({id:createRecordId('mastery'),questionId:`mastery-${sourceQuestion||fieldId}`,mode:'multi',topic:field?.label||topic,status:'correct',at:recorded.attempt.answeredAt})
+    if(recorded.completed){
+      saveAttempt({id:createRecordId('mastery'),questionId:`mastery-${sourceQuestion||fieldId}`,mode:'multi',topic:field?.label||topic,status:'correct',at:recorded.attempt.answeredAt})
+      const sourceYear=Number(source)
+      if(sourceQuestion&&Number.isInteger(sourceYear)&&sourceYear>=2022&&sourceYear<=2026){
+        const target=loadPreferences().target
+        if(sourceMistakeProgress(sourceYear,target).complete&&sourcePracticeProgress(sourceYear,target).complete)markRequiredYearComplete(sourceYear,target)
+      }
+    }
     setResult(correct);setStaleSubmission(recorded.stale);setSession(recorded.session);if(recorded.completed||recorded.session.status==='completed')setFinished(true)
   }
   const next=()=>{
