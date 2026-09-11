@@ -1,16 +1,16 @@
 import questions from './data/questions.json'
 import type { MajorQuestion } from './types'
 import { loadAttempts } from './storage'
-import { loadGuidedProgressState, type GuidedProgressState } from './guidedReview'
+import { loadGuidedProgressState } from './guidedReview'
 import { loadLevel2SessionSummaries } from './level2ProgressView'
 import { requiredPracticeCount } from './practiceLoad'
-import { classifyRemediationField } from './data/remediation'
-import { REQUIRED_MAIN_YEAR_SEQUENCE, latestExam, loadLearningRoute } from './learningRoute'
-import { gradeInTarget, storedExamItems, targetGoalLabel, weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
+import { REQUIRED_MAIN_YEAR_SEQUENCE, isRequiredYearLocked, latestExam, sourceMistakeProgress } from './learningRoute'
+import { gradeInTarget, storedExamItems, targetGoalLabel, type TargetScore } from './targetStrategy'
 
 export type GoalDayEstimate={
   target:TargetScore
   label:string
+  remainingQuestions:number
   remainingUnits:number
   days:number
   complete:boolean
@@ -22,131 +22,102 @@ const majors=questions.questions as MajorQuestion[]
 const questionMeta=majors.flatMap(major=>major.subquestions.map(sub=>({
   id:`${major.id}-${sub.no}`,
   year:major.year,
+  major:major.major,
   topic:sub.topic,
   grade:sub.grade
 })))
-const questionById=new Map(questionMeta.map(q=>[q.id,q]))
 
 export const DEFAULT_DAILY_TASK_CAPACITY=10
 
-type MinimalAttempt={questionId:string;status:string;at:string}
-
-function estimateUnitsForQuestion(
-  questionId:string,
-  progress:GuidedProgressState,
-  latestAttempt?:MinimalAttempt,
-  now=new Date()
-){
-  const p=progress[questionId]
-  const attemptIsNewer=!!latestAttempt&&(!p||latestAttempt.at>p.updatedAt)
-
-  if(attemptIsNewer&&latestAttempt?.status==='correct')return 0
-  if(attemptIsNewer&&latestAttempt?.status!=='correct')return 2
-
-  if(!p)return 1
-  if(p.mastery==='consolidated'||p.mastery==='independent'){
-    const age=now.getTime()-Date.parse(p.updatedAt||'')
-    return Number.isFinite(age)&&age>=7*24*60*60*1000?1:0
-  }
-  if(p.mastery==='reproduced')return 1
-  if(p.mastery==='guided'||p.mastery==='exposed'||p.mastery==='attempted')return 2
-  return 1
+function reservedPracticeCount(questionId:string){
+  return requiredPracticeCount(questionId,'')
 }
 
-function latestExamAttempts(){
-  const attempts=loadAttempts(),latestByQuestion=new Map<string,MinimalAttempt>()
-  for(const attempt of attempts){
-    if(!attempt.questionId.startsWith('exam-'))continue
-    const id=attempt.questionId.slice(5)
-    if(!latestByQuestion.has(id))latestByQuestion.set(id,attempt)
-  }
-  return {attempts,latestByQuestion}
+export function reservedQuestionCount(questionId:string,grade:'A'|'B'|'C',target:TargetScore){
+  // 必須年度の過去問は目標外の小問も年度通しで1問として数える。
+  // 目標範囲内だけ、誤答時に必要になる「直し1問＋固定類題」を先に予約する。
+  return 1+(gradeInTarget(target,grade)?1+reservedPracticeCount(questionId):0)
+}
+
+function latestPracticeSession(questionId:string,examAt:string){
+  return loadLevel2SessionSummaries()
+    .filter(session=>session.triggerSourceQuestionId===questionId&&(!session.sourceAttemptAt||session.sourceAttemptAt>=examAt))
+    .sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))[0]
+}
+
+function remainingPracticeQuestions(questionId:string,examAt:string){
+  const progress=loadGuidedProgressState()[questionId]
+  if(progress&&progress.updatedAt>=examAt&&progress.mastery==='consolidated')return 0
+
+  const session=latestPracticeSession(questionId,examAt)
+  if(!session)return reservedPracticeCount(questionId)
+  if(session.status==='completed')return 0
+  return Math.max(0,session.requiredCount-Math.min(session.requiredCount,session.completedQuestionIds.length))
 }
 
 export function buildGoalDayEstimates(
-  now=new Date(),
+  _now=new Date(),
   dailyCapacity=DEFAULT_DAILY_TASK_CAPACITY,
 ):GoalDayEstimate[]{
-  const progress=loadGuidedProgressState()
-  const level2Sessions=loadLevel2SessionSummaries()
-  const {attempts,latestByQuestion}=latestExamAttempts()
-  const route=loadLearningRoute()
-
+  const attempts=loadAttempts()
   const raw=([60,70,75] as TargetScore[]).map(target=>{
-    let remainingUnits=0
+    let remainingQuestions=0
     let includedQuestions=0
 
-    // 必須の得点確認は2022〜2026の5年度。未実施年度はその年度の対象小問数を実学習量として数える。
-    // 実施済み年度は、正解済みを除き「解き直し・定着」に必要な分だけ数える。
     for(const year of REQUIRED_MAIN_YEAR_SEQUENCE){
+      const yearQuestions=questionMeta.filter(q=>q.year===year)
+      includedQuestions+=yearQuestions.length
+
+      // 一度その目標で本線完了した年度は、任意再受験・任意再練習でETAを再開しない。
+      if(isRequiredYearLocked(year,target))continue
+
       const exam=latestExam(year)
-      const targetQuestions=questionMeta.filter(q=>q.year===year&&gradeInTarget(target,q.grade))
       if(!exam){
-        includedQuestions+=targetQuestions.length
-        remainingUnits+=targetQuestions.length
+        // 未採点年度は、過去問そのもの＋目標範囲内の直し・固定類題を先取り予約。
+        remainingQuestions+=yearQuestions.reduce((sum,q)=>sum+reservedQuestionCount(q.id,q.grade,target),0)
         continue
       }
-      const examItems=storedExamItems(exam,attempts)
-      const itemById=new Map(examItems.map(item=>[item.key,item]))
-      for(const q of targetQuestions){
+
+      const itemById=new Map(storedExamItems(exam,attempts).map(item=>[item.key,item]))
+      const repairRemaining=new Set(sourceMistakeProgress(year,target).remainingIds)
+
+      for(const q of yearQuestions){
         const item=itemById.get(q.id)
-        if(!item)continue
-        includedQuestions++
-        if(item.status!=='correct')remainingUnits+=estimateUnitsForQuestion(q.id,progress,latestByQuestion.get(q.id),now)
-      }
-    }
-
-    // 2019〜2021年度は「全問題」を数えない。現在の補強計画に実際に選ばれた問題だけを数える。
-    // さらに、各弱点分野の負荷別固定セットも未完了なら学習単位として加える。
-    for(const sourceYear of REQUIRED_MAIN_YEAR_SEQUENCE){
-      const exam=latestExam(sourceYear)
-      if(!exam)continue
-      const plan=route.reinforcement[String(sourceYear)]
-      if(!plan||plan.examId!==exam.id||plan.target!==target)continue
-      const completed=new Set(plan.completedQuestionIds)
-      const fields=weakFieldsForStoredExam(target,exam,attempts)
-      for(const field of fields){
-        const selected=plan.fields[field]||[]
-        const remainingOld=selected.filter(id=>!completed.has(id))
-        remainingUnits+=remainingOld.length
-        includedQuestions+=remainingOld.length
-
-        const mastered=attempts.some(a=>a.questionId.startsWith('mastery-')&&a.status==='correct'&&a.at>exam.at&&classifyRemediationField(a.topic).title===field)
-        if(!mastered){
-          const sourceIds=storedExamItems(exam,attempts)
-            .filter(item=>item.status!=='correct'&&gradeInTarget(target,item.grade))
-            .filter(item=>classifyRemediationField(item.topic).title===field)
-            .map(item=>item.key)
-          const sessions=level2Sessions.filter(session=>session.triggerSourceQuestionId&&sourceIds.includes(session.triggerSourceQuestionId))
-          const session=sessions.sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))[0]
-          const sourceId=session?.triggerSourceQuestionId||sourceIds[0]||null
-          const requiredCount=session?.requiredCount||requiredPracticeCount(sourceId,'')
-          const completed=session?.completedQuestionIds.length||0
-          remainingUnits+=Math.max(0,requiredCount-Math.min(requiredCount,completed))
+        if(!item){
+          // 壊れた／旧形式の部分データで過小表示しない。
+          remainingQuestions+=reservedQuestionCount(q.id,q.grade,target)
+          continue
         }
+        if(item.status==='correct')continue
+        // 年度通しの採点が確定した時点で、過去問1問分は消える。
+        // 目標外のB/C問題は、現在目標では直し・類題を必須にしない。
+        if(!gradeInTarget(target,q.grade))continue
+
+        if(repairRemaining.has(q.id))remainingQuestions+=1
+        remainingQuestions+=remainingPracticeQuestions(q.id,exam.at)
       }
     }
 
     const cap=Math.max(1,Math.floor(dailyCapacity))
-    const days=remainingUnits===0?0:Math.ceil(remainingUnits/cap)
+    const days=remainingQuestions===0?0:Math.ceil(remainingQuestions/cap)
     return {
       target,
       label:targetGoalLabel(target),
-      remainingUnits,
+      remainingQuestions,
+      remainingUnits:remainingQuestions,
       days,
-      complete:remainingUnits===0,
+      complete:remainingQuestions===0,
       includedQuestions,
       dailyCapacity:cap
     }
   })
 
-  // 目標を上げたのに残り学習量が減る表示は、任意演習やtarget別plan差による混乱を生む。
-  // 学習履歴は変えず、表示用見積もりだけ A≦B≦C を保証する。
+  // A→B→Cと目標を上げたとき、必要量が逆転して見えないよう表示だけ単調化する。
   let floor=0
   return raw.map(item=>{
-    const remainingUnits=Math.max(floor,item.remainingUnits)
-    floor=remainingUnits
-    const days=remainingUnits===0?0:Math.ceil(remainingUnits/Math.max(1,item.dailyCapacity))
-    return {...item,remainingUnits,days,complete:remainingUnits===0}
+    const remainingQuestions=Math.max(floor,item.remainingQuestions)
+    floor=remainingQuestions
+    const days=remainingQuestions===0?0:Math.ceil(remainingQuestions/Math.max(1,item.dailyCapacity))
+    return {...item,remainingQuestions,remainingUnits:remainingQuestions,days,complete:remainingQuestions===0}
   })
 }
