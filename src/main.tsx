@@ -6,6 +6,7 @@ import './styles.css'
 import './guidedReview.css'
 import './homeRoute.css'
 import { bootstrapSafety } from './safetyBootstrap'
+import { syncRequiredYearCompletionLocks } from './learningRoute'
 import SafetyMode from './SafetyMode'
 
 const root=ReactDOM.createRoot(document.getElementById('root')!)
@@ -13,5 +14,7 @@ root.render(<main className="boot-screen"><b>学習データを確認してい�
 
 void bootstrapSafety().then(result=>{
   if(result.mode==='safe'){root.render(<SafetyMode result={result}/>);return}
+  // 旧版ですでに本線を完了している年度は、React renderの外で一度だけ完了ロックへ昇格する。
+  syncRequiredYearCompletionLocks()
   root.render(<React.StrictMode><HashRouter><App /></HashRouter></React.StrictMode>)
 }).catch(error=>root.render(<SafetyMode result={{mode:'safe',message:`起動前の安全確認を完了できません：${error instanceof Error?error.message:'不明なエラー'}`}}/>))
