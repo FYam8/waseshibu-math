@@ -1,7 +1,7 @@
 {
-  "appVersion": "0.18.0",
-  "dataVersion": 7,
-  "releasedAt": "2026-09-03",
-  "release": "audited-level2-v7",
-  "version": "0.18.0"
+  "appVersion": "0.18.1",
+  "dataVersion": 8,
+  "releasedAt": "2026-09-11",
+  "release": "simple-monotonic-eta-v8",
+  "version": "0.18.1"
 }
