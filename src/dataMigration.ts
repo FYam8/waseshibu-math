@@ -1,6 +1,5 @@
-
 export const DATA_VERSION_KEY='waseshibu-math-data-version'
-export const CURRENT_DATA_VERSION=7
+export const CURRENT_DATA_VERSION=8
 export const LEGACY_DRAFT_KEY='waseshibu-math-exam-drafts'
 export const CURRENT_DRAFT_KEY='waseshibu-math-exam-drafts-v2'
 export const PREP_STORAGE_KEY='waseshibu-math-prep-check-v1'
@@ -9,6 +8,7 @@ export const GUIDED_PROGRESS_STORAGE_KEY='waseshibu-math-guided-progress-v2'
 export const MIGRATION_BACKUP_STORAGE_KEY='waseshibu-math-migration-backup-v1'
 export const REMEDIATION_PROGRESS_STORAGE_KEY='waseshibu-math-remediation-progress-v1'
 export const LEVEL2_HISTORY_STORAGE_KEY='waseshibu-math-level2-history-v1'
+const LEARNING_ROUTE_STORAGE_KEY='waseshibu-math-learning-route-v1'
 
 export type MigrationStorage=Pick<Storage,'getItem'|'setItem'|'removeItem'>
 const isObject=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)
@@ -82,29 +82,28 @@ export function migrateDataRecord(input:Record<string,unknown>,fromVersion:numbe
     version=3
   }
   if(version<4){
-    // 旧Guided Reviewは一切削除・上書きせず、新形式へコピーして派生させる。
     if(!(GUIDED_PROGRESS_STORAGE_KEY in data))data[GUIDED_PROGRESS_STORAGE_KEY]=guidedProgressFromLegacy(data[GUIDED_REVIEW_STORAGE_KEY])
     version=4
   }
   if(version<5){
-    // v5はUX・目標ロジックの更新。学習履歴の意味は変更せず、そのまま保持する。
     version=5
   }
   if(version<6){
-    // v6は類題の「問題位置＋連続正解」を元問題ID単位で永続化する。
-    // v5以前の practiceStreak には「4つの異なる類題を順に正解した」証拠がない。
-    // 旧不具合で同じ類題の再正解が連続数に混ざった可能性があるため、
-    // Guided履歴そのものは保持するが、新しい mastery 判定へは引き継がない。
-    // 類題を次に開いた時点から、安全側の 0/4 で新形式の進捗を開始する。
     if(!(REMEDIATION_PROGRESS_STORAGE_KEY in data))data[REMEDIATION_PROGRESS_STORAGE_KEY]={}
     version=6
   }
   if(version<7){
-    // v7は精査済みLevel2の不変questionId履歴を追加する。旧72問・難易度別・
-    // 過去問別類題のattempt/progressは書き換えず、legacy履歴としてそのまま保持する。
-    // 内容同一性が未確認のため、旧類題履歴を新L2-* IDへ推測移行しない。
     if(!(LEVEL2_HISTORY_STORAGE_KEY in data))data[LEVEL2_HISTORY_STORAGE_KEY]={schemaVersion:1,attempts:[],questionStats:{},sessions:{},masteryEvents:[]}
     version=7
+  }
+  if(version<8){
+    // v8は「年度×目標の本線完了ロック」をlearning-route内へ追加する。
+    // 既存の得点・答案・補強履歴は変更せず、完了ロックは実行時に現在の履歴から安全に確定する。
+    if(LEARNING_ROUTE_STORAGE_KEY in data){
+      const route=isObject(data[LEARNING_ROUTE_STORAGE_KEY])?data[LEARNING_ROUTE_STORAGE_KEY]:{}
+      data[LEARNING_ROUTE_STORAGE_KEY]={...route,completedCoreByTarget:isObject(route.completedCoreByTarget)?route.completedCoreByTarget:{}}
+    }
+    version=8
   }
   data[DATA_VERSION_KEY]=CURRENT_DATA_VERSION
   return {data,version}
@@ -114,11 +113,10 @@ export function runDataMigrations(storage:MigrationStorage=localStorage){
   const storedVersion=Number(storage.getItem(DATA_VERSION_KEY)||'0')
   if(storedVersion>CURRENT_DATA_VERSION)return {ok:false,fromVersion:storedVersion,toVersion:storedVersion,error:'新しいデータ形式です'}
   if(storedVersion===CURRENT_DATA_VERSION)return {ok:true,fromVersion:storedVersion,toVersion:CURRENT_DATA_VERSION}
-  const keys=['waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-scores',CURRENT_DRAFT_KEY,'waseshibu-math-learning-route-v1',PREP_STORAGE_KEY,GUIDED_REVIEW_STORAGE_KEY,GUIDED_PROGRESS_STORAGE_KEY,REMEDIATION_PROGRESS_STORAGE_KEY,LEVEL2_HISTORY_STORAGE_KEY,LEGACY_DRAFT_KEY]
+  const keys=['waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-scores',CURRENT_DRAFT_KEY,LEARNING_ROUTE_STORAGE_KEY,PREP_STORAGE_KEY,GUIDED_REVIEW_STORAGE_KEY,GUIDED_PROGRESS_STORAGE_KEY,REMEDIATION_PROGRESS_STORAGE_KEY,LEVEL2_HISTORY_STORAGE_KEY,LEGACY_DRAFT_KEY]
   const source:Record<string,unknown>={}
   for(const key of keys){const raw=storage.getItem(key);if(raw===null)continue;try{source[key]=JSON.parse(raw)}catch{source[key]=raw}}
   const managedKeys=[...keys,DATA_VERSION_KEY],before=new Map(managedKeys.map(key=>[key,storage.getItem(key)]))
-  // migration前の生データを別キーへ退避する。成功前に旧データを削除しない。
   const backupPayload={fromVersion:Number.isFinite(storedVersion)?storedVersion:0,createdAt:new Date().toISOString(),raw:Object.fromEntries([...before].filter(([,value])=>value!==null))}
   try{storage.setItem(MIGRATION_BACKUP_STORAGE_KEY,JSON.stringify(backupPayload))}
   catch(error){return {ok:false,fromVersion:storedVersion,toVersion:storedVersion,error:`更新前バックアップを保存できないため移行を中止しました：${error instanceof Error?error.message:'保存エラー'}`}}
