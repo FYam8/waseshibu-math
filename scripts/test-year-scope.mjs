@@ -32,15 +32,20 @@ for(const year of [2019,2020]){
   assert.ok(level2ForYear.every(item=>!forbidden.test(JSON.stringify(item))),`S9-SCOPE-005: ${year}年度出典の類題が範囲外定理を明示使用`)
 }
 
-const uiFiles=['src/pages/PastPapers.tsx','src/pages/GuidedReview.tsx','src/pages/Remediation.tsx','src/pages/Reinforcement.tsx']
-for(const file of uiFiles){
+// Reinforcement は元問題ごとの進捗一覧だけを表示し、実際の問題は表示しない。
+// 年度条件は問題本文を表示する PastPapers / GuidedReview / Remediation で必ず参照・表示する。
+const problemUiFiles=['src/pages/PastPapers.tsx','src/pages/GuidedReview.tsx','src/pages/Remediation.tsx']
+for(const file of problemUiFiles){
   const source=fs.readFileSync(file,'utf8')
   assert.match(source,/examScopeNote/,`S9-SCOPE-006: ${file} が年度条件を参照していない`)
   assert.match(source,/exam-scope-notice/,`S9-SCOPE-007: ${file} が年度条件を画面表示しない`)
 }
+const reinforcement=fs.readFileSync('src/pages/Reinforcement.tsx','utf8')
+assert.doesNotMatch(reinforcement,/FocusedQuestionView|MathAnswerInput|examScopeNote/,'S9-SCOPE-007: Reinforcementは問題本文を直接表示せず、範囲注意の責任をRemediationへ集約する')
+assert.match(reinforcement,/fixed-practice|固定類題|FIXED PRACTICE/i,'S9-SCOPE-007: Reinforcementから問題表示画面への固定類題導線がない')
 
 const oldCompleteness=fs.readFileSync('scripts/test-v0178-completeness.mjs','utf8')
 assert.match(oldCompleteness,/scope audit/,'S9-SCOPE-008: 既存の年度範囲回帰が消えている')
 
-console.log('PASS: S9-SCOPE-001..008 2019/2020の明示条件、年度分離、解説・類題・4画面の範囲表示を検証')
+console.log('PASS: S9-SCOPE-001..008 2019/2020の明示条件、年度分離、解説・固定類題の問題表示画面で範囲表示を検証')
 console.log('NOTE: 固定合成入力の機能検査であり、AI模擬学習者の転移結果ではありません')
