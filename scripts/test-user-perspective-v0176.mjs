@@ -12,14 +12,15 @@ if(reinforce.includes('markOldQuestionCompleted('))throw new Error('optional old
 console.log('PASS: source repair -> fixed practice is the required flow; separate 2019-2021 work is optional')
 
 // 2) 固定類題で不正解でも完了数を増やさず、未正解問題だけを再挑戦する。
-if(!history.includes("const qualifying=!stale&&input.firstSubmission&&input.correct&&!usedHint&&!usedExplanation&&!revealedAnswer"))throw new Error('wrong/assisted fixed-practice answers can qualify as completed')
+if(!/qualifying\s*=\s*!stale\s*&&\s*input\.firstSubmission\s*&&\s*input\.correct\s*&&\s*!usedHint\s*&&\s*!usedExplanation\s*&&\s*!revealedAnswer/.test(history))throw new Error('wrong/assisted fixed-practice answers can qualify as completed')
+if(!/completedIds\s*=\s*qualifying/.test(history))throw new Error('fixed-practice completion does not depend on a qualifying correct answer')
 if(!remediation.includes('誤答や補助利用があっても正解済み問題は維持し、未正解問題だけを周回します'))throw new Error('fixed-practice retry behavior is not explained to the learner')
 console.log('PASS: wrong fixed-practice answers stay unresolved without resetting completed questions')
 
 // 3) 正答・解説を見た後の正解は独立正解として数えず、後で再挑戦する。
 if(!remediation.includes('setRevealedAnswer(true)'))throw new Error('answer reveal is not tracked')
 if(!remediation.includes('補助を使ったため、この問題は後でもう一度出題します'))throw new Error('assisted answer does not tell the learner that a fresh retry is required')
-if(!history.includes('!usedHint&&!usedExplanation&&!revealedAnswer'))throw new Error('assistance flags are not enforced in fixed-practice qualification')
+if(!/!usedHint\s*&&\s*!usedExplanation\s*&&\s*!revealedAnswer/.test(history))throw new Error('assistance flags are not enforced in fixed-practice qualification')
 console.log('PASS: reveal/hint use requires a later independent retry')
 
 // 4) 必須セット完了後の再練習は任意で、本線ETAを再開しない前提をUIに明示する。
