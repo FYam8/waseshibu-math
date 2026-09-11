@@ -39,8 +39,8 @@ const focus=await loadModule('src/data/questionFocus.ts')
 const targetStrategy=await loadModule('src/targetStrategy.ts')
 const version=await loadModule('src/version.ts')
 
-assert.equal(version.APP_VERSION,'0.18.0')
-assert.equal(migration.CURRENT_DATA_VERSION,7)
+assert.equal(version.APP_VERSION,'0.18.1')
+assert.equal(migration.CURRENT_DATA_VERSION,8)
 assert.equal(guided.GUIDED_REVIEW_KEY,'waseshibu-math-guided-review-v1')
 assert.equal(guided.GUIDED_PROGRESS_KEY,'waseshibu-math-guided-progress-v2')
 assert.equal(guided.guidedSolutionCount(),160)
@@ -52,7 +52,7 @@ const sample={
   'waseshibu-math-daily':{date:'2026-01-01',questionIds:['2024-Q1-1'],completed:false},
   'waseshibu-math-exam-scores':[{id:'s1',year:2024,score:65,correctCount:13,at:'2026-01-01T00:00:00.000Z'}],
   'waseshibu-math-exam-drafts-v2':{'2025':{answers:{'2025-Q1-1':'－１６'},flags:{'2025-Q1-2':true},seconds:321,majorIndex:1,phase:'solve'}},
-  'waseshibu-math-learning-route-v1':{solvedYears:[2024],usedOldQuestionIds:['2019-Q1-1'],reinforcement:{'2024':{examId:'s1',completedQuestionIds:['2019-Q1-1']}},updatedAt:'2026-01-01T00:00:00.000Z'},
+  'waseshibu-math-learning-route-v1':{solvedYears:[2024],usedOldQuestionIds:['2019-Q1-1'],reinforcement:{'2024':{examId:'s1',completedQuestionIds:['2019-Q1-1']}},completedCoreByTarget:{'60':[2024]},updatedAt:'2026-01-01T00:00:00.000Z'},
   'waseshibu-math-prep-check-v1':{version:1,index:2,answers:{'prep-1':'６'},tries:{'prep-1':1},completed:false,skipped:false,updatedAt:'2026-01-01T00:00:00.000Z'},
   'waseshibu-math-guided-review-v1':{'2024-Q1-1':{questionId:'2024-Q1-1',step1:'整理',step2:'途中式',finalAnswer:'6',hintUsed:true,answerSeen:false,outcome:'guided',updatedAt:'2026-01-01T00:00:00.000Z'}},
   'waseshibu-math-data-version':3
@@ -73,16 +73,19 @@ const v2Seed={
 }
 const v2=new MemoryStorage(v2Seed),migrated=migration.runDataMigrations(v2)
 assert.equal(migrated.ok,true)
-assert.equal(v2.getItem('waseshibu-math-data-version'),'7')
+assert.equal(v2.getItem('waseshibu-math-data-version'),'8')
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-attempts')),JSON.parse(v2Seed['waseshibu-math-attempts']))
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-exam-scores')),JSON.parse(v2Seed['waseshibu-math-exam-scores']))
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-guided-review-v1')),{})
 assert.deepEqual(JSON.parse(v2.getItem('waseshibu-math-guided-progress-v2')),{})
 assert.ok(v2.getItem('waseshibu-math-migration-backup-v1'))
 
-const merged=new MemoryStorage({'waseshibu-math-guided-review-v1':JSON.stringify({'2024-Q1-2':{questionId:'2024-Q1-2'}})})
+const merged=new MemoryStorage({'waseshibu-math-guided-review-v1':JSON.stringify({'2024-Q1-2':{questionId:'2024-Q1-2'}}),'waseshibu-math-learning-route-v1':JSON.stringify({completedCoreByTarget:{'70':[2023]},solvedYears:[],usedOldQuestionIds:[],reinforcement:{}})})
 backup.restoreBackup(merged,parsed,'merge')
 assert.deepEqual(Object.keys(JSON.parse(merged.getItem('waseshibu-math-guided-review-v1'))).sort(),['2024-Q1-1','2024-Q1-2'])
+const mergedRoute=JSON.parse(merged.getItem('waseshibu-math-learning-route-v1'))
+assert.deepEqual(mergedRoute.completedCoreByTarget['60'],[2024])
+assert.deepEqual(mergedRoute.completedCoreByTarget['70'],[2023])
 
 const failing=new MemoryStorage(Object.fromEntries(backup.BACKUP_KEYS.map(key=>[key,source.getItem(key)])),2)
 assert.throws(()=>backup.restoreBackup(failing,parsed,'replace'),/元のデータへ戻しました/)
@@ -177,4 +180,4 @@ assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTar
 for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100)
 
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`v0.18.0, data v7, 60 official past + 100 active Level2 + 60 backlog + support 2, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK`)
+console.log(`v0.18.1, data v8, 60 official past + 100 active Level2 + 60 backlog + support 2, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK`)
