@@ -313,9 +313,13 @@ export function requiredYearComplete(year:number,target:TargetScore=loadPreferen
   const exam=latestExam(year)
   if(!exam)return false
   const sourceComplete=sourceMistakeProgress(year,target).complete
-  const complete=sourceComplete&&(sourcePracticeProgress(year,target).complete||legacyReinforcementComplete(year,target))
-  if(complete)markRequiredYearComplete(year,target)
-  return complete
+  return sourceComplete&&(sourcePracticeProgress(year,target).complete||legacyReinforcementComplete(year,target))
+}
+
+export function syncRequiredYearCompletionLocks(target:TargetScore=loadPreferences().target){
+  for(const year of REQUIRED_MAIN_YEAR_SEQUENCE){
+    if(!isRequiredYearLocked(year,target)&&requiredYearComplete(year,target))markRequiredYearComplete(year,target)
+  }
 }
 
 function completedCheckpointYears(target:TargetScore=loadPreferences().target){return REQUIRED_MAIN_YEAR_SEQUENCE.slice(1).filter(year=>requiredYearComplete(year,target))}
