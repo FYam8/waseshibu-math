@@ -2882,7 +2882,7 @@
     "provenance": "previously_audited_final",
     "sourceSkill": "相似と直線の傾き",
     "context": "原点をOとするxy平面に、放物線①:y=ax²(a>0)、直線②:y=(1/2)x+2、直線③:y=cx(c<0)がある。A,Bは①と②の交点、Cは①と③のOでない交点、Dは②と③の交点、Eは②とx軸の交点。A,Cからx軸へ下ろした垂線の足をF,Gとする。F=(4,0)とする。 △AFE∽△OGCである。",
-    "prompt": "cの値を求めなさい。",
+    "prompt": "定数cの値を求めなさい。",
     "answer": "-2",
     "acceptedAnswers": [
       "-2",
