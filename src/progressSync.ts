@@ -13,7 +13,6 @@ let running=false
 
 type ControlRow={key:string,value:any}
 type SyncEvent={eventId:string;appId:string;sourceRecordId:string;revision:number;eventType:string;occurredAt:string;payload:Record<string,unknown>;queuedAt:string}
-
 type StateRecord={sourceRecordId:string;eventType:string;occurredAt:string;payload:Record<string,unknown>}
 
 function apiBase(){
@@ -70,10 +69,11 @@ function buildStateRecords():StateRecord[]{
 }
 async function queueState(record:StateRecord){
   const fingerprint=await sha256Hex(canonicalJson({eventType:record.eventType,payload:record.payload}))
+  const sourceHash=await sha256Hex(record.sourceRecordId)
   const db=await openDb();try{
     const tx=db.transaction(['outbox','seen_v2'],'readwrite'),seen=tx.objectStore('seen_v2'),key=sourceKey(record.sourceRecordId),current=await requestValue<any>(seen.get(key))
     if(current?.fingerprint===fingerprint){await txDone(tx);return false}
-    const revision=Math.max(0,Number(current?.revision||0))+1,sourceHash=await sha256Hex(record.sourceRecordId)
+    const revision=Math.max(0,Number(current?.revision||0))+1
     const item:SyncEvent={eventId:`${APP_ID}:${sourceHash}:r${revision}`,appId:APP_ID,sourceRecordId:record.sourceRecordId,revision,eventType:record.eventType,occurredAt:record.occurredAt,payload:record.payload,queuedAt:new Date().toISOString()}
     tx.objectStore('outbox').put(item);seen.put({sourceKey:key,appId:APP_ID,sourceRecordId:record.sourceRecordId,state:'queued',revision,fingerprint,at:new Date().toISOString()});await txDone(tx);return true
   }finally{db.close()}
@@ -87,8 +87,8 @@ async function uploadBaseline(reg:any){
   try{const r=await fetchWithTimeout(`${apiBase()}/v1/progress/snapshot`,{method:'PUT',headers:{'content-type':'application/json','authorization':`Bearer ${reg.credential}`},body:JSON.stringify({appId:APP_ID,generation:1,payload})});const d=await r.json().catch(()=>({}));if(r.status===401){await setControl('syncRevoked',true);return false}if(r.status===403&&d?.code==='collection_disabled'){await setControl('collectionDisabled',true);return false}if(!r.ok)return false;await setControl(key,{at:new Date().toISOString()});return true}catch{return false}
 }
 async function readOutbox(){const db=await openDb();try{const tx=db.transaction('outbox','readonly'),rows=await requestValue<any[]>(tx.objectStore('outbox').getAll());await txDone(tx);return(rows||[]).filter(x=>x?.appId===APP_ID).sort((a,b)=>String(a.queuedAt).localeCompare(String(b.queuedAt))).slice(0,MAX_BATCH)}finally{db.close()}}
-async function settle(ids:string[],batch:SyncEvent[]){if(!ids.length)return;const db=await openDb();try{const tx=db.transaction('outbox','readwrite'),s=tx.objectStore('outbox');ids.forEach(id=>s.delete(id));await txDone(tx)}finally{db.close()}}
-async function flush(reg:any){const batch=await readOutbox();if(!batch.length)return true;try{const r=await fetchWithTimeout(`${apiBase()}/v1/events/batch`,{method:'POST',headers:{'content-type':'application/json','authorization':`Bearer ${reg.credential}`},body:JSON.stringify({events:batch.map(({queuedAt,...e})=>e)})});const d=await r.json().catch(()=>({}));if(r.status===401){await setControl('syncRevoked',true);return false}if(r.status===403&&d?.code==='collection_disabled'){await setControl('collectionDisabled',true);return false}if(!r.ok)return false;await settle([...(d.accepted||[]),...(d.duplicate||[])],batch);return true}catch{return false}}
+async function settle(ids:string[]){if(!ids.length)return;const db=await openDb();try{const tx=db.transaction('outbox','readwrite'),s=tx.objectStore('outbox');ids.forEach(id=>s.delete(id));await txDone(tx)}finally{db.close()}}
+async function flush(reg:any){const batch=await readOutbox();if(!batch.length)return true;try{const r=await fetchWithTimeout(`${apiBase()}/v1/events/batch`,{method:'POST',headers:{'content-type':'application/json','authorization':`Bearer ${reg.credential}`},body:JSON.stringify({events:batch.map(({queuedAt,...e})=>e)})});const d=await r.json().catch(()=>({}));if(r.status===401){await setControl('syncRevoked',true);return false}if(r.status===403&&d?.code==='collection_disabled'){await setControl('collectionDisabled',true);return false}if(!r.ok)return false;await settle([...(d.accepted||[]),...(d.duplicate||[])]);return true}catch{return false}}
 async function syncOnce(){
   if(running||!apiBase()||navigator.onLine===false)return;running=true
   try{const reg=await ensureRegistration();if(!reg?.credential||await getControl('collectionDisabled'))return;if(!(await uploadBaseline(reg)))return;for(const record of buildStateRecords())await queueState(record);await flush(reg)}finally{running=false}
