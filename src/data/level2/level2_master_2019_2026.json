@@ -2910,7 +2910,7 @@
     "materialized": true,
     "provenance": "previously_audited_final",
     "sourceSkill": "座標と面積比",
-    "context": "原点をOとするxy平面に、放物線①:y=ax²(a>0)、直線②:y=(1/2)x+2、直線③:y=cx(c<0)がある。A,Bは①と②の交点、Cは①と③のOでない交点、Dは②と③の交点、Eは②とx軸の交点。A,Cからx軸へ下ろした垂線の足をF,Gとする。F=(4,0)とする。",
+    "context": "原点をOとするxy平面に、放物線①:y=ax²(a>0)、直線②:y=(1/2)x+2、直線③:y=−2xがある。A,Bは①と②の交点、Cは①と③のOでない交点、Dは②と③の交点、Eは②とx軸の交点。A,Cからx軸へ下ろした垂線の足をF,Gとする。F=(4,0)とする。",
     "prompt": "△ADOの面積をS1、△BCDの面積をS2とするとき、S1:S2を求めなさい。",
     "answer": "4:9",
     "acceptedAnswers": [
@@ -2921,13 +2921,13 @@
     "problemFigure": "assets/2023/2023_q2_coordinates.png",
     "hintFigure": null,
     "explanationFigure": null,
-    "contentRevision": 2,
+    "contentRevision": 3,
     "gradingRevision": 1,
     "standaloneVerified": true,
     "figureVerified": true,
-    "contentHash": "27b9f6494a9562b8",
+    "contentHash": "c13d24069c0a16e5",
     "taskHash": "30593aef9b7b4bfc",
-    "renderHash": "7640c9f81ef6b09b"
+    "renderHash": "b1e8639b09c17e2d"
   },
   {
     "id": "L2-2023-Q3-1",
