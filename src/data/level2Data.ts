@@ -62,11 +62,19 @@ export type Level2Field={
 
 type Assignment={questionId:string;fieldId:string;assignmentRevision:number;practiceFieldIds:string[]}
 
+const explanationOverrides:Record<string,string>={
+  'L2-2022-Q1-2':'x²−5x−14を因数分解する。積が−14、和が−5になる2数は−7と2なので、x²−5x−14=(x−7)(x+2)。したがって(x−7)(x+2)=0より、x=7またはx=−2。',
+  'L2-2022-Q2-2':'Aはl上、Bはm上なのでA=(t,t²/3)、B=(t,10/t)。したがってC=(0,10/t)、D=(0,t²/3)で、ABCDは幅t、縦CD=10/t−t²/3の長方形。Q=(q,q²/3)(q>0)とおくと、△CDQは底辺CD、高さqだから面積は(1/2)×CD×q。一方、四角形ABCDの面積はt×CD。両者が等しいので(1/2)×CD×q=t×CDよりq=2t。よってQ=(2t,(4/3)t²)。',
+  'L2-2022-Q4-2':'各スイッチに隣接する廊下は①が2本、②が3本、③が3本、④が4本、⑤が4本。2つのスイッチを押すと、両方に接する廊下があればその廊下は2回反転して消灯に戻り、それ以外の隣接廊下は1回反転して点灯する。したがって点灯数は「2つの隣接本数の和」から、2つを直接結ぶ廊下があるとき2を引けばよい。これが4になる組は{①,④},{①,⑤},{②,③}の3組。順序を区別するため各組2通りあり、3×2=6通り。',
+  'L2-2022-Q4-3':'電灯は反転回数が奇数のときだけ点灯するので、同じ3つのスイッチを1回ずつ押すなら順序を変えても最終状態は同じ。3つを押したとき、点灯するのは「押した側と押していない側を結ぶ廊下」だけである。そこで押さない2つのスイッチを見る。①〜⑤の隣接本数は2,3,3,4,4本で、押さない2つを直接結ぶ廊下がある場合はその1本を2回数えているので2を引く。点灯数が4になる押さない組は{①,④},{①,⑤},{②,③}の3組。したがって押す3個の組は{②,③,⑤},{②,③,④},{①,④,⑤}の3組。各組の押す順序は3!=6通りなので、3×6=18通り。',
+  'L2-2022-Q5-2':'対角面ACGEで考える。P,Qは△ABDのAB,ADの中点なのでPQ∥BDで、PQはBDをA中心に1/2に縮めた位置にある。BDとACの交点をM、PQとACの交点をJとすると、Mは正方形ABCDの中心だからAM=AC/2、したがってAJ=AM/2=AC/4。次に立方体ではBD∥FHなのでPQ∥FH。Fは平面PQF上にあるから、Fを通りPQに平行な直線FHも平面PQF上にある。FHとEGの交点をKとすると、FHとEGは正方形EFGHの対角線なのでKはEGの中点、よってGK=EG/2=AC/2。J,Kはともに平面PQFと対角面ACGE上にあるため、その2平面の交線はJK。IはAGと平面PQFの交点なのでIはJK上にある。AC∥EGより△IAJ∽△IGK。したがってAI:IG=AJ:GK=(AC/4):(AC/2)=1:2。'
+}
+
 export const LEVEL2_ASSIGNMENT_SET_REVISION=Number(assignmentsJson.assignmentSetRevision||1)
 export const level2Assignments=assignmentsJson.assignments as Assignment[]
 const assignmentById=new Map(level2Assignments.map(x=>[x.questionId,x]))
 
-const allCore=(coreJson as Level2Question[]).map(q=>({...q,sourceQuestionId:q.sourceQuestionId??null,bankType:'core160'}))
+const allCore=(coreJson as Level2Question[]).map(q=>({...q,explanation:explanationOverrides[q.id]??q.explanation,sourceQuestionId:q.sourceQuestionId??null,bankType:'core160'}))
 export const backlogLevel2Questions=allCore.filter(q=>q.status==='backlog'||q.selectable===false)
 const core=allCore.filter(q=>!backlogLevel2Questions.includes(q))
 const support=(supportJson as Level2Question[]).map(q=>({...q,sourceQuestionId:null,bankType:'field-support'}))
