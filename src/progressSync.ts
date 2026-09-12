@@ -46,14 +46,14 @@ async function ensureRegistration(){
 }
 function latestIso(values:string[]){return values.filter(v=>Number.isFinite(Date.parse(v))).sort().at(-1)||'1970-01-01T00:00:00.000Z'}
 function buildStateRecords():StateRecord[]{
-  const attempts=loadAttempts(),scores=loadExamScores(),prefs=loadPreferences(),route=loadLearningRoute(),meta=loadSyncMeta()
+  const attempts=loadAttempts(),scores=loadExamScores(),prefs=loadPreferences(),route=loadLearningRoute(),meta=loadSyncMeta(),stateChangedAt=new Date().toISOString()
   const latestExam=[...scores].filter(x=>x.completed!==false).sort((a,b)=>b.at.localeCompare(a.at))[0]
   const lastLearningAt=latestIso([...attempts.map(x=>x.at),...scores.map(x=>x.at),route.updatedAt])
   const records:StateRecord[]=[{
-    sourceRecordId:'state:summary',eventType:'progress_state',occurredAt:lastLearningAt,
-    payload:{total:attempts.length+scores.length,kind:`target-${prefs.target}`,completed:false}
+    sourceRecordId:'state:summary',eventType:'progress_state',occurredAt:stateChangedAt,
+    payload:{total:attempts.length+scores.length,kind:`target-${prefs.target}`,completed:false,lastLearningAt}
   }]
-  const examResetAt=meta.examScoresResetVersion>1_000_000_000_000?new Date(meta.examScoresResetVersion).toISOString():lastLearningAt
+  const examResetAt=meta.examScoresResetVersion>1_000_000_000_000?new Date(meta.examScoresResetVersion).toISOString():stateChangedAt
   records.push(latestExam?{
     sourceRecordId:'state:latest-exam',eventType:'exam_completed',occurredAt:latestExam.at,
     payload:{year:String(latestExam.year),score:latestExam.score,maxScore:100,kind:latestExam.scoreValidity||latestExam.attemptKind||'exam',completed:true}
@@ -63,7 +63,7 @@ function buildStateRecords():StateRecord[]{
     const relevantTimes=[...scores.filter(x=>x.year===year).map(x=>x.at),...attempts.filter(x=>x.questionId.includes(String(year))||x.topic.includes(`${year}年度`)).map(x=>x.at)]
     const started=relevantTimes.length>0||route.solvedYears.includes(year)||completedYears.has(year)
     const completed=completedYears.has(year)
-    records.push({sourceRecordId:`state:year:${year}`,eventType:completed?'year_completed':'year_state',occurredAt:started?latestIso([...relevantTimes,route.updatedAt]):lastLearningAt,payload:started?{year:String(year),completed}:{completed:false}})
+    records.push({sourceRecordId:`state:year:${year}`,eventType:completed?'year_completed':'year_state',occurredAt:stateChangedAt,payload:started?{year:String(year),completed}:{completed:false}})
   }
   return records
 }
