@@ -1,6 +1,7 @@
 import { loadAttempts, loadExamScores, loadPreferences, loadSyncMeta } from './storage'
 import { loadLearningRoute } from './learningRoute'
 import { loadLevel2History } from './level2History'
+import { loadGuidedProgressState } from './guidedReview'
 
 const SYNC_DB='waseshibu-progress-sync'
 const SYNC_DB_VERSION=7
@@ -88,12 +89,13 @@ async function refreshControl(reg:any,force=false){
     return true
   }catch{return false}
 }
-function latestIso(values:string[]){return values.filter(v=>Number.isFinite(Date.parse(v))).sort().at(-1)||null}
+function latestIso(values:string[]){return values.filter(v=>Number.isFinite(Date.parse(v))&&Date.parse(v)>0).sort().at(-1)||null}
+function currentGuidedRecords(){return Object.values(loadGuidedProgressState()).filter(x=>x&&x.mastery!=='unseen')}
 function buildStateRecords():StateRecord[]{
-  const attempts=loadAttempts(),scores=loadExamScores(),level2=loadLevel2History(),prefs=loadPreferences(),route=loadLearningRoute(),meta=loadSyncMeta(),stateChangedAt=new Date().toISOString()
+  const attempts=loadAttempts(),scores=loadExamScores(),level2=loadLevel2History(),guided=currentGuidedRecords(),prefs=loadPreferences(),route=loadLearningRoute(),meta=loadSyncMeta(),stateChangedAt=new Date().toISOString()
   const latestExam=[...scores].filter(x=>x.completed!==false).sort((a,b)=>b.at.localeCompare(a.at))[0]
-  const lastLearningAt=latestIso([...attempts.map(x=>x.at),...scores.map(x=>x.at),...level2.attempts.map(x=>x.answeredAt),route.updatedAt])
-  const total=attempts.length+scores.length+level2.attempts.length
+  const lastLearningAt=latestIso([...attempts.map(x=>x.at),...scores.map(x=>x.at),...level2.attempts.map(x=>x.answeredAt),...guided.map(x=>x.updatedAt)])
+  const total=attempts.length+scores.length+level2.attempts.length+guided.length
   const records:StateRecord[]=[{
     sourceRecordId:'state:summary',eventType:'progress_state',occurredAt:stateChangedAt,
     payload:{total,kind:`target-${prefs.target}`,completed:false,...(lastLearningAt?{lastLearningAt}:{})}
@@ -105,7 +107,7 @@ function buildStateRecords():StateRecord[]{
   }:{sourceRecordId:'state:latest-exam',eventType:'exam_state',occurredAt:examResetAt,payload:{completed:false}})
   const completedYears=new Set((route.completedCoreByTarget[String(prefs.target) as '60'|'70'|'75']||[]).map(Number))
   for(let year=2019;year<=2026;year++){
-    const relevantTimes=[...scores.filter(x=>x.year===year).map(x=>x.at),...attempts.filter(x=>x.questionId.includes(String(year))||x.topic.includes(`${year}年度`)).map(x=>x.at),...level2.attempts.filter(x=>x.questionId.includes(String(year))).map(x=>x.answeredAt)]
+    const relevantTimes=[...scores.filter(x=>x.year===year).map(x=>x.at),...attempts.filter(x=>x.questionId.includes(String(year))||x.topic.includes(`${year}年度`)).map(x=>x.at),...level2.attempts.filter(x=>x.questionId.includes(String(year))).map(x=>x.answeredAt),...guided.filter(x=>x.questionId.includes(String(year))).map(x=>x.updatedAt)]
     const started=relevantTimes.length>0||route.solvedYears.includes(year)||completedYears.has(year)
     const completed=completedYears.has(year)
     records.push({sourceRecordId:`state:year:${year}`,eventType:completed?'year_completed':'year_state',occurredAt:stateChangedAt,payload:started?{year:String(year),completed}:{completed:false}})
@@ -125,11 +127,12 @@ async function queueState(record:StateRecord){
 }
 async function uploadBaseline(reg:any){
   const key=`${APP_ID}:baselineSent:${reg.registrationId}`;if(await getControl(key))return true
-  const attempts=loadAttempts(),scores=loadExamScores(),level2=loadLevel2History(),years:Record<string,number>={}
+  const attempts=loadAttempts(),scores=loadExamScores(),level2=loadLevel2History(),guided=currentGuidedRecords(),years:Record<string,number>={}
   for(const score of scores)years[String(score.year)]=(years[String(score.year)]||0)+1
   for(const attempt of attempts){const m=`${attempt.questionId} ${attempt.topic}`.match(/20(?:19|2[0-6])/);if(m)years[m[0]]=(years[m[0]]||0)+1}
   for(const attempt of level2.attempts){const m=attempt.questionId.match(/20(?:19|2[0-6])/);if(m)years[m[0]]=(years[m[0]]||0)+1}
-  const eventCount=attempts.length+scores.length+level2.attempts.length
+  for(const record of guided){const m=record.questionId.match(/20(?:19|2[0-6])/);if(m)years[m[0]]=(years[m[0]]||0)+1}
+  const eventCount=attempts.length+scores.length+level2.attempts.length+guided.length
   const payload={baseline:true,eventCount,scoredEventCount:scores.length,scoreTotal:scores.reduce((n,x)=>n+x.score,0),eventsByYear:years,capturedAt:new Date().toISOString(),progressLabel:`math target ${loadPreferences().target}`}
   try{const r=await fetchWithTimeout(`${apiBase()}/v1/progress/snapshot`,{method:'PUT',headers:{'content-type':'application/json','authorization':`Bearer ${reg.credential}`},body:JSON.stringify({appId:APP_ID,generation:1,payload})});const d=await r.json().catch(()=>({}));if(r.status===401){await setControl('syncRevoked',true);return false}if(r.status===403&&d?.code==='collection_disabled'){await setControl('collectionDisabled',true);return false}if(!r.ok)return false;await setControl(key,{at:new Date().toISOString()});return true}catch{return false}
 }
