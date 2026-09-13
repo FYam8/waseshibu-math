@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 const sync=fs.readFileSync(new URL('../src/progressSync.ts',import.meta.url),'utf8')
 const main=fs.readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8')
 const deploy=fs.readFileSync(new URL('../.github/workflows/deploy.yml',import.meta.url),'utf8')
+const dataManager=fs.readFileSync(new URL('../src/pages/DataManager.tsx',import.meta.url),'utf8')
 
 assert.match(sync,/SYNC_DB='waseshibu-progress-sync'/)
 assert.match(sync,/SYNC_DB_VERSION=7/)
@@ -40,5 +41,8 @@ assert.doesNotMatch(sync,/\.answer\b|answerText|rawAnswer|acceptedAnswers|finalA
 assert.doesNotMatch(sync,/localStorage\.clear|indexedDB\.deleteDatabase|deleteDatabase|removeItem\(['"]waseshibu-math/)
 assert.match(main,/initMathProgressSync/)
 assert.match(deploy,/VITE_PROGRESS_API_BASE:\s*https:\/\/waseshibu-progress-api\.fyam8\.workers\.dev/)
+assert.match(dataManager,/Cloud同期が有効な環境では/)
+assert.match(dataManager,/入力した答案や問題本文はCloudへ送りません/)
+assert.doesNotMatch(dataManager,/学習データはこの端末にだけ保存され、操作しない限り外部へ送信されません/)
 
 console.log('math cloud progress sync guards: PASS')
