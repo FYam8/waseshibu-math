@@ -108,7 +108,7 @@ function buildStateRecords():StateRecord[]{
   const examResetAt=meta.examScoresResetVersion>1_000_000_000_000?new Date(meta.examScoresResetVersion).toISOString():stateChangedAt
   records.push(latestExam?{
     sourceRecordId:'state:latest-exam',eventType:'exam_completed',occurredAt:latestExam.at,
-    payload:{year:String(latestExam.year),score:latestExam.score,maxScore:100,kind:latestExam.scoreValidity||latestExam.attemptKind||'exam',completed:true}
+    payload:{year:String(latestExam.year),score:latestExam.score,maxScore:100,kind:latestExam.scoreValidity||latestExam.attemptKind||'exam',completed:true,lastLearningAt:latestExam.at}
   }:{sourceRecordId:'state:latest-exam',eventType:'exam_state',occurredAt:examResetAt,payload:{completed:false}})
   const completedYears=new Set((route.completedCoreByTarget[String(prefs.target) as '60'|'70'|'75']||[]).map(Number))
   for(let year=2019;year<=2026;year++){
