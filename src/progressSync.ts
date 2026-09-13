@@ -183,5 +183,6 @@ export function initMathProgressSync(){
   void syncOnce(true)
   if(!timer)timer=window.setInterval(()=>void syncOnce(),RECONCILE_INTERVAL_MS)
   window.addEventListener('online',()=>void syncOnce(true))
+  window.addEventListener('pagehide',()=>void syncOnce())
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void syncOnce(true)})
 }
