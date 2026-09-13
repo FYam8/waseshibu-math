@@ -7,14 +7,17 @@ const SYNC_DB_VERSION=7
 const APP_ID='math'
 const MAX_BATCH=10
 const RECONCILE_INTERVAL_MS=60_000
+const CONTROL_REFRESH_INTERVAL_MS=5*60_000
 const REQUEST_TIMEOUT_MS=15_000
 const te=new TextEncoder()
 let timer:number|undefined
 let running=false
+let lastControlRefreshAt=0
 
 type ControlRow={key:string,value:any}
 type SyncEvent={eventId:string;appId:string;sourceRecordId:string;revision:number;eventType:string;occurredAt:string;payload:Record<string,unknown>;queuedAt:string}
 type StateRecord={sourceRecordId:string;eventType:string;occurredAt:string;payload:Record<string,unknown>}
+type RegistrationSeed={registration?:any;pending?:any}
 
 function apiBase(){
   const env=import.meta.env.VITE_PROGRESS_API_BASE||''
@@ -33,17 +36,57 @@ async function getControl(key:string){const db=await openDb();try{const tx=db.tr
 async function setControl(key:string,value:any){const db=await openDb();try{const tx=db.transaction('control','readwrite'),s=tx.objectStore('control');value==null?s.delete(key):s.put({key,value});await txDone(tx)}finally{db.close()}}
 function sourceKey(id:string){return `${APP_ID}:${id}`}
 function deviceMetadata(){const ua=String(navigator.userAgent||'');return{deviceType:/iPad|Tablet/i.test(ua)?'tablet':/Mobi|Android|iPhone/i.test(ua)?'mobile':'desktop',osFamily:/iPhone|iPad|iOS/i.test(ua)?'iOS/iPadOS':/Android/i.test(ua)?'Android':/Windows/i.test(ua)?'Windows':/Mac OS|Macintosh/i.test(ua)?'macOS':/Linux/i.test(ua)?'Linux':'unknown',browserFamily:/Edg\//i.test(ua)?'Edge':/CriOS|Chrome\//i.test(ua)?'Chrome':/FxiOS|Firefox\//i.test(ua)?'Firefox':/Safari\//i.test(ua)?'Safari':'unknown'}}
+async function getOrCreateRegistrationSeed():Promise<RegistrationSeed>{
+  const db=await openDb()
+  try{
+    return await new Promise<RegistrationSeed>((resolve,reject)=>{
+      const tx=db.transaction('control','readwrite'),store=tx.objectStore('control')
+      let result:RegistrationSeed={}
+      const regReq=store.get('registration')
+      regReq.onsuccess=()=>{
+        const registration=(regReq.result as ControlRow|undefined)?.value
+        if(registration?.credential){result={registration};return}
+        const pendingReq=store.get('pendingRegistration')
+        pendingReq.onsuccess=()=>{
+          let pending=(pendingReq.result as ControlRow|undefined)?.value
+          if(!pending?.registrationId||!pending?.credential){pending={registrationId:crypto.randomUUID(),credential:randomToken(),createdAt:new Date().toISOString()};store.put({key:'pendingRegistration',value:pending})}
+          result={pending}
+        }
+        pendingReq.onerror=()=>{try{tx.abort()}catch{};reject(pendingReq.error)}
+      }
+      regReq.onerror=()=>{try{tx.abort()}catch{};reject(regReq.error)}
+      tx.oncomplete=()=>resolve(result)
+      tx.onerror=()=>reject(tx.error)
+      tx.onabort=()=>reject(tx.error||new Error('registration transaction aborted'))
+    })
+  }finally{db.close()}
+}
 async function ensureRegistration(){
   if(!apiBase()||await getControl('syncRevoked'))return null
-  const existing=await getControl('registration');if(existing?.credential)return existing
-  let pending=await getControl('pendingRegistration')
-  if(!pending?.registrationId||!pending?.credential){pending={registrationId:crypto.randomUUID(),credential:randomToken(),createdAt:new Date().toISOString()};await setControl('pendingRegistration',pending)}
+  const seed=await getOrCreateRegistrationSeed()
+  if(seed.registration?.credential)return seed.registration
+  const pending=seed.pending
+  if(!pending?.registrationId||!pending?.credential)return null
   try{
     const r=await fetchWithTimeout(`${apiBase()}/v1/register-anonymous`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({registrationId:pending.registrationId,credentialHash:await sha256Hex(pending.credential),device:deviceMetadata()})})
     const d=await r.json().catch(()=>({}));if(!r.ok)return null
     const reg={registrationId:pending.registrationId,credential:pending.credential,status:d.status||'unclassified',deviceCode:d.deviceCode||null,enrolledAt:new Date().toISOString()}
     await setControl('registration',reg);return reg
   }catch{return null}
+}
+async function refreshControl(reg:any,force=false){
+  if(!reg?.credential)return false
+  const now=Date.now();if(!force&&now-lastControlRefreshAt<CONTROL_REFRESH_INTERVAL_MS)return true
+  try{
+    const r=await fetchWithTimeout(`${apiBase()}/v1/control`,{headers:{'authorization':`Bearer ${reg.credential}`}})
+    const d=await r.json().catch(()=>({}))
+    if(r.status===401){await setControl('syncRevoked',true);lastControlRefreshAt=now;return false}
+    if(!r.ok)return false
+    await setControl('collectionDisabled',d.collectionEnabled===false)
+    await setControl('registration',{...reg,status:d.status||reg.status,deviceCode:d.deviceCode||reg.deviceCode})
+    lastControlRefreshAt=now
+    return true
+  }catch{return false}
 }
 function latestIso(values:string[]){return values.filter(v=>Number.isFinite(Date.parse(v))).sort().at(-1)||null}
 function buildStateRecords():StateRecord[]{
@@ -91,16 +134,44 @@ async function uploadBaseline(reg:any){
   try{const r=await fetchWithTimeout(`${apiBase()}/v1/progress/snapshot`,{method:'PUT',headers:{'content-type':'application/json','authorization':`Bearer ${reg.credential}`},body:JSON.stringify({appId:APP_ID,generation:1,payload})});const d=await r.json().catch(()=>({}));if(r.status===401){await setControl('syncRevoked',true);return false}if(r.status===403&&d?.code==='collection_disabled'){await setControl('collectionDisabled',true);return false}if(!r.ok)return false;await setControl(key,{at:new Date().toISOString()});return true}catch{return false}
 }
 async function readOutbox(){const db=await openDb();try{const tx=db.transaction('outbox','readonly'),rows=await requestValue<any[]>(tx.objectStore('outbox').getAll());await txDone(tx);return(rows||[]).filter(x=>x?.appId===APP_ID).sort((a,b)=>String(a.queuedAt).localeCompare(String(b.queuedAt))).slice(0,MAX_BATCH)}finally{db.close()}}
-async function settle(ids:string[]){if(!ids.length)return;const db=await openDb();try{const tx=db.transaction('outbox','readwrite'),s=tx.objectStore('outbox');ids.forEach(id=>s.delete(id));await txDone(tx)}finally{db.close()}}
-async function flush(reg:any){const batch=await readOutbox();if(!batch.length)return true;try{const r=await fetchWithTimeout(`${apiBase()}/v1/events/batch`,{method:'POST',headers:{'content-type':'application/json','authorization':`Bearer ${reg.credential}`},body:JSON.stringify({events:batch.map(({queuedAt,...e})=>e)})});const d=await r.json().catch(()=>({}));if(r.status===401){await setControl('syncRevoked',true);return false}if(r.status===403&&d?.code==='collection_disabled'){await setControl('collectionDisabled',true);return false}if(!r.ok)return false;await settle([...(d.accepted||[]),...(d.duplicate||[])]);return true}catch{return false}}
-async function syncOnce(){
+async function settleBatch(doneIds:string[],rejected:any[],batch:any[]){
+  const done=new Set((doneIds||[]).map(String)),rejectedRows=(rejected||[]).filter(x=>x?.eventId)
+  if(!done.size&&!rejectedRows.length)return
+  const byId=new Map(batch.map(x=>[String(x.eventId),x])),db=await openDb()
+  try{
+    const tx=db.transaction(['outbox','deadletter'],'readwrite'),outbox=tx.objectStore('outbox'),dead=tx.objectStore('deadletter')
+    for(const id of done)outbox.delete(id)
+    for(const row of rejectedRows){const id=String(row.eventId);dead.put({eventId:id,code:String(row.code||'rejected'),rejectedAt:new Date().toISOString(),event:byId.get(id)||null});outbox.delete(id)}
+    await txDone(tx)
+  }finally{db.close()}
+}
+async function flush(reg:any){
+  const batch=await readOutbox();if(!batch.length)return true
+  try{
+    const r=await fetchWithTimeout(`${apiBase()}/v1/events/batch`,{method:'POST',headers:{'content-type':'application/json','authorization':`Bearer ${reg.credential}`},body:JSON.stringify({events:batch.map(({queuedAt,...e})=>e)})})
+    const d=await r.json().catch(()=>({}))
+    if(r.status===401){await setControl('syncRevoked',true);return false}
+    if(r.status===403&&d?.code==='collection_disabled'){await setControl('collectionDisabled',true);return false}
+    if(!r.ok)return false
+    await settleBatch([...(d.accepted||[]),...(d.duplicate||[])],d.rejected||[],batch)
+    return true
+  }catch{return false}
+}
+async function syncOnce(forceControl=false){
   if(running||!apiBase()||navigator.onLine===false)return;running=true
-  try{const reg=await ensureRegistration();if(!reg?.credential||await getControl('collectionDisabled'))return;if(!(await uploadBaseline(reg)))return;for(const record of buildStateRecords())await queueState(record);await flush(reg)}finally{running=false}
+  try{
+    const reg=await ensureRegistration();if(!reg?.credential)return
+    await refreshControl(reg,forceControl)
+    if(await getControl('syncRevoked')||await getControl('collectionDisabled'))return
+    if(!(await uploadBaseline(reg)))return
+    for(const record of buildStateRecords())await queueState(record)
+    await flush(reg)
+  }finally{running=false}
 }
 export function initMathProgressSync(){
   if(!apiBase()||typeof indexedDB==='undefined')return
-  void syncOnce()
+  void syncOnce(true)
   if(!timer)timer=window.setInterval(()=>void syncOnce(),RECONCILE_INTERVAL_MS)
-  window.addEventListener('online',()=>void syncOnce())
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void syncOnce()})
+  window.addEventListener('online',()=>void syncOnce(true))
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void syncOnce(true)})
 }
