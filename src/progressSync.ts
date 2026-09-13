@@ -175,7 +175,8 @@ async function syncOnce(forceControl=false){
     if(!(await uploadBaseline(reg)))return
     for(const record of buildStateRecords())await queueState(record)
     await flush(reg)
-  }finally{running=false}
+  }catch{/* Cloud sync is best-effort; studying remains local-first. */}
+  finally{running=false}
 }
 export function initMathProgressSync(){
   if(!apiBase()||typeof indexedDB==='undefined')return
