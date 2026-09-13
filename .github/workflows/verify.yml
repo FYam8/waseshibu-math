@@ -21,4 +21,5 @@ jobs:
       - run: npm ci
       - run: npm run self-check
       - run: npm run verify-critical
+      - run: node scripts/test-progress-cloud-sync.mjs
       - run: npm run build
