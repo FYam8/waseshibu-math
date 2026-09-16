@@ -100,6 +100,56 @@ export type CanonicalPreparationCheckState = {
   schoolEvidence?: Record<string, unknown>
 }
 
+export type CanonicalGuidedMasteryState =
+  | 'unseen'
+  | 'attempted'
+  | 'exposed'
+  | 'guided'
+  | 'reproduced'
+  | 'independent'
+  | 'consolidated'
+
+export type CanonicalGuidedSelfAssessment = 'matched' | 'guided' | 'unclear'
+
+export type CanonicalGuidedStepProgress = {
+  stepId: string
+  answerText: string
+  tries: number
+  maxHintLevelUsed: 0 | 1 | 2 | 3
+  completed: boolean
+  selfAssessment?: CanonicalGuidedSelfAssessment
+}
+
+/**
+ * Current guided-learning progress for one problem. Problem/step IDs remain
+ * opaque, while school-only dependency and migration evidence stays outside
+ * the generic mastery semantics.
+ */
+export type CanonicalGuidedProblemProgress = {
+  problemId: string
+  currentStepId?: string
+  stepsById: Record<string, CanonicalGuidedStepProgress>
+  finalAnswerText: string
+  finalAnswerSeen: boolean
+  reproductionAttempts: number
+  reproductionSucceeded: boolean
+  independentSucceeded: boolean
+  practiceStreak: number
+  mastery: CanonicalGuidedMasteryState
+  updatedAt: string
+  schoolEvidence?: Record<string, unknown>
+}
+
+/**
+ * Canonical active guided state. Historical/compatibility records that are not
+ * authoritative mastery state must remain school evidence rather than a second
+ * generic progress map; this prevents double-counting one learner action.
+ */
+export type CanonicalGuidedLearningState = {
+  progressByProblemId: Record<string, CanonicalGuidedProblemProgress>
+  schoolEvidence?: Record<string, unknown>
+}
+
 /**
  * Opaque reference to one scheduler task. Generic engine code may retain a
  * stable task identity and optional problem lineage, but school-owned labels,
