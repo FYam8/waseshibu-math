@@ -172,4 +172,5 @@ export type CanonicalLearnerStateMigrationCandidate = CanonicalLearnerStateShado
   dailyPractice: CanonicalDailyPracticeSession | null
   todayRequiredPlan: CanonicalScheduledTaskPlan | null
   studyAheadPlan: CanonicalScheduledTaskPlan | null
+  preparationCheck: CanonicalPreparationCheckState | null
 }
