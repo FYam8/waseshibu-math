@@ -140,6 +140,30 @@ The extracted engine should version the canonical data contract independently fr
 
 An engine sync that requires an unsupported contract version must fail closed before deploy.
 
+## Gap 8 — a 0–100 exam score is not a universal field
+
+Current WaseShibu `ExamScore` state requires a numeric 0–100 score because WaseShibu has a score-oriented strategy model.
+
+Rikkyo's current release explicitly does **not** claim an official small-question point allocation and does not estimate an official score. Its answer authority is based on source PDF + independent solution + mathematical recheck, while official points are unavailable.
+
+Forcing every Rikkyo exam attempt into a WaseShibu-style 0–100 score would manufacture information that the Rikkyo source data does not support.
+
+### Canonical requirement
+
+The shared exam-result model must separate exam completion/evidence from optional scoring. It should support, as applicable:
+
+- `examId`
+- completion / attempt metadata
+- correct / wrong / unanswered counts or other school-supported evidence
+- optional numeric `score`
+- optional `maxScore`
+- score/points authority or model (`official`, `school-modelled`, `internal`, `not-available`, etc.)
+- optional school-specific derived metrics
+
+A school adapter may require a score for WaseShibu while leaving it unavailable for Rikkyo. Generic engine code must not interpret a missing official score as zero and must not invent a 100-point conversion.
+
+Target strategy and progress projection must therefore be injected school policy rather than a universal score-gap calculation.
+
 ## Rikkyo normalization acceptance rules
 
 Before Rikkyo can switch to the common runtime format:
@@ -153,7 +177,8 @@ Before Rikkyo can switch to the common runtime format:
 7. FY26A Q5(3) remains review-required;
 8. no required canonical field is filled with an unaudited guessed placeholder;
 9. current Rikkyo learner data has an explicit migration to the canonical learner-state shape;
-10. Rikkyo persistence/sync identities remain distinct from WaseShibu despite identical logical shapes.
+10. Rikkyo persistence/sync identities remain distinct from WaseShibu despite identical logical shapes;
+11. no official/100-point Rikkyo score is fabricated when the source does not provide an authoritative point model.
 
 ## Phase-1 implementation consequence
 
@@ -164,7 +189,7 @@ Before Rikkyo conversion begins, WaseShibu Phase 1 should produce explicit canon
 - target definitions
 - deterministic answer specification
 - source/figure resolution
-- learner attempt/exam/daily/route state
+- learner attempt/exam-result/daily/route state
 - guided/remediation/mastery state
 - backup/migration contract
 - progress-sync projection
