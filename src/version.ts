@@ -1,3 +1,5 @@
+import { APP_EVENT_NAMES } from './appConfig'
+
 export const APP_VERSION='0.18.1'
 export const ACTIVE_APP_VERSION_KEY='waseshibu-math-active-app-version'
 export const LAST_APP_VERSION_KEY='waseshibu-math-last-app-version'
@@ -9,5 +11,5 @@ export function canWriteLearningData(storage:Pick<Storage,'getItem'>=localStorag
 }
 
 export function notifyWriteBlocked(){
-  if(typeof window!=='undefined')window.dispatchEvent(new CustomEvent('waseshibu-write-blocked'))
+  if(typeof window!=='undefined')window.dispatchEvent(new CustomEvent(APP_EVENT_NAMES.writeBlocked))
 }
