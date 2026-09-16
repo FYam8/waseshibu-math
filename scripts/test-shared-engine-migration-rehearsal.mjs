@@ -128,7 +128,7 @@ assert.equal(report.canonicalCandidate.examResults[0].deviceId, 'legacy-device')
 assert.equal(report.canonicalCandidate.examResults[0].resetVersion, 9)
 assert.deepEqual(report.canonicalCandidate.route.completedExamIdsByTarget, {
   '60': ['waseshibu-2024', 'waseshibu-2023'],
-  '70': ['waseshibu-2024', 'waseshibu-2023'],
+  '70': ['waseshibu-2023', 'waseshibu-2024'],
   '75': ['waseshibu-2024']
 })
 assert.equal(report.sourceSnapshot['waseshibu-math-data-version'], '8')
