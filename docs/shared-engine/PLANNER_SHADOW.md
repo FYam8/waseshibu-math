@@ -38,7 +38,7 @@ The engine must not parse `review-*`, `practice-*`, `progression:*` or route str
 
 `plannerShadow.ts` reads the two persisted records directly. It never calls WaseShibu reconciliation functions, which can freeze/refill/promote planner state and therefore may write.
 
-The current checkpoint performs no generation, promotion, queue reconciliation, target switching or storage writes.
+The current checkpoint performs no generation, promotion, queue reconciliation, target switching or storage writes. `src/dailyPlan.ts` is unchanged by this checkpoint.
 
 ## Fail-closed rules
 
