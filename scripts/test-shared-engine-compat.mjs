@@ -15,7 +15,8 @@ const entries = [
   'src/engine/appProfile.ts',
   'src/engine/examContract.ts',
   'src/schools/waseshibu/appProfile.ts',
-  'src/schools/waseshibu/legacyCompatibility.ts'
+  'src/schools/waseshibu/legacyCompatibility.ts',
+  'src/appConfig.ts'
 ]
 
 const compiled = spawnSync('tsc', [
@@ -38,9 +39,23 @@ const load = rel => require(path.join(out, rel))
 const examContract = load('engine/examContract.js')
 const schoolProfile = load('schools/waseshibu/appProfile.js')
 const compat = load('schools/waseshibu/legacyCompatibility.js')
+const appConfig = load('appConfig.js')
 
 const profile = schoolProfile.WASESHIBU_APP_PROFILE
+assert.equal(appConfig.APP_PROFILE, profile)
 assert.equal(profile.id, 'waseshibu')
+assert.equal(profile.schoolLabel, '早稲田渋谷シンガポール校')
+assert.deepEqual(profile.brand, {
+  title: 'WaseShibu Math 70',
+  unofficialLabel: '非公式',
+  subtitle: '過去問の出題構造を参考にした学習用Webアプリ',
+  footer: '非公式の学習支援アプリです。2019〜2026年度の過去問演習、学習記録、18分野の類題を掲載します。A/B/Cは学習上の優先度です。学習データはこの端末に保存されます。'
+})
+assert.deepEqual(appConfig.APP_EVENT_NAMES, {
+  routeChange: 'waseshibu-route-change',
+  writeBlocked: 'waseshibu-write-blocked',
+  preferencesChange: 'waseshibu-preferences-change'
+})
 assert.deepEqual(profile.supportedYears, [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026])
 assert.deepEqual(profile.targets.map(x => [x.id, x.scoreThreshold, x.legacyValue]), [
   ['60', 60, 60],
@@ -132,4 +147,4 @@ assert.throws(() => examContract.assertCanonicalExamResult({
 }), /scored result cannot use not-available authority/)
 
 console.log('SHARED ENGINE COMPATIBILITY TEST PASSED')
-console.log('examId/year bridge, targetId/legacy bridge, score authority, and WaseShibu identity preservation: OK')
+console.log('profile identity, app-shell events, examId/year bridge, targetId/legacy bridge, score authority, and WaseShibu identity preservation: OK')
