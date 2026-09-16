@@ -22,6 +22,13 @@ const entries = [
   'src/schools/waseshibu/activityCompatibility.ts',
   'src/schools/waseshibu/activityShadow.ts',
   'src/schools/waseshibu/activityAudit.ts',
+  'src/schools/waseshibu/dailyCompatibility.ts',
+  'src/schools/waseshibu/dailyShadow.ts',
+  'src/schools/waseshibu/dailyAudit.ts',
+  'src/schools/waseshibu/plannerCompatibility.ts',
+  'src/schools/waseshibu/plannerShadow.ts',
+  'src/schools/waseshibu/plannerLegacyReader.ts',
+  'src/schools/waseshibu/plannerAudit.ts',
   'src/schools/waseshibu/migrationRehearsal.ts',
   'src/storage.ts',
   'src/learningRoute.ts',
@@ -120,8 +127,47 @@ const seed = {
       status: 'correct', at: '2026-09-12T11:00:00.000Z'
     }
   ]),
-  // Deliberately outside the current rehearsal scope: it must remain untouched.
-  'waseshibu-math-daily': JSON.stringify({ date: '2026-09-16', questionIds: ['field-expressions-1'], completed: false })
+  'waseshibu-math-daily': JSON.stringify({
+    date: '2026-09-16',
+    questionIds: ['field-expressions-1', 'field-equations-1'],
+    completed: false,
+    queue: ['field-equations-1'],
+    deferredOnce: ['field-expressions-1'],
+    settled: 1,
+    correctCount: 0,
+    wrongCount: 1,
+    deferredCount: 1,
+    sessionElapsed: 92,
+    updatedAt: '2026-09-16T08:30:00.000Z'
+  }),
+  'waseshibu-math-daily-required-plan-v2': JSON.stringify({
+    date: '2026-09-16',
+    target: 70,
+    pendingIds: ['review-2024-Q1-1', 'progression:/past-papers?year=2025'],
+    completedIds: ['review-2024-Q1-2'],
+    fallbackTask: {
+      id: 'progression:/past-papers?year=2025',
+      kind: 'past-paper',
+      title: '2025年度を解く',
+      detail: '次の1ステップ',
+      to: '/past-papers?year=2025',
+      priority: 1,
+      questionId: '2025-Q1-1',
+      grade: 'B'
+    },
+    queueVersion: 3
+  }),
+  'waseshibu-math-study-ahead-plan-v1': JSON.stringify({
+    date: '2026-09-17',
+    target: 75,
+    pendingIds: ['practice-2024-Q2-1'],
+    completedIds: [],
+    queueVersion: 3
+  }),
+  // Deliberately outside the expanded rehearsal scope: it must remain untouched.
+  'waseshibu-math-guided-progress-v2': JSON.stringify({
+    '2024-Q1-1': { questionId: '2024-Q1-1', mastery: 'attempted', updatedAt: '2026-09-16T07:00:00.000Z' }
+  })
 }
 
 const storage = new MemoryStorage(seed)
@@ -135,8 +181,17 @@ const after = storage.snapshot()
 
 assert.equal(report.ready, true, report.issues.map(x => `${x.surface}: ${x.message}`).join('\n'))
 assert.deepEqual(report.issues, [])
-assert.equal(report.rehearsalContractVersion, 2)
-assert.deepEqual(report.scope, ['preferences', 'examResults', 'drafts', 'route', 'activityRecords'])
+assert.equal(report.rehearsalContractVersion, 3)
+assert.deepEqual(report.scope, [
+  'preferences',
+  'examResults',
+  'drafts',
+  'route',
+  'activityRecords',
+  'dailyPractice',
+  'todayRequiredPlan',
+  'studyAheadPlan'
+])
 assert.equal(after, before, 'migration rehearsal must not mutate any persisted state')
 assert.equal(storage.writes, 0, 'migration rehearsal must perform zero storage writes')
 assert.equal(report.canonicalCandidate.preferences.targetId, '70')
@@ -157,17 +212,42 @@ assert.equal(activities.get('attempt-exam').resetVersion, 4)
 assert.equal(activities.get('attempt-exposure').kind, 'exam-exposure')
 assert.equal(activities.get('attempt-exposure').examId, 'waseshibu-2025')
 assert.equal(activities.get('attempt-mastery').kind, 'mastery-marker')
+
+assert.equal(report.canonicalCandidate.dailyPractice.date, '2026-09-16')
+assert.deepEqual(report.canonicalCandidate.dailyPractice.problemIds, ['field-expressions-1', 'field-equations-1'])
+assert.deepEqual(report.canonicalCandidate.dailyPractice.queueProblemIds, ['field-equations-1'])
+assert.equal(report.canonicalCandidate.dailyPractice.elapsedSeconds, 92)
+
+assert.equal(report.canonicalCandidate.todayRequiredPlan.planKind, 'today-required')
+assert.equal(report.canonicalCandidate.todayRequiredPlan.targetId, '70')
+assert.deepEqual(report.canonicalCandidate.todayRequiredPlan.pendingTaskIds, ['review-2024-Q1-1', 'progression:/past-papers?year=2025'])
+assert.equal(report.canonicalCandidate.todayRequiredPlan.fallbackTask.taskId, 'progression:/past-papers?year=2025')
+assert.equal(report.canonicalCandidate.todayRequiredPlan.fallbackTask.schoolEvidence.legacyRoute, '/past-papers?year=2025')
+assert.equal(report.canonicalCandidate.studyAheadPlan.planKind, 'study-ahead')
+assert.equal(report.canonicalCandidate.studyAheadPlan.targetId, '75')
+assert.deepEqual(report.canonicalCandidate.studyAheadPlan.pendingTaskIds, ['practice-2024-Q2-1'])
+
 assert.equal(report.sourceSnapshot['waseshibu-math-data-version'], '8')
 assert.equal(report.sourceSnapshot['waseshibu-math-attempts'], seed['waseshibu-math-attempts'])
-assert.equal(Object.prototype.hasOwnProperty.call(report.sourceSnapshot, 'waseshibu-math-daily'), false, 'unmigrated surfaces must not be implied by the rehearsal snapshot')
+assert.equal(report.sourceSnapshot['waseshibu-math-daily'], seed['waseshibu-math-daily'])
+assert.equal(report.sourceSnapshot['waseshibu-math-daily-required-plan-v2'], seed['waseshibu-math-daily-required-plan-v2'])
+assert.equal(report.sourceSnapshot['waseshibu-math-study-ahead-plan-v1'], seed['waseshibu-math-study-ahead-plan-v1'])
+assert.equal(
+  Object.prototype.hasOwnProperty.call(report.sourceSnapshot, 'waseshibu-math-guided-progress-v2'),
+  false,
+  'unmigrated surfaces must not be implied by the rehearsal snapshot'
+)
 
-// Rollback rehearsal: corrupt only the source surfaces in an isolated clone,
-// then restore the exact captured raw strings. This proves byte-for-byte source
-// restoration is possible before any production write path is introduced.
+// Rollback rehearsal: corrupt only source surfaces in an isolated clone, then
+// restore exact captured strings. This proves byte-for-byte restoration across
+// attempts, daily practice and both scheduler plans before any production write.
 const rollbackClone = new MemoryStorage(seed)
 rollbackClone.setItem('waseshibu-math-preferences', '{"target":60}')
 rollbackClone.removeItem('waseshibu-math-exam-scores')
 rollbackClone.setItem('waseshibu-math-attempts', '[]')
+rollbackClone.setItem('waseshibu-math-daily', 'null')
+rollbackClone.removeItem('waseshibu-math-daily-required-plan-v2')
+rollbackClone.setItem('waseshibu-math-study-ahead-plan-v1', '{"date":"2099-01-01"}')
 rollbackClone.setItem('waseshibu-math-data-version', '999')
 for (const key of rehearsal.WASESHIBU_REHEARSAL_SOURCE_KEYS) {
   const raw = report.sourceSnapshot[key]
@@ -177,7 +257,11 @@ for (const key of rehearsal.WASESHIBU_REHEARSAL_SOURCE_KEYS) {
 for (const key of rehearsal.WASESHIBU_REHEARSAL_SOURCE_KEYS) {
   assert.equal(rollbackClone.getItem(key), seed[key] ?? null, `rollback source byte parity: ${key}`)
 }
-assert.equal(rollbackClone.getItem('waseshibu-math-daily'), seed['waseshibu-math-daily'], 'rollback rehearsal must not touch out-of-scope learner data')
+assert.equal(
+  rollbackClone.getItem('waseshibu-math-guided-progress-v2'),
+  seed['waseshibu-math-guided-progress-v2'],
+  'rollback rehearsal must not touch out-of-scope guided progress'
+)
 
 // Duplicate result IDs are readable today, but canonical cutover must stop
 // until an explicit no-loss duplicate policy exists.
@@ -224,6 +308,33 @@ assert.equal(filteredActivity.ready, false)
 assert.ok(filteredActivity.issues.some(x => x.surface.startsWith('activity:') || x.surface === 'activityRecords'))
 assert.equal(filteredActivityStorage.writes, 0)
 
+// Parseable but malformed daily practice must block the aggregate rehearsal.
+const malformedDailyStorage = new MemoryStorage({
+  'waseshibu-math-data-version': '8',
+  'waseshibu-math-preferences': JSON.stringify({ target: 70 }),
+  'waseshibu-math-daily': JSON.stringify({ date: '2026-09-16', questionIds: 'not-an-array', completed: false })
+})
+installStorage(malformedDailyStorage)
+const malformedDaily = rehearsal.rehearseWaseShibuCanonicalMigration()
+assert.equal(malformedDaily.ready, false)
+assert.ok(malformedDaily.issues.some(x => x.surface === 'dailyPractice' || x.surface.startsWith('daily:')))
+assert.equal(malformedDailyStorage.writes, 0)
+
+// Unsupported planner target/shape must fail closed even though legacy runtime
+// readers can fall back or ignore broken state.
+const malformedPlannerStorage = new MemoryStorage({
+  'waseshibu-math-data-version': '8',
+  'waseshibu-math-preferences': JSON.stringify({ target: 70 }),
+  'waseshibu-math-daily-required-plan-v2': JSON.stringify({
+    date: '2026-09-16', target: 80, pendingIds: [], completedIds: [], queueVersion: 3
+  })
+})
+installStorage(malformedPlannerStorage)
+const malformedPlanner = rehearsal.rehearseWaseShibuCanonicalMigration()
+assert.equal(malformedPlanner.ready, false)
+assert.ok(malformedPlanner.issues.some(x => x.surface === 'todayRequiredPlan' || x.surface.startsWith('planner:')))
+assert.equal(malformedPlannerStorage.writes, 0)
+
 // Unmappable legacy route state fails closed and still remains read-only.
 const malformedStorage = new MemoryStorage({
   'waseshibu-math-data-version': '8',
@@ -237,4 +348,4 @@ assert.ok(malformed.issues.some(x => x.surface === 'route' || x.surface === 'sha
 assert.equal(malformedStorage.writes, 0)
 
 console.log('SHARED ENGINE MIGRATION REHEARSAL TEST PASSED')
-console.log('legacy -> canonical candidate now includes audited activities, exact source rollback evidence, duplicate-ID fail-close and zero production writes: OK')
+console.log('legacy -> canonical candidate includes activities + daily practice + both scheduler plans, exact source rollback evidence, fail-closed malformed state and zero production writes: OK')
