@@ -1,5 +1,6 @@
 import type { Attempt, ExamScore } from './types'
 import { canWriteLearningData, notifyWriteBlocked } from './version'
+import { APP_EVENT_NAMES } from './appConfig'
 
 const ATTEMPT_KEY = 'waseshibu-math-attempts'
 const PREF_KEY = 'waseshibu-math-preferences'
@@ -149,7 +150,7 @@ export function savePreferences(prefs: Omit<Preferences,'updatedAt'> & Partial<P
   if (!allowWrite()) return
   const full: Preferences = {...prefs, updatedAt: prefs.updatedAt || now()}
   localStorage.setItem(PREF_KEY, JSON.stringify(full))
-  if(typeof window!=='undefined'&&typeof CustomEvent!=='undefined')window.dispatchEvent(new CustomEvent('waseshibu-preferences-change'))
+  if(typeof window!=='undefined'&&typeof CustomEvent!=='undefined')window.dispatchEvent(new CustomEvent(APP_EVENT_NAMES.preferencesChange))
 }
 
 export function loadDaily(): DailyState | null {
