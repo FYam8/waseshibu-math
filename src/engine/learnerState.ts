@@ -88,12 +88,20 @@ export type CanonicalLearningRouteState = {
  * Read model used during behaviour-preserving extraction. It is deliberately a
  * value object: persistence code is school-owned and injected separately.
  *
- * Activity records are being introduced behind a separate WaseShibu audit gate
- * before they are added to this aggregate migration surface.
+ * Activity records remain separately audited so the legacy attempts container
+ * is never treated as a universal attempt schema merely because it exists.
  */
 export type CanonicalLearnerStateShadow = {
   preferences: CanonicalLearnerPreferences
   examResults: CanonicalExamResult[]
   draftsByExamId: Record<string, unknown>
   route: CanonicalLearningRouteState
+}
+
+/**
+ * In-memory migration candidate after all currently integrated safety audits.
+ * This does not imply a canonical storage key or authorize a write migration.
+ */
+export type CanonicalLearnerStateMigrationCandidate = CanonicalLearnerStateShadow & {
+  activityRecords: CanonicalActivityRecord[]
 }
