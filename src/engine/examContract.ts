@@ -23,6 +23,10 @@ export type CanonicalExamDefinition = {
 /**
  * Shared exam-result shape. Numeric score is intentionally optional because
  * not every school has an authoritative point model for every subquestion.
+ *
+ * `schoolEvidence` preserves school-specific derived evidence without making
+ * those fields universal engine semantics. Generic engine code must not depend
+ * on school-specific keys inside this object.
  */
 export type CanonicalExamResult = {
   id: string
@@ -35,12 +39,18 @@ export type CanonicalExamResult = {
   correctCount?: number
   wrongCount?: number
   unansweredCount?: number
+  deviceId?: string
+  resetVersion?: number
+  schoolEvidence?: Record<string, unknown>
 }
 
 export function assertCanonicalExamResult(result: CanonicalExamResult) {
   if (!result.id) throw new Error('exam result id is required')
   if (!result.examId) throw new Error('examId is required')
   if (!result.at || Number.isNaN(Date.parse(result.at))) throw new Error('valid result timestamp is required')
+  if (result.resetVersion !== undefined && (!Number.isInteger(result.resetVersion) || result.resetVersion < 0)) {
+    throw new Error('resetVersion must be a non-negative integer when supplied')
+  }
 
   const hasScore = result.score !== undefined || result.maxScore !== undefined
   if (hasScore) {
