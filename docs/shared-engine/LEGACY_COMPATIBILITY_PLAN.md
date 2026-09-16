@@ -1,6 +1,6 @@
 # Legacy Compatibility Bridge
 
-Status: Phase-1 compatibility helpers + read-only shadow + dual-read parity implemented; learner-state migration not wired
+Status: Phase-1 compatibility helpers + read-only shadow + dual-read parity + scoped migration rehearsal implemented; learner-state migration not wired
 
 ## Purpose
 
@@ -38,13 +38,16 @@ The shadow reader deliberately preserves current WaseShibu read semantics, inclu
 
 It projects both into the same canonical value model and fails closed when they differ. The audit snapshots the relevant storage keys before/after and treats any write during the audit as a failure.
 
+`src/schools/waseshibu/migrationRehearsal.ts` adds the next safety layer for the currently audited scope. It captures exact raw source strings, requires successful dual-read parity, validates known exam/target identities, rejects duplicate result IDs without an explicit no-loss policy, and returns only an in-memory canonical candidate. It performs no writes. `docs/shared-engine/MIGRATION_REHEARSAL.md` records the exact scope and rollback evidence.
+
 The required build gates are now:
 
 - `scripts/test-shared-engine-compat.mjs` — identity/contracts;
 - `scripts/test-shared-engine-shadow.mjs` — canonical shadow mapping + zero-write behaviour;
-- `scripts/test-shared-engine-dual-read.mjs` — actual legacy readers equal canonical shadow, plus fail-closed mismatch detection.
+- `scripts/test-shared-engine-dual-read.mjs` — actual legacy readers equal canonical shadow, plus fail-closed mismatch detection;
+- `scripts/test-shared-engine-migration-rehearsal.mjs` — exact source snapshot, in-memory canonical candidate, simulated rollback and zero-write guarantee.
 
-No learner localStorage record is rewritten by these helpers or audits. Actual storage migration remains a later Phase-1 step after parity is proven over the required compatibility surfaces.
+No learner localStorage record is rewritten by these helpers or audits. Actual storage migration remains a later Phase-1 step after the remaining learner-state surfaces are brought under the same parity/rehearsal gates.
 
 The app shell has begun a separate behaviour-preserving profile extraction: visible brand strings and the existing update/event identities are now read through the WaseShibu composition profile, with exact legacy values locked by compatibility tests. This does not change the values seen or used by existing users.
 
@@ -109,7 +112,7 @@ legacy completedCoreByTarget["70"] = [2024, 2023]
   -> canonical completion[targetId="70"] = ["waseshibu-2024", "waseshibu-2023"]
 ```
 
-The current shadow/dual-read stage proves this mapping without persisting the canonical representation. A future write migration must preserve a rollback/restore point and must be covered by preservation tests before runtime cutover.
+The current shadow/dual-read/rehearsal stage proves this mapping without persisting the canonical representation. A future write migration must preserve a rollback/restore point and must be covered by preservation tests before runtime cutover.
 
 Rikkyo starts the shared-engine cutover with exam-keyed canonical state so A/B forms never share one year bucket.
 
@@ -150,8 +153,11 @@ The Phase-1 learner-state bridge is not mergeable until tests prove all of the f
 9. dual-read parity is green for preferences, exam results, drafts and route/reinforcement state;
 10. legacy fallback metadata (`legacy-device`, resetVersion) remains equivalent in the canonical view;
 11. malformed/unmappable state fails closed rather than being silently invented or discarded;
-12. Rikkyo A/B forms remain independent in exam result, draft, route, lock and reinforcement state;
-13. Rikkyo does not write any WaseShibu persistence/IndexedDB/channel/cloud identity.
+12. migration rehearsal captures exact source strings and proves simulated byte/string restoration for the audited scope;
+13. duplicate result identities fail closed until a no-loss policy exists;
+14. attempts/daily/prep/guided/remediation/Level2/backup/sync state are added to the canonical rehearsal before any production learner-state cutover;
+15. Rikkyo A/B forms remain independent in exam result, draft, route, lock and reinforcement state;
+16. Rikkyo does not write any WaseShibu persistence/IndexedDB/channel/cloud identity.
 
 ## Principle
 
@@ -159,7 +165,7 @@ The migration direction is:
 
 ```text
 WaseShibu legacy representation
-        ↓ compatibility adapter / shadow / dual-read / tested migration
+        ↓ compatibility adapter / shadow / dual-read / rehearsal / tested migration
 canonical engine identity
         ↑
 Rikkyo canonical school data
