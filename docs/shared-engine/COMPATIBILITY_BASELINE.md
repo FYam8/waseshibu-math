@@ -1,6 +1,6 @@
 # Shared Engine Compatibility Baseline
 
-Status: audited foundation baseline before runtime extraction
+Status: audited baseline + Phase-1 compatibility guardrails
 
 This file records identities and data-shape boundaries that must be preserved or deliberately migrated before `waseshibu-math` runtime code is generalized.
 
@@ -18,6 +18,8 @@ Baseline source commit: `11bb2acad74888831fdd6a9fde7b7d6a912296bf` (`main` when 
   - `waseshibu-route-change`
   - `waseshibu-write-blocked`
   - `waseshibu-preferences-change`
+
+The Phase-1 branch has begun routing app-shell branding and the existing update/event identities through the WaseShibu composition profile. The resolved learner-visible strings and runtime identity strings are unchanged and are locked by `scripts/test-shared-engine-compat.mjs`.
 
 ### localStorage and backup identity
 
@@ -83,7 +85,7 @@ This isolation must be tested explicitly before Rikkyo is allowed to deploy the 
 
 ## Rikkyo current preservation baseline
 
-The existing `FYam8/rikkyo-uk-math` release is not disposable scaffolding. Its analysed school content remains the Rikkyo Source of Truth:
+The existing `FYam8/rikkyo-uk-math` release is not disposable scaffolding. Its analysed school content remains the Rikkyo Source of Truth for migration into the canonical format:
 
 - 212 past-paper problem IDs
 - 212/212 authored source-grounded explanations
@@ -131,7 +133,7 @@ The target architecture uses:
 
 ## Phase-1 acceptance invariants
 
-Before any behaviour-preserving extraction is merged into WaseShibu `main`, the regression gate must prove all of the following:
+Before behaviour-preserving extraction is merged into WaseShibu `main`, the regression gate must prove all of the following:
 
 1. WaseShibu routes and visible learning flow are unchanged.
 2. Existing WaseShibu localStorage keys retain exact names and semantics.
@@ -141,6 +143,11 @@ Before any behaviour-preserving extraction is merged into WaseShibu `main`, the 
 6. Existing learner-history migration tests remain green, including the v3→v8 preservation case.
 7. Cloud-sync tests remain green and no Rikkyo identity appears in the WaseShibu production build.
 8. Shared engine contracts do not require parsing WaseShibu-only ID syntax when explicit structural fields can be used.
+9. Legacy WaseShibu year/target compatibility mappings are deterministic, fail closed on unsupported values, and do not mutate source records.
+10. Canonical exam results never require a fabricated score when score authority is unavailable.
+11. WaseShibu app-shell branding, event names and update channel resolve to the exact pre-extraction values.
+
+The first new automated gate is `scripts/test-shared-engine-compat.mjs`. It is part of `npm run build`, so both PR verification and deploy builds fail if the WaseShibu profile/event identities, year↔examId bridge, target bridge, or score-authority rules regress.
 
 ## Rikkyo normalization acceptance invariants
 
@@ -155,5 +162,7 @@ Before Rikkyo cutover:
 7. Missing canonical fields are explicitly created/audited rather than filled with guessed placeholders.
 8. The old `rikkyoMathFull:${NS}:v3` state has a tested migration into canonical learner-state shapes.
 9. Rikkyo uses its own persistence/sync names for every origin-scoped store/channel.
+10. No official/100-point score is fabricated when Rikkyo source material does not provide an authoritative point model.
+11. A/B forms remain distinct in results, drafts, route completion, locking, reinforcement and phase progression.
 
 Only after these invariants are automated should Rikkyo run the shared engine in production.
