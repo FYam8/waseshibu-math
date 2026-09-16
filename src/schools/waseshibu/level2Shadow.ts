@@ -23,6 +23,14 @@ export type WaseShibuLevel2Shadow = {
   issues: WaseShibuLevel2ShadowIssue[]
 }
 
+function blankRuntimePracticeHistory() {
+  const history = emptyCanonicalPracticeHistory()
+  // `loadLevel2History()` materializes schemaVersion 1 even when the key is
+  // absent/corrupt. `present` separately preserves whether source bytes existed.
+  history.schoolEvidence = { legacySchemaVersion: 1 }
+  return history
+}
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
 }
@@ -107,18 +115,18 @@ export function readWaseShibuCanonicalLevel2Shadow(
 ): WaseShibuLevel2Shadow {
   const issues: WaseShibuLevel2ShadowIssue[] = []
   const rawText = storage.getItem(LEGACY_LEVEL2_HISTORY_KEY)
-  if (rawText === null) return { practiceHistory: emptyCanonicalPracticeHistory(), present: false, issues }
+  if (rawText === null) return { practiceHistory: blankRuntimePracticeHistory(), present: false, issues }
 
   let raw: unknown
   try {
     raw = JSON.parse(rawText)
   } catch {
     issue(issues, 'persisted Level2 history is not valid JSON')
-    return { practiceHistory: emptyCanonicalPracticeHistory(), present: true, issues }
+    return { practiceHistory: blankRuntimePracticeHistory(), present: true, issues }
   }
   if (!isObject(raw)) {
     issue(issues, 'persisted Level2 history must be a JSON object')
-    return { practiceHistory: emptyCanonicalPracticeHistory(), present: true, issues }
+    return { practiceHistory: blankRuntimePracticeHistory(), present: true, issues }
   }
 
   const allowedRootKeys = new Set(['schemaVersion', 'attempts', 'questionStats', 'sessions', 'masteryEvents'])
@@ -130,8 +138,7 @@ export function readWaseShibuCanonicalLevel2Shadow(
     issue(issues, 'active reader would silently report schemaVersion 1 for a different persisted version', 'schemaVersion')
   }
 
-  const practiceHistory = emptyCanonicalPracticeHistory()
-  practiceHistory.schoolEvidence = { legacySchemaVersion: 1 }
+  const practiceHistory = blankRuntimePracticeHistory()
 
   const attempts = raw.attempts
   if (attempts !== undefined && !Array.isArray(attempts)) {
@@ -201,7 +208,7 @@ export function readWaseShibuCanonicalLevel2Shadow(
         // therefore blanks the entire Level2 history at runtime. Do not pretend a
         // partial canonical candidate is equivalent to that reader.
         if (error instanceof TypeError) {
-          return { practiceHistory: emptyCanonicalPracticeHistory(), present: true, issues }
+          return { practiceHistory: blankRuntimePracticeHistory(), present: true, issues }
         }
       }
     }
