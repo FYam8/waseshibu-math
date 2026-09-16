@@ -16,10 +16,18 @@ const PREF_KEY = 'waseshibu-math-preferences'
 const EXAM_KEY = 'waseshibu-math-exam-scores'
 const DRAFT_KEY = 'waseshibu-math-exam-drafts-v2'
 const ROUTE_KEY = 'waseshibu-math-learning-route-v1'
+const META_KEY = 'waseshibu-math-sync-meta'
 const REQUIRED_MAIN_YEARS = [2024, 2023, 2022, 2025, 2026] as const
 const REQUIRED_MAIN_EXAM_IDS = new Set(REQUIRED_MAIN_YEARS.map(examIdForLegacyYear))
+const EPOCH = '1970-01-01T00:00:00.000Z'
 
 type ReadOnlyStorage = Pick<Storage, 'getItem'>
+
+type ShadowSyncMeta = {
+  attemptsResetVersion: number
+  examScoresResetVersion: number
+  lastSyncAt?: string
+}
 
 export type WaseShibuShadowIssue = {
   key: string
@@ -46,13 +54,22 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
 }
 
+function readSyncMeta(storage: ReadOnlyStorage, issues: WaseShibuShadowIssue[]): ShadowSyncMeta {
+  const raw = asRecord(readJson(storage, META_KEY, {}, issues))
+  return {
+    attemptsResetVersion: Number.isInteger(raw.attemptsResetVersion) ? Number(raw.attemptsResetVersion) : 0,
+    examScoresResetVersion: Number.isInteger(raw.examScoresResetVersion) ? Number(raw.examScoresResetVersion) : 0,
+    lastSyncAt: typeof raw.lastSyncAt === 'string' ? raw.lastSyncAt : undefined
+  }
+}
+
 function readPreferences(storage: ReadOnlyStorage, issues: WaseShibuShadowIssue[]) {
   const raw = asRecord(readJson(storage, PREF_KEY, {}, issues))
   const legacyTarget = raw.target === 60 || raw.target === 75 ? raw.target : 70
   return {
     targetId: targetIdForLegacyTarget(legacyTarget),
     name: typeof raw.name === 'string' ? raw.name : undefined,
-    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : '1970-01-01T00:00:00.000Z'
+    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : EPOCH
   }
 }
 
@@ -67,7 +84,11 @@ function schoolEvidenceForLegacyResult(item: Record<string, unknown>) {
   return Object.keys(evidence).length ? evidence : undefined
 }
 
-function readExamResults(storage: ReadOnlyStorage, issues: WaseShibuShadowIssue[]): CanonicalExamResult[] {
+function readExamResults(
+  storage: ReadOnlyStorage,
+  issues: WaseShibuShadowIssue[],
+  syncMeta: ShadowSyncMeta
+): CanonicalExamResult[] {
   const raw = readJson(storage, EXAM_KEY, [], issues)
   if (!Array.isArray(raw)) {
     issues.push({ key: EXAM_KEY, message: 'exam score state is not an array' })
@@ -100,8 +121,8 @@ function readExamResults(storage: ReadOnlyStorage, issues: WaseShibuShadowIssue[
         correctCount: typeof item.correctCount === 'number' ? item.correctCount : undefined,
         wrongCount: typeof item.wrongCount === 'number' ? item.wrongCount : undefined,
         unansweredCount: typeof item.unansweredCount === 'number' ? item.unansweredCount : undefined,
-        deviceId: typeof item.deviceId === 'string' ? item.deviceId : undefined,
-        resetVersion: Number.isInteger(item.resetVersion) ? Number(item.resetVersion) : undefined,
+        deviceId: String(item.deviceId || 'legacy-device'),
+        resetVersion: Number.isInteger(item.resetVersion) ? Number(item.resetVersion) : syncMeta.examScoresResetVersion,
         schoolEvidence: schoolEvidenceForLegacyResult(item)
       }))
     } catch (error) {
@@ -199,7 +220,7 @@ function readRoute(storage: ReadOnlyStorage, issues: WaseShibuShadowIssue[]): Ca
     usedProblemIds: Array.isArray(raw.usedOldQuestionIds) ? raw.usedOldQuestionIds.map(String) : [],
     completedExamIdsByTarget,
     reinforcementByExamId,
-    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : undefined
+    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : EPOCH
   }
 }
 
@@ -212,10 +233,11 @@ function readRoute(storage: ReadOnlyStorage, issues: WaseShibuShadowIssue[]): Ca
  */
 export function readWaseShibuCanonicalShadow(storage: ReadOnlyStorage): WaseShibuCanonicalShadow {
   const issues: WaseShibuShadowIssue[] = []
+  const syncMeta = readSyncMeta(storage, issues)
   return {
     state: {
       preferences: readPreferences(storage, issues),
-      examResults: readExamResults(storage, issues),
+      examResults: readExamResults(storage, issues, syncMeta),
       draftsByExamId: readDrafts(storage, issues),
       route: readRoute(storage, issues)
     },
