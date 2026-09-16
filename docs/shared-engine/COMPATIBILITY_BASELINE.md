@@ -2,7 +2,7 @@
 
 Status: audited foundation baseline before runtime extraction
 
-This file records identities that must be preserved or deliberately isolated before `waseshibu-math` runtime code is generalized. It exists to prevent a refactor from looking behaviour-equivalent in the UI while silently mixing learner state across school apps.
+This file records identities and data-shape boundaries that must be preserved or deliberately migrated before `waseshibu-math` runtime code is generalized.
 
 ## WaseShibu production baseline
 
@@ -38,7 +38,7 @@ The current learner-data family uses the `waseshibu-math-*` identity. Existing k
 - `waseshibu-math-level2-history-v1`
 - `waseshibu-math-data-version`
 
-Other WaseShibu-only state also exists for version guards, migration journals, restore points and sync metadata. Extraction must inventory those exact names before changing any persistence code.
+Other WaseShibu-only state also exists for version guards, migration journals, restore points and sync metadata. Extraction must inventory those exact names before changing persistence code.
 
 Backup package identity is currently:
 
@@ -46,7 +46,13 @@ Backup package identity is currently:
 - backup schema version: 5
 - data version: 8
 
-A future profile must not reconstruct historical WaseShibu keys from a newly invented naming rule unless tests prove byte-for-byte equivalence. Existing keys are authoritative.
+A shared-engine refactor must preserve these exact WaseShibu identities.
+
+### Current learner-state shapes
+
+The WaseShibu implementation already has typed/stateful structures for attempts, exam scores, daily state, learning route, guided progress, remediation progress, Level2 history, backup/export and versioned migrations. Those logical shapes are the starting point for the canonical learner-state contract.
+
+The canonical contract may be cleaned up during behaviour-preserving extraction, but WaseShibu data must remain migration-compatible and lossless.
 
 ### Cloud-progress isolation identities
 
@@ -65,7 +71,7 @@ These values are WaseShibu compatibility identities. In particular, the IndexedD
 
 Separate repositories and separate URL paths are not a sufficient learner-data boundary when apps are served from the same web origin. Browser localStorage, IndexedDB and BroadcastChannel are origin-scoped rather than path-scoped.
 
-Therefore the Rikkyo consumer must use different values for at least:
+Therefore Rikkyo must use different values for at least:
 
 - localStorage key family / backup identity
 - IndexedDB database name
@@ -90,14 +96,38 @@ The existing `FYam8/rikkyo-uk-math` release is not disposable scaffolding. Its a
 - 31 source-page images
 - FY26A Q5(3): `REVIEW_REQUIRED`
 
-Current Rikkyo local persistence is also separately named:
+Its current content files are rich Rikkyo-specific migration/source inputs, not the long-term runtime data format:
+
+- `data/questions.json`
+- `data/practice_bank.json`
+- `data/exams.json`
+- `data/registry.json`
+
+Before shared-engine cutover, these values will be normalized into the WaseShibu-derived canonical engine contract. Existing mathematical content, explanations, answer specs, source references and lineage IDs must survive that normalization.
+
+### Current Rikkyo learner-state source
+
+Current Rikkyo local persistence is separately named:
 
 - current key: `rikkyoMathFull:${NS}:v3`
 - environments: `prod`, `qa`, `test`
 - legacy keys: `rikkyoMathMvp:${NS}:v2`, `rikkyoMathMvp:${NS}:v1`
 - current schema version: 3
 
-When the Rikkyo adapter is implemented, these current Rikkyo keys must either be preserved or migrated explicitly. The shared WaseShibu engine must never read them as WaseShibu data and must never write WaseShibu state into them.
+This v3 family is now treated as a **migration source**. The target is the same logical learner-state format used by the shared WaseShibu engine, but under a Rikkyo-specific namespace and backup identity.
+
+The migration must be Rikkyo-only and must never read or write `waseshibu-math-*` learner keys.
+
+## Shared-format decision
+
+The target architecture uses:
+
+- one canonical engine data contract derived from WaseShibu;
+- one canonical logical learner-state model and migration framework;
+- separate school content values;
+- separate school persistence/sync identities.
+
+“Same format” does not mean sharing the same localStorage keys, backup app ID, IndexedDB database, BroadcastChannel or cloud tenant.
 
 ## Phase-1 acceptance invariants
 
@@ -110,6 +140,20 @@ Before any behaviour-preserving extraction is merged into WaseShibu `main`, the 
 5. BroadcastChannel/custom-event identities remain unchanged for WaseShibu.
 6. Existing learner-history migration tests remain green, including the v3→v8 preservation case.
 7. Cloud-sync tests remain green and no Rikkyo identity appears in the WaseShibu production build.
-8. The Rikkyo consumer defines its own persistence/sync identities before it can initialize any shared persistence or sync subsystem.
+8. Shared engine contracts do not require parsing WaseShibu-only ID syntax when explicit structural fields can be used.
 
-Only after these invariants are automated should common runtime modules be wired to the profile.
+## Rikkyo normalization acceptance invariants
+
+Before Rikkyo cutover:
+
+1. 212 past-paper records and 411 practice records have complete one-to-one source lineage.
+2. 212/212 explanations remain present.
+3. 623 total source problem identities remain traceable.
+4. Answer specifications and mathematical QA status survive normalization.
+5. Source-page links remain resolvable.
+6. FY26A Q5(3) remains `REVIEW_REQUIRED`.
+7. Missing canonical fields are explicitly created/audited rather than filled with guessed placeholders.
+8. The old `rikkyoMathFull:${NS}:v3` state has a tested migration into canonical learner-state shapes.
+9. Rikkyo uses its own persistence/sync names for every origin-scoped store/channel.
+
+Only after these invariants are automated should Rikkyo run the shared engine in production.
