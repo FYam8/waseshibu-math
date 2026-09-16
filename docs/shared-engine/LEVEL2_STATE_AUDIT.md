@@ -48,10 +48,14 @@ The strict shadow reports migration blockers when current forgiving normalizatio
 
 Missing legacy session fields that the current runtime intentionally supports are still normalized deterministically. In particular, absent `requiredCount` uses the current WaseShibu source/field fallback and absent `completedQuestionIds` uses the normalized current-streak IDs.
 
-## Build gate
+## Build and aggregate migration gates
 
 `test:shared-engine-level2` is build-required. It source-pins the critical normalization expressions in both current readers, verifies the generic projection and preserved school evidence, exercises old-compatible fallbacks, compares both reader surfaces, tests migration blockers and verifies zero storage writes.
 
+Level2 is also included in migration-rehearsal contract version `7` as generic `practiceHistory`. The aggregate rehearsal captures the exact `waseshibu-math-level2-history-v1` source string, requires the Level2 parity audit to pass, validates duplicate/identity/evidence constraints, and restores the exact source string in the isolated rollback proof. School-local device identity remains outside the canonical learner-state snapshot and is explicitly checked as untouched.
+
+A future/non-1 Level2 schema version blocks the aggregate rehearsal while its exact source bytes remain available for rollback/manual policy.
+
 ## Not changed
 
-This audit does not yet put Level2 into the aggregate migration candidate or authorize any write migration. The active `waseshibu-math-level2-history-v1` reader/writer and all learner-visible behavior remain unchanged. Aggregate rehearsal/rollback integration is the next gate; backup/export/import and IndexedDB/cloud projection remain later gates.
+This audit does not authorize a write migration. The active `waseshibu-math-level2-history-v1` reader/writer and all learner-visible behavior remain unchanged. Backup/export/import semantics and IndexedDB/cloud projection remain the next safety gates before any production canonical learner-state cutover.

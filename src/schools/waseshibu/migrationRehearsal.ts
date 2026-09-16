@@ -3,6 +3,7 @@ import type {
   CanonicalScheduledTaskPlan
 } from '../../engine/learnerState'
 import type { CanonicalRemediationState } from '../../engine/remediationContract'
+import type { CanonicalPracticeHistory } from '../../engine/practiceHistoryContract'
 import { DATA_VERSION_KEY } from '../../dataMigration'
 import { WASESHIBU_APP_PROFILE } from './appProfile'
 import { WASESHIBU_EXAM_CATALOG } from './legacyCompatibility'
@@ -13,6 +14,7 @@ import { auditWaseShibuPlannerReaderParity } from './plannerAudit'
 import { auditWaseShibuPrepState } from './prepAudit'
 import { auditWaseShibuGuidedState } from './guidedAudit'
 import { auditWaseShibuRemediationState } from './remediationAudit'
+import { auditWaseShibuLevel2State } from './level2Audit'
 import {
   LEGACY_DAILY_REQUIRED_PLAN_KEY,
   LEGACY_STUDY_AHEAD_PLAN_KEY
@@ -23,6 +25,7 @@ import {
   LEGACY_GUIDED_REVIEW_KEY
 } from './guidedCompatibility'
 import { LEGACY_REMEDIATION_PROGRESS_KEY } from './remediationCompatibility'
+import { LEGACY_LEVEL2_HISTORY_KEY } from './level2Compatibility'
 
 const ATTEMPT_KEY = 'waseshibu-math-attempts'
 const DAILY_KEY = 'waseshibu-math-daily'
@@ -35,11 +38,10 @@ const META_KEY = 'waseshibu-math-sync-meta'
 /**
  * Exact legacy source bytes covered by the current rehearsal.
  *
- * Both guided keys are included because v2 is the active mastery timeline while
- * v1 is still compatibility/final-answer-fallback evidence. Remediation keeps
- * its current runtime-normalized record as school evidence and its exact source
- * bytes here for rollback. Level2 and later state families remain outside this
- * rehearsal until their own parity gates exist.
+ * Guided v2 is the active mastery timeline while v1 remains compatibility
+ * evidence. Remediation and Level2/practice history keep their school-specific
+ * normalized evidence in the candidate and their exact source bytes here for
+ * rollback. Backup/import and cloud/IndexedDB projections remain later gates.
  */
 export const WASESHIBU_REHEARSAL_SOURCE_KEYS = [
   ATTEMPT_KEY,
@@ -50,6 +52,7 @@ export const WASESHIBU_REHEARSAL_SOURCE_KEYS = [
   LEGACY_GUIDED_REVIEW_KEY,
   LEGACY_GUIDED_PROGRESS_KEY,
   LEGACY_REMEDIATION_PROGRESS_KEY,
+  LEGACY_LEVEL2_HISTORY_KEY,
   PREF_KEY,
   EXAM_KEY,
   DRAFT_KEY,
@@ -62,6 +65,7 @@ export type WaseShibuRehearsalSourceKey = (typeof WASESHIBU_REHEARSAL_SOURCE_KEY
 export type WaseShibuRawSnapshot = Record<WaseShibuRehearsalSourceKey, string | null>
 export type WaseShibuCanonicalMigrationCandidate = CanonicalLearnerStateMigrationCandidate & {
   remediation: CanonicalRemediationState
+  practiceHistory: CanonicalPracticeHistory
 }
 
 export type WaseShibuMigrationRehearsalIssue = {
@@ -73,7 +77,7 @@ export type WaseShibuMigrationRehearsalReport = {
   /** Ready only for the next migration-engine step for the audited scope. */
   ready: boolean
   /** This is a rehearsal/read-model contract marker, not the app data version. */
-  rehearsalContractVersion: 6
+  rehearsalContractVersion: 7
   scope: readonly [
     'preferences',
     'examResults',
@@ -85,7 +89,8 @@ export type WaseShibuMigrationRehearsalReport = {
     'studyAheadPlan',
     'preparationCheck',
     'guidedLearning',
-    'remediation'
+    'remediation',
+    'practiceHistory'
   ]
   sourceSnapshot: WaseShibuRawSnapshot
   canonicalCandidate: WaseShibuCanonicalMigrationCandidate
@@ -115,6 +120,62 @@ function validatePlannerPlan(
   }
   if (!knownTargetIds.has(plan.targetId)) {
     issues.push({ surface, message: `unknown canonical targetId: ${plan.targetId}` })
+  }
+}
+
+function validatePracticeHistory(
+  practiceHistory: CanonicalPracticeHistory,
+  issues: WaseShibuMigrationRehearsalIssue[]
+) {
+  if (practiceHistory.schoolEvidence?.legacySchemaVersion !== 1) {
+    issues.push({ surface: 'practiceHistory', message: 'WaseShibu practice history must retain legacy schemaVersion 1 evidence' })
+  }
+
+  const attemptIds = new Set<string>()
+  for (const attempt of practiceHistory.attempts) {
+    if (attemptIds.has(attempt.id)) {
+      issues.push({ surface: 'practiceHistory', message: `duplicate practice attempt id requires an explicit migration policy: ${attempt.id}` })
+    }
+    attemptIds.add(attempt.id)
+    const legacyRecord = attempt.schoolEvidence?.legacyRecord
+    if (!legacyRecord || typeof legacyRecord !== 'object' || Array.isArray(legacyRecord)) {
+      issues.push({ surface: 'practiceHistory', message: `WaseShibu practice attempt legacy evidence is missing: ${attempt.id}` })
+    }
+  }
+
+  for (const [problemId, stats] of Object.entries(practiceHistory.problemStatsByProblemId)) {
+    const legacyRecord = stats.schoolEvidence?.legacyRecord
+    if (!legacyRecord || typeof legacyRecord !== 'object' || Array.isArray(legacyRecord)) {
+      issues.push({ surface: 'practiceHistory', message: `WaseShibu problem-stat legacy evidence is missing: ${problemId}` })
+    }
+  }
+
+  const sessionIds = new Set<string>()
+  for (const [storageKey, session] of Object.entries(practiceHistory.sessionsByKey)) {
+    if (!storageKey) {
+      issues.push({ surface: 'practiceHistory', message: 'practice session storage key must not be empty' })
+    }
+    if (sessionIds.has(session.id)) {
+      issues.push({ surface: 'practiceHistory', message: `duplicate practice session id requires an explicit migration policy: ${session.id}` })
+    }
+    sessionIds.add(session.id)
+    if (!Number.isInteger(session.requiredCount) || session.requiredCount < 1 || session.requiredCount > 4) {
+      issues.push({ surface: 'practiceHistory', message: `invalid WaseShibu practice requiredCount for ${storageKey}: ${session.requiredCount}` })
+    }
+    if (session.schoolEvidence?.legacyStorageKey !== storageKey) {
+      issues.push({ surface: 'practiceHistory', message: `practice session storage identity mismatch: ${storageKey}` })
+    }
+    const legacyRecord = session.schoolEvidence?.legacyRecord
+    if (!legacyRecord || typeof legacyRecord !== 'object' || Array.isArray(legacyRecord)) {
+      issues.push({ surface: 'practiceHistory', message: `WaseShibu practice session legacy evidence is missing: ${storageKey}` })
+    }
+  }
+
+  for (let index = 0; index < practiceHistory.masteryEvents.length; index++) {
+    const legacyRecord = practiceHistory.masteryEvents[index].schoolEvidence?.legacyRecord
+    if (!legacyRecord || typeof legacyRecord !== 'object' || Array.isArray(legacyRecord)) {
+      issues.push({ surface: 'practiceHistory', message: `WaseShibu practice mastery-event legacy evidence is missing at index ${index}` })
+    }
   }
 }
 
@@ -245,6 +306,7 @@ function validateCanonicalCandidate(state: WaseShibuCanonicalMigrationCandidate)
     }
   }
 
+  validatePracticeHistory(state.practiceHistory, issues)
   return issues
 }
 
@@ -257,13 +319,14 @@ function validateCanonicalCandidate(state: WaseShibuCanonicalMigrationCandidate)
  * 3. requires persisted planner parity without invoking reconciliation writes;
  * 4. requires guided v1 compatibility and v2 active-progress parity separately;
  * 5. requires remediation runtime-normalization parity and no-loss blockers;
- * 6. adds one generic guided timeline plus generic remediation state to the candidate;
- * 7. validates combined canonical identities;
- * 8. verifies that the rehearsal itself changed no persisted source string.
+ * 6. requires both Level2 durable-history and independent summary-reader parity;
+ * 7. adds one generic guided timeline, remediation and practice-history state;
+ * 8. validates combined canonical identities;
+ * 9. verifies that the rehearsal itself changed no persisted source string.
  *
  * It never writes, removes, renames or migrates a localStorage key. A later
  * production migration must still use the app's backup/restore-point safety
- * framework and cover the remaining learner-state surfaces first.
+ * framework and cover backup/import and sync projections first.
  */
 export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehearsalReport {
   const before = captureRawSnapshot()
@@ -274,6 +337,7 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
   const prepAudit = auditWaseShibuPrepState()
   const guidedAudit = auditWaseShibuGuidedState()
   const remediationAudit = auditWaseShibuRemediationState()
+  const level2Audit = auditWaseShibuLevel2State()
 
   const issues: WaseShibuMigrationRehearsalIssue[] = dualRead.mismatches.map(mismatch => ({
     surface: mismatch.surface,
@@ -307,6 +371,12 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
     surface: mismatch.surface === 'remediation' ? 'remediation' : `remediation:${mismatch.surface}`,
     message: mismatch.message
   })))
+  issues.push(...level2Audit.mismatches.map(mismatch => ({
+    surface: mismatch.surface === 'practiceHistory' || mismatch.surface === 'sessionSummaries'
+      ? 'practiceHistory'
+      : `level2:${mismatch.surface}`,
+    message: mismatch.message
+  })))
 
   const canonicalCandidate: WaseShibuCanonicalMigrationCandidate = {
     ...dualRead.canonicalShadow,
@@ -316,7 +386,8 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
     studyAheadPlan: plannerAudit.canonicalShadow.studyAheadPlan,
     preparationCheck: prepAudit.canonicalShadow,
     guidedLearning: guidedAudit.canonicalShadow.guidedLearning,
-    remediation: remediationAudit.canonicalShadow
+    remediation: remediationAudit.canonicalShadow,
+    practiceHistory: level2Audit.canonicalShadow
   }
   issues.push(...validateCanonicalCandidate(canonicalCandidate))
 
@@ -327,7 +398,7 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
 
   return {
     ready: issues.length === 0,
-    rehearsalContractVersion: 6,
+    rehearsalContractVersion: 7,
     scope: [
       'preferences',
       'examResults',
@@ -339,7 +410,8 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
       'studyAheadPlan',
       'preparationCheck',
       'guidedLearning',
-      'remediation'
+      'remediation',
+      'practiceHistory'
     ],
     sourceSnapshot: before,
     canonicalCandidate,

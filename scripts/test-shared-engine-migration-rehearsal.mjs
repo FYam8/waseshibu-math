@@ -16,6 +16,8 @@ const entries = [
   'src/engine/examContract.ts',
   'src/engine/learnerState.ts',
   'src/engine/remediationContract.ts',
+  'src/engine/practiceHistoryContract.ts',
+  'src/practiceLoad.ts',
   'src/schools/waseshibu/appProfile.ts',
   'src/schools/waseshibu/legacyCompatibility.ts',
   'src/schools/waseshibu/shadowState.ts',
@@ -41,6 +43,10 @@ const entries = [
   'src/schools/waseshibu/remediationLegacyReader.ts',
   'src/schools/waseshibu/remediationShadow.ts',
   'src/schools/waseshibu/remediationAudit.ts',
+  'src/schools/waseshibu/level2Compatibility.ts',
+  'src/schools/waseshibu/level2LegacyReader.ts',
+  'src/schools/waseshibu/level2Shadow.ts',
+  'src/schools/waseshibu/level2Audit.ts',
   'src/schools/waseshibu/migrationRehearsal.ts',
   'src/storage.ts',
   'src/learningRoute.ts',
@@ -91,6 +97,7 @@ function installStorage(storage) {
 
 const seed = {
   'waseshibu-math-data-version': '8',
+  'waseshibu-math-device-id': 'device-stays-school-local',
   'waseshibu-math-preferences': JSON.stringify({ target: 70, name: '受験生', updatedAt: '2026-09-10T08:00:00.000Z' }),
   'waseshibu-math-sync-meta': JSON.stringify({ attemptsResetVersion: 4, examScoresResetVersion: 9, lastSyncAt: '2026-09-10T09:00:00.000Z' }),
   'waseshibu-math-exam-scores': JSON.stringify([
@@ -237,7 +244,6 @@ const seed = {
       updatedAt: '2026-09-16T09:10:00.000Z'
     }
   }),
-  // Deliberately outside rehearsal v6: it must remain untouched.
   'waseshibu-math-level2-history-v1': JSON.stringify({
     schemaVersion: 1,
     attempts: [],
@@ -258,7 +264,7 @@ const after = storage.snapshot()
 
 assert.equal(report.ready, true, report.issues.map(x => `${x.surface}: ${x.message}`).join('\n'))
 assert.deepEqual(report.issues, [])
-assert.equal(report.rehearsalContractVersion, 6)
+assert.equal(report.rehearsalContractVersion, 7)
 assert.deepEqual(report.scope, [
   'preferences',
   'examResults',
@@ -270,7 +276,8 @@ assert.deepEqual(report.scope, [
   'studyAheadPlan',
   'preparationCheck',
   'guidedLearning',
-  'remediation'
+  'remediation',
+  'practiceHistory'
 ])
 assert.equal(after, before, 'migration rehearsal must not mutate any persisted state')
 assert.equal(storage.writes, 0, 'migration rehearsal must perform zero storage writes')
@@ -341,6 +348,13 @@ assert.equal(remediation.schoolEvidence.legacyRecord.field, '数式計算')
 assert.equal(remediation.schoolEvidence.legacyRecord.rank, 'B')
 assert.equal(remediation.schoolEvidence.legacyRecord.currentIndex, 1)
 
+const practiceHistory = report.canonicalCandidate.practiceHistory
+assert.deepEqual(practiceHistory.attempts, [])
+assert.deepEqual(practiceHistory.problemStatsByProblemId, {})
+assert.deepEqual(practiceHistory.sessionsByKey, {})
+assert.deepEqual(practiceHistory.masteryEvents, [])
+assert.equal(practiceHistory.schoolEvidence.legacySchemaVersion, 1)
+
 assert.equal(report.sourceSnapshot['waseshibu-math-data-version'], '8')
 assert.equal(report.sourceSnapshot['waseshibu-math-attempts'], seed['waseshibu-math-attempts'])
 assert.equal(report.sourceSnapshot['waseshibu-math-daily'], seed['waseshibu-math-daily'])
@@ -350,15 +364,16 @@ assert.equal(report.sourceSnapshot['waseshibu-math-prep-check-v1'], seed['wasesh
 assert.equal(report.sourceSnapshot['waseshibu-math-guided-review-v1'], seed['waseshibu-math-guided-review-v1'])
 assert.equal(report.sourceSnapshot['waseshibu-math-guided-progress-v2'], seed['waseshibu-math-guided-progress-v2'])
 assert.equal(report.sourceSnapshot['waseshibu-math-remediation-progress-v1'], seed['waseshibu-math-remediation-progress-v1'])
+assert.equal(report.sourceSnapshot['waseshibu-math-level2-history-v1'], seed['waseshibu-math-level2-history-v1'])
 assert.equal(
-  Object.prototype.hasOwnProperty.call(report.sourceSnapshot, 'waseshibu-math-level2-history-v1'),
+  Object.prototype.hasOwnProperty.call(report.sourceSnapshot, 'waseshibu-math-device-id'),
   false,
-  'unmigrated Level2 state must not be implied by the rehearsal snapshot'
+  'school-local device identity must stay outside canonical learner-state source snapshots'
 )
 
-// Rollback rehearsal: corrupt only source surfaces in an isolated clone, then
-// restore exact captured strings. Guided v1/v2 and remediation are all rollback
-// sources, while Level2 remains outside this contract.
+// Rollback rehearsal: corrupt only audited source surfaces in an isolated clone,
+// then restore exact captured strings. School-local device identity is out of
+// scope and must remain byte-for-byte untouched.
 const rollbackClone = new MemoryStorage(seed)
 rollbackClone.setItem('waseshibu-math-preferences', '{"target":60}')
 rollbackClone.removeItem('waseshibu-math-exam-scores')
@@ -370,6 +385,7 @@ rollbackClone.setItem('waseshibu-math-prep-check-v1', '{"version":999}')
 rollbackClone.setItem('waseshibu-math-guided-review-v1', '{}')
 rollbackClone.removeItem('waseshibu-math-guided-progress-v2')
 rollbackClone.setItem('waseshibu-math-remediation-progress-v1', '{}')
+rollbackClone.setItem('waseshibu-math-level2-history-v1', '{}')
 rollbackClone.setItem('waseshibu-math-data-version', '999')
 for (const key of rehearsal.WASESHIBU_REHEARSAL_SOURCE_KEYS) {
   const raw = report.sourceSnapshot[key]
@@ -380,9 +396,9 @@ for (const key of rehearsal.WASESHIBU_REHEARSAL_SOURCE_KEYS) {
   assert.equal(rollbackClone.getItem(key), seed[key] ?? null, `rollback source byte parity: ${key}`)
 }
 assert.equal(
-  rollbackClone.getItem('waseshibu-math-level2-history-v1'),
-  seed['waseshibu-math-level2-history-v1'],
-  'rollback rehearsal must not touch out-of-scope Level2 state'
+  rollbackClone.getItem('waseshibu-math-device-id'),
+  'device-stays-school-local',
+  'rollback rehearsal must not touch school-local device identity'
 )
 
 // Duplicate result IDs are readable today, but canonical cutover must stop
@@ -562,6 +578,30 @@ assert.equal(droppedRemediation.ready, false)
 assert.ok(droppedRemediation.issues.some(x => x.surface.startsWith('remediation') && x.message.includes('silently drop')))
 assert.equal(droppedRemediationStorage.writes, 0)
 
+// The Level2 runtime ignores a future persisted schema version and still
+// reports schemaVersion 1. The aggregate canonical cutover must stop instead.
+const futureLevel2Storage = new MemoryStorage({
+  'waseshibu-math-data-version': '8',
+  'waseshibu-math-preferences': JSON.stringify({ target: 70 }),
+  'waseshibu-math-level2-history-v1': JSON.stringify({
+    schemaVersion: 2,
+    attempts: [],
+    questionStats: {},
+    sessions: {},
+    masteryEvents: []
+  })
+})
+installStorage(futureLevel2Storage)
+const futureLevel2 = rehearsal.rehearseWaseShibuCanonicalMigration()
+assert.equal(futureLevel2.ready, false, 'future Level2 schema must block aggregate migration rehearsal')
+assert.ok(futureLevel2.issues.some(x => x.surface === 'practiceHistory' || x.surface.startsWith('level2:')))
+assert.equal(
+  futureLevel2.sourceSnapshot['waseshibu-math-level2-history-v1'],
+  futureLevel2Storage.getItem('waseshibu-math-level2-history-v1'),
+  'future Level2 bytes remain available for rollback/manual policy'
+)
+assert.equal(futureLevel2Storage.writes, 0)
+
 // Unmappable legacy route state fails closed and still remains read-only.
 const malformedStorage = new MemoryStorage({
   'waseshibu-math-data-version': '8',
@@ -575,4 +615,4 @@ assert.ok(malformed.issues.some(x => x.surface === 'route' || x.surface === 'sha
 assert.equal(malformedStorage.writes, 0)
 
 console.log('SHARED ENGINE MIGRATION REHEARSAL TEST PASSED')
-console.log('aggregate candidate includes audited guided and remediation state; exact rollback now covers remediation while Level2 remains isolated: OK')
+console.log('aggregate candidate includes guided, remediation and practice-history state; exact rollback now covers Level2 while school-local device identity remains isolated: OK')
