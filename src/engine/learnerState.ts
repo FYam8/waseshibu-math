@@ -86,6 +86,21 @@ export type CanonicalDailyPracticeSession = {
 }
 
 /**
+ * School preparation/onboarding state. Item IDs stay opaque: the shared engine
+ * stores progress through the check but does not own WaseShibu's five prompts,
+ * answer rules or presentation.
+ */
+export type CanonicalPreparationCheckState = {
+  currentItemIndex: number
+  answersByItemId: Record<string, string>
+  triesByItemId: Record<string, number>
+  completed: boolean
+  skipped: boolean
+  updatedAt: string
+  schoolEvidence?: Record<string, unknown>
+}
+
+/**
  * Opaque reference to one scheduler task. Generic engine code may retain a
  * stable task identity and optional problem lineage, but school-owned labels,
  * routes and presentation metadata stay in `schoolEvidence`.
@@ -138,8 +153,8 @@ export type CanonicalLearningRouteState = {
  * Read model used during behaviour-preserving extraction. It is deliberately a
  * value object: persistence code is school-owned and injected separately.
  *
- * Activity records, daily practice and scheduler plans are separately audited
- * before they are added to the aggregate migration surface.
+ * Additional state families are independently audited before they are added to
+ * the aggregate migration surface.
  */
 export type CanonicalLearnerStateShadow = {
   preferences: CanonicalLearnerPreferences
