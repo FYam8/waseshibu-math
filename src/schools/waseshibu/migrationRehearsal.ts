@@ -9,10 +9,12 @@ import { auditWaseShibuDualRead } from './dualReadAudit'
 import { auditWaseShibuActivities } from './activityAudit'
 import { auditWaseShibuDailyPractice } from './dailyAudit'
 import { auditWaseShibuPlannerReaderParity } from './plannerAudit'
+import { auditWaseShibuPrepState } from './prepAudit'
 import {
   LEGACY_DAILY_REQUIRED_PLAN_KEY,
   LEGACY_STUDY_AHEAD_PLAN_KEY
 } from './plannerLegacyReader'
+import { WASESHIBU_PREP_ITEM_COUNT, WASESHIBU_PREP_KEY } from './prepCompatibility'
 
 const ATTEMPT_KEY = 'waseshibu-math-attempts'
 const DAILY_KEY = 'waseshibu-math-daily'
@@ -25,8 +27,8 @@ const META_KEY = 'waseshibu-math-sync-meta'
 /**
  * Exact legacy source bytes covered by the current rehearsal.
  *
- * The scope includes attempts, the 8-question daily-practice session and both
- * persisted scheduler plans after each passed an independent read-only parity
+ * The scope includes attempts, daily practice, both persisted scheduler plans
+ * and the preparation check after each passed an independent read-only parity
  * gate. Guided/remediation/Level2 and other state families remain outside.
  */
 export const WASESHIBU_REHEARSAL_SOURCE_KEYS = [
@@ -34,6 +36,7 @@ export const WASESHIBU_REHEARSAL_SOURCE_KEYS = [
   DAILY_KEY,
   LEGACY_DAILY_REQUIRED_PLAN_KEY,
   LEGACY_STUDY_AHEAD_PLAN_KEY,
+  WASESHIBU_PREP_KEY,
   PREF_KEY,
   EXAM_KEY,
   DRAFT_KEY,
@@ -54,7 +57,7 @@ export type WaseShibuMigrationRehearsalReport = {
   /** Ready only for the next migration-engine step for the audited scope. */
   ready: boolean
   /** This is a rehearsal/read-model contract marker, not the app data version. */
-  rehearsalContractVersion: 3
+  rehearsalContractVersion: 4
   scope: readonly [
     'preferences',
     'examResults',
@@ -63,7 +66,8 @@ export type WaseShibuMigrationRehearsalReport = {
     'activityRecords',
     'dailyPractice',
     'todayRequiredPlan',
-    'studyAheadPlan'
+    'studyAheadPlan',
+    'preparationCheck'
   ]
   sourceSnapshot: WaseShibuRawSnapshot
   canonicalCandidate: CanonicalLearnerStateMigrationCandidate
@@ -166,6 +170,24 @@ function validateCanonicalCandidate(state: CanonicalLearnerStateMigrationCandida
   validatePlannerPlan('todayRequiredPlan', state.todayRequiredPlan, 'today-required', knownTargetIds, issues)
   validatePlannerPlan('studyAheadPlan', state.studyAheadPlan, 'study-ahead', knownTargetIds, issues)
 
+  if (state.preparationCheck !== null) {
+    if (
+      !Number.isInteger(state.preparationCheck.currentItemIndex) ||
+      state.preparationCheck.currentItemIndex < 0 ||
+      state.preparationCheck.currentItemIndex >= WASESHIBU_PREP_ITEM_COUNT
+    ) {
+      issues.push({
+        surface: 'preparationCheck',
+        message: `prep cursor is outside the current WaseShibu item range: ${state.preparationCheck.currentItemIndex}`
+      })
+    }
+    for (const [itemId, tries] of Object.entries(state.preparationCheck.triesByItemId)) {
+      if (!Number.isInteger(tries) || tries < 0) {
+        issues.push({ surface: 'preparationCheck', message: `invalid prep try count for ${itemId}: ${tries}` })
+      }
+    }
+  }
+
   return issues
 }
 
@@ -175,7 +197,7 @@ function validateCanonicalCandidate(state: CanonicalLearnerStateMigrationCandida
  * The active legacy readers remain authoritative. This function:
  * 1. captures the exact legacy source strings needed for rollback evidence;
  * 2. requires legacy-vs-canonical dual-read parity for exam/route state;
- * 3. requires independent attempt/activity and daily-practice parity;
+ * 3. requires independent attempt/activity, daily-practice and prep parity;
  * 4. requires persisted planner shadow vs read-only legacy-reader parity;
  * 5. validates the combined canonical candidate against known identities;
  * 6. verifies that the rehearsal itself changed no persisted source string.
@@ -190,6 +212,7 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
   const activityAudit = auditWaseShibuActivities()
   const dailyAudit = auditWaseShibuDailyPractice()
   const plannerAudit = auditWaseShibuPlannerReaderParity()
+  const prepAudit = auditWaseShibuPrepState()
 
   const issues: WaseShibuMigrationRehearsalIssue[] = dualRead.mismatches.map(mismatch => ({
     surface: mismatch.surface,
@@ -209,13 +232,18 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
       : `planner:${mismatch.surface}`,
     message: mismatch.message
   })))
+  issues.push(...prepAudit.mismatches.map(mismatch => ({
+    surface: mismatch.surface === 'preparationCheck' ? 'preparationCheck' : `prep:${mismatch.surface}`,
+    message: mismatch.message
+  })))
 
   const canonicalCandidate: CanonicalLearnerStateMigrationCandidate = {
     ...dualRead.canonicalShadow,
     activityRecords: activityAudit.canonicalShadow,
     dailyPractice: dailyAudit.canonicalShadow,
     todayRequiredPlan: plannerAudit.canonicalShadow.todayRequiredPlan,
-    studyAheadPlan: plannerAudit.canonicalShadow.studyAheadPlan
+    studyAheadPlan: plannerAudit.canonicalShadow.studyAheadPlan,
+    preparationCheck: prepAudit.canonicalShadow
   }
   issues.push(...validateCanonicalCandidate(canonicalCandidate))
 
@@ -226,7 +254,7 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
 
   return {
     ready: issues.length === 0,
-    rehearsalContractVersion: 3,
+    rehearsalContractVersion: 4,
     scope: [
       'preferences',
       'examResults',
@@ -235,7 +263,8 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
       'activityRecords',
       'dailyPractice',
       'todayRequiredPlan',
-      'studyAheadPlan'
+      'studyAheadPlan',
+      'preparationCheck'
     ],
     sourceSnapshot: before,
     canonicalCandidate,
