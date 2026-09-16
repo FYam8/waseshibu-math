@@ -1,6 +1,6 @@
 # Scheduler Planner Shadow Checkpoint
 
-Status: read-only persisted planner shadow implemented; active-reader parity and aggregate migration integration intentionally deferred
+Status: persisted raw shadow + read-only legacy-reader parity gate implemented; aggregate migration integration intentionally deferred
 
 ## Scope
 
@@ -13,7 +13,7 @@ It does not cover the separate 8-question practice session in `waseshibu-math-da
 
 ## Canonical boundary
 
-The shared engine now defines `CanonicalScheduledTaskPlan` and `CanonicalScheduledTaskReference`.
+The shared engine defines `CanonicalScheduledTaskPlan` and `CanonicalScheduledTaskReference`.
 
 Only school-neutral persistence concepts are promoted:
 
@@ -34,15 +34,36 @@ WaseShibu-specific presentation/action data stays under `schoolEvidence`, includ
 
 The engine must not parse `review-*`, `practice-*`, `progression:*` or route strings to infer meaning.
 
-## Read-only guarantee
+## Two independent read-only views
 
-`plannerShadow.ts` reads the two persisted records directly. It never calls WaseShibu reconciliation functions, which can freeze/refill/promote planner state and therefore may write.
+`plannerShadow.ts` reads the exact two persisted records directly and applies the strict canonical projection.
 
-The current checkpoint performs no generation, promotion, queue reconciliation, target switching or storage writes. `src/dailyPlan.ts` is unchanged by this checkpoint.
+`plannerLegacyReader.ts` separately mirrors the current private reader semantics in `dailyPlan.ts` without invoking any reconciliation API:
+
+- the required-plan reader keeps the current date-scoped behavior and target fallback;
+- the study-ahead reader keeps the current invalid/missing -> `null` behavior;
+- neither reader writes, freezes, refills, promotes or regenerates persisted state.
+
+`plannerAudit.ts` compares valid persisted plans from the legacy-reader mirror against the canonical raw shadow. The audit captures the scheduler source strings before/after and fails if they change.
+
+Because the live private functions remain embedded in `dailyPlan.ts`, the test also pins the compatibility mirror to the current source-level reader signatures/normalization expressions. If those runtime readers change, the parity gate requires the compatibility mirror to be reviewed before migration claims can advance.
+
+This is deliberately safer than calling high-level planner APIs during audit, because the high-level APIs reconcile and can write state.
+
+## Important behavior distinction
+
+Absence/staleness has different runtime and persistence meanings:
+
+- no persisted required plan => canonical persisted shadow is `null`;
+- the current runtime required-plan reader still synthesizes an empty ephemeral plan for the requested date/target;
+- a stored plan for another date is likewise treated as an empty ephemeral current-day plan;
+- the persisted shadow does not invent that ephemeral value.
+
+The parity audit therefore compares canonical persisted values only when a corresponding valid raw record exists, while separately testing the legacy absent/stale behavior.
 
 ## Fail-closed rules
 
-The planner projection rejects:
+The strict canonical planner projection rejects:
 
 - corrupt JSON;
 - unknown plan fields;
@@ -52,14 +73,17 @@ The planner projection rejects:
 - unsupported fallback task fields;
 - non-integer queue-version evidence.
 
-No unknown persisted field is silently discarded merely to fit the canonical contract.
+This remains intentional even though the current runtime reader is more forgiving. A malformed record may be ignored/regenerated for runtime continuity, but migration must not silently discard unknown learner state.
 
-## Build gate
+## Build gates
 
-`test:shared-engine-planner-shadow` verifies the persisted projection, task-order preservation, target mapping, fallback lineage, school-only route evidence, absent-key behavior and zero writes.
+- `test:shared-engine-planner-shadow` verifies exact persisted projection, task order, target mapping, fallback lineage, school-only route evidence, absent-key behavior and zero writes.
+- `test:shared-engine-planner-parity` verifies the read-only legacy-reader semantics against the canonical raw shadow for valid plans, preserves stale/absent behavior, fails closed on unsupported raw state and performs zero writes.
 
-## Not yet claimed
+Both are required by the normal build.
 
-This checkpoint does **not** claim parity with the private legacy planner readers/reconcilers in `dailyPlan.ts`, and it does not add planner state to the aggregate migration rehearsal.
+## Still not yet claimed
 
-The next step is to isolate genuinely read-only legacy reader semantics, compare them with this raw shadow, and only then consider planner state for aggregate rehearsal/rollback coverage.
+Planner state is **not yet added to the aggregate migration rehearsal**.
+
+The next safe step is to combine the already-audited daily-practice session with both planner records in one expanded in-memory rehearsal, add exact rollback bytes for all three daily-family keys and prove the existing 10-task/no-11th-refill/next-day-promotion behavior remains outside the migration adapter rather than being reimplemented as universal engine policy.
