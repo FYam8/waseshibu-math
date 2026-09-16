@@ -64,6 +64,27 @@ export type CanonicalActivityRecord =
   | CanonicalExamExposureActivity
   | CanonicalMasteryMarkerActivity
 
+/**
+ * One resumable daily problem-practice session.
+ *
+ * This is intentionally not the same concept as a school's generated
+ * "today's required tasks" scheduler. Problem IDs are opaque; the shared
+ * engine does not parse them or infer school policy from them.
+ */
+export type CanonicalDailyPracticeSession = {
+  date: string
+  problemIds: string[]
+  completed: boolean
+  queueProblemIds?: string[]
+  deferredOnceProblemIds?: string[]
+  settledCount?: number
+  correctCount?: number
+  wrongCount?: number
+  deferredCount?: number
+  elapsedSeconds?: number
+  updatedAt?: string
+}
+
 export type CanonicalReinforcementState = {
   /** Concrete source exam whose weaknesses created this plan. */
   sourceExamId: string
@@ -88,8 +109,8 @@ export type CanonicalLearningRouteState = {
  * Read model used during behaviour-preserving extraction. It is deliberately a
  * value object: persistence code is school-owned and injected separately.
  *
- * Activity records remain separately audited so the legacy attempts container
- * is never treated as a universal attempt schema merely because it exists.
+ * Activity records and daily practice are separately audited before they are
+ * added to the aggregate migration surface.
  */
 export type CanonicalLearnerStateShadow = {
   preferences: CanonicalLearnerPreferences
