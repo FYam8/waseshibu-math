@@ -52,8 +52,19 @@ class ReadOnlyMemoryStorage {
 const seed = {
   'waseshibu-math-preferences': JSON.stringify({ target: 70, name: '受験生', updatedAt: '2026-09-01T10:00:00.000Z' }),
   'waseshibu-math-exam-scores': JSON.stringify([
-    { id: 'score-2024', year: 2024, score: 68, correctCount: 14, wrongCount: 5, unansweredCount: 1, completed: true, attemptKind: 'first', scoreValidity: 'first-look', at: '2026-09-02T10:00:00.000Z' },
-    { id: 'score-2025', year: 2025, score: 72, correctCount: 15, wrongCount: 4, unansweredCount: 1, completed: true, attemptKind: 'retake', scoreValidity: 'reference', at: '2026-09-03T10:00:00.000Z' }
+    {
+      id: 'score-2024', deviceId: 'device-a', resetVersion: 3, year: 2024, score: 68,
+      reproducibleScore: 64, recoverableScore: 72, timeCandidateScore: 74,
+      correctCount: 14, wrongCount: 5, unansweredCount: 1, completed: true,
+      attemptKind: 'first', scoreValidity: 'first-look', weakFields: ['数式計算'],
+      at: '2026-09-02T10:00:00.000Z'
+    },
+    {
+      id: 'score-2025', deviceId: 'device-a', resetVersion: 3, year: 2025, score: 72,
+      correctCount: 15, wrongCount: 4, unansweredCount: 1, completed: true,
+      attemptKind: 'retake', scoreValidity: 'reference',
+      at: '2026-09-03T10:00:00.000Z'
+    }
   ]),
   'waseshibu-math-exam-drafts-v2': JSON.stringify({
     '2023': { answers: { '2023-Q1-1': '4' }, flags: {}, seconds: 121, majorIndex: 0, phase: 'solve' },
@@ -95,6 +106,16 @@ assert.deepEqual(result.state.examResults.map(x => [x.id, x.examId, x.score, x.m
   ['score-2024', 'waseshibu-2024', 68, 100, 'school-modelled'],
   ['score-2025', 'waseshibu-2025', 72, 100, 'school-modelled']
 ])
+assert.equal(result.state.examResults[0].deviceId, 'device-a')
+assert.equal(result.state.examResults[0].resetVersion, 3)
+assert.deepEqual(result.state.examResults[0].schoolEvidence, {
+  reproducibleScore: 64,
+  recoverableScore: 72,
+  timeCandidateScore: 74,
+  attemptKind: 'first',
+  scoreValidity: 'first-look',
+  weakFields: ['数式計算']
+})
 assert.deepEqual(Object.keys(result.state.draftsByExamId).sort(), ['waseshibu-2023', 'waseshibu-2026'])
 assert.equal(result.state.draftsByExamId['waseshibu-2026'].seconds, 44)
 assert.deepEqual(result.state.route.solvedExamIds, ['waseshibu-2024', 'waseshibu-2023'])
@@ -114,6 +135,18 @@ assert.deepEqual(result.state.route.reinforcementByExamId['waseshibu-2024'], {
 })
 assert.deepEqual(result.state.route.usedProblemIds, ['2019-Q1-1'])
 
+const impliedLocks = shadow.readWaseShibuCanonicalShadow(new ReadOnlyMemoryStorage({
+  'waseshibu-math-learning-route-v1': JSON.stringify({
+    solvedYears: [], usedOldQuestionIds: [], reinforcement: {},
+    completedCoreByTarget: { '75': [2024, 2019] }
+  })
+}))
+assert.deepEqual(impliedLocks.state.route.completedExamIdsByTarget, {
+  '75': ['waseshibu-2024'],
+  '60': ['waseshibu-2024'],
+  '70': ['waseshibu-2024']
+}, 'shadow route must match WaseShibu target-completion closure and exclude optional old years')
+
 const defaults = shadow.readWaseShibuCanonicalShadow(new ReadOnlyMemoryStorage({}))
 assert.equal(defaults.state.preferences.targetId, '70')
 assert.equal(defaults.state.preferences.updatedAt, '1970-01-01T00:00:00.000Z')
@@ -131,4 +164,4 @@ assert.ok(malformed.issues.some(x => x.message.includes('2099')))
 assert.deepEqual(malformed.state.route.solvedExamIds, ['waseshibu-2024'])
 
 console.log('SHARED ENGINE SHADOW STATE TEST PASSED')
-console.log('legacy WaseShibu preferences/results/drafts/route -> canonical read-only view, zero writes: OK')
+console.log('legacy WaseShibu preferences/results/drafts/route -> canonical read-only view, zero writes, preserved evidence and route semantics: OK')
