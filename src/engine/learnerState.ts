@@ -216,6 +216,10 @@ export type CanonicalLearnerStateShadow = {
 /**
  * In-memory migration candidate after all currently integrated safety audits.
  * This does not imply a canonical storage key or authorize a write migration.
+ *
+ * Guided learning contains one active generic mastery timeline. Any WaseShibu
+ * v1 review compatibility/fallback record remains inside guided schoolEvidence
+ * instead of becoming a second progress map.
  */
 export type CanonicalLearnerStateMigrationCandidate = CanonicalLearnerStateShadow & {
   activityRecords: CanonicalActivityRecord[]
@@ -223,4 +227,5 @@ export type CanonicalLearnerStateMigrationCandidate = CanonicalLearnerStateShado
   todayRequiredPlan: CanonicalScheduledTaskPlan | null
   studyAheadPlan: CanonicalScheduledTaskPlan | null
   preparationCheck: CanonicalPreparationCheckState | null
+  guidedLearning: CanonicalGuidedLearningState
 }
