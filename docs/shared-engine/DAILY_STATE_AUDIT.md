@@ -1,6 +1,6 @@
 # Daily State Audit
 
-Status: legacy daily-practice shadow/parity implemented; scheduler state intentionally not canonicalized yet
+Status: daily-practice parity implemented; required-task/study-ahead planner shadows implemented read-only; aggregate migration not yet expanded
 
 ## Why this needs a separate extraction step
 
@@ -22,7 +22,7 @@ These must not be collapsed into one universal `DailyState` merely because their
 
 ## Daily practice session: current safe extraction
 
-The shared contract now has `CanonicalDailyPracticeSession` for the first concept only.
+The shared contract has `CanonicalDailyPracticeSession` for the first concept only.
 
 `src/schools/waseshibu/dailyCompatibility.ts` maps the legacy 8-question practice session without parsing problem IDs or attaching score/target meaning. The mapping preserves:
 
@@ -43,7 +43,7 @@ Unknown fields, malformed arrays/counts or unsupported shapes fail closed rather
 
 The normal build runs `test:shared-engine-daily` so corrupt JSON, malformed shapes, unknown fields or parity drift block the branch.
 
-## Important current-reader finding
+## Important daily-practice reader finding
 
 `loadDaily()` currently performs JSON parsing only; unlike attempts and exam scores, it does not normalize or validate the shape. Therefore a parseable but malformed object can enter current runtime code.
 
@@ -51,33 +51,66 @@ For migration safety, the canonical adapter is deliberately stricter: parseable 
 
 This is a migration-safety rule, not a change to current production runtime behavior.
 
-## Why the required-task planner is not canonicalized in this step
+## Scheduler contract boundary
 
-The required plan and study-ahead plan include school-policy and UI/action data that must be separated before they can become a reusable engine contract:
+The shared contract now also defines `CanonicalScheduledTaskPlan` and `CanonicalScheduledTaskReference` for persisted scheduler state, while keeping them separate from `CanonicalDailyPracticeSession`.
 
-- numeric WaseShibu target `60 | 70 | 75`;
-- generated task IDs such as review/practice/progression IDs;
-- `fallbackTask` snapshots containing title/detail/priority and WaseShibu route strings such as `/past-papers?year=...`;
-- a WaseShibu-specific queue-version/reconciliation algorithm;
-- promotion of next-day plan into today's plan;
-- write-on-reconcile behavior used to freeze the daily cap and avoid automatic 11th-task refill.
+The generic scheduler contract contains only:
 
-A downstream school must not be forced to store WaseShibu routes or interpret task IDs by string prefix.
+- plan kind (`today-required` or `study-ahead`);
+- plan date;
+- opaque school-defined `targetId`;
+- ordered pending/completed task IDs;
+- an optional fallback task reference with opaque task ID and optional problem lineage;
+- opaque school-owned evidence.
 
-Before these planner records join the aggregate canonical migration candidate, Phase 1 must define a planner contract that separates at least:
+It deliberately does **not** define WaseShibu URL grammar, task-ID prefixes, numeric score targets, queue-version meaning or the "maximum 10 / no automatic 11th refill" policy as universal semantics.
 
-- opaque scheduled-task identity;
-- target identity as school-defined `targetId`;
-- plan date and completion membership;
-- generic scheduler state;
-- school-owned task resolver/presentation/action metadata;
-- version/migration evidence.
+## Planner shadow: current safe extraction
 
-The existing WaseShibu behavior — maximum 10 required tasks, no automatic 11th refill, target-change cap preservation and next-day handoff — remains the compatibility baseline and must not change during extraction.
+`src/schools/waseshibu/plannerCompatibility.ts` strictly projects persisted planner records into the generic scheduler contract.
+
+For WaseShibu:
+
+- numeric `60 | 70 | 75` is converted through the school compatibility map into opaque `targetId`;
+- `pendingIds` and `completedIds` remain opaque and ordered;
+- `fallbackTask.id` becomes the generic task identity;
+- `fallbackTask.questionId`, when present, is retained only as explicit problem lineage;
+- fallback title/detail/priority/kind and the WaseShibu `to` route are preserved under `schoolEvidence` rather than promoted to universal planner fields;
+- `queueVersion` is preserved as `legacyQueueVersion` under school evidence.
+
+`src/schools/waseshibu/plannerShadow.ts` reads `waseshibu-math-daily-required-plan-v2` and `waseshibu-math-study-ahead-plan-v1` directly from raw storage. It does not call reconciliation, generate tasks, promote next-day state, refill a queue, change a target or write localStorage.
+
+`scripts/test-shared-engine-planner-shadow.mjs` verifies:
+
+- exact ordered task-ID preservation;
+- school target mapping;
+- fallback problem lineage preservation;
+- WaseShibu routes remain school evidence;
+- absence remains `null` rather than inventing an empty persisted plan;
+- corrupt JSON, unsupported fields, invalid targets and malformed fallback metadata fail closed;
+- zero persistence writes.
+
+The normal build now runs `test:shared-engine-planner-shadow`.
+
+## Why planner parity is intentionally not claimed yet
+
+The current planner readers/reconcilers are private inside `dailyPlan.ts`, and normal high-level planner APIs can write during reconciliation. This extraction step therefore does **not** claim active-reader parity yet and does not modify `dailyPlan.ts` merely to make the audit convenient.
+
+The next safety step is to expose or isolate genuinely read-only legacy planner-reader semantics without invoking reconciliation, then compare those current reader values against the raw canonical planner shadow. Only after that parity gate is green should planner state be considered for the aggregate migration rehearsal.
+
+This preserves the current learner-visible baseline:
+
+- maximum 10 required tasks;
+- no automatic 11th required-task refill;
+- target-change cap preservation;
+- next-day handoff/promotion behavior.
+
+None of those runtime behaviors are changed by the current planner-shadow work.
 
 ## Aggregate migration status
 
-`waseshibu-math-daily` is **audited but not yet included in the aggregate migration rehearsal**.
+The aggregate migration rehearsal currently covers preferences, exam results, drafts, route/completion/reinforcement and audited activity/attempt history.
 
 The following remain outside the aggregate candidate at this checkpoint:
 
@@ -95,4 +128,4 @@ No production learner-state cutover is allowed while those surfaces remain outsi
 
 ## Next safe step
 
-After the daily-practice gate is green, inspect/extract the required-task and study-ahead planners as read-only snapshots first. Do not integrate `waseshibu-math-daily` into the aggregate rehearsal until the planner boundary is explicit, because backup/restore and learner-visible "Today" behavior must be migrated as one coherent policy rather than as similarly named keys.
+Add a **read-only planner parity gate** without running reconciliation or changing current write behavior. After planner parity is proven, evaluate daily practice + both scheduler records together as one coherent backup/migration unit before expanding the aggregate rehearsal.
