@@ -4,6 +4,7 @@ import type {
   CanonicalLearningRouteState,
   CanonicalReinforcementState
 } from '../../engine/learnerState'
+import { WASESHIBU_APP_PROFILE } from './appProfile'
 import {
   examIdForLegacyYear,
   mapLegacyCompletionByTarget,
@@ -15,6 +16,8 @@ const PREF_KEY = 'waseshibu-math-preferences'
 const EXAM_KEY = 'waseshibu-math-exam-scores'
 const DRAFT_KEY = 'waseshibu-math-exam-drafts-v2'
 const ROUTE_KEY = 'waseshibu-math-learning-route-v1'
+const REQUIRED_MAIN_YEARS = [2024, 2023, 2022, 2025, 2026] as const
+const REQUIRED_MAIN_EXAM_IDS = new Set(REQUIRED_MAIN_YEARS.map(examIdForLegacyYear))
 
 type ReadOnlyStorage = Pick<Storage, 'getItem'>
 
@@ -53,6 +56,17 @@ function readPreferences(storage: ReadOnlyStorage, issues: WaseShibuShadowIssue[
   }
 }
 
+function schoolEvidenceForLegacyResult(item: Record<string, unknown>) {
+  const evidence: Record<string, unknown> = {}
+  for (const key of ['reproducibleScore', 'recoverableScore', 'timeCandidateScore'] as const) {
+    if (typeof item[key] === 'number') evidence[key] = item[key]
+  }
+  if (item.attemptKind === 'first' || item.attemptKind === 'retake') evidence.attemptKind = item.attemptKind
+  if (item.scoreValidity === 'first-look' || item.scoreValidity === 'reference') evidence.scoreValidity = item.scoreValidity
+  if (Array.isArray(item.weakFields)) evidence.weakFields = item.weakFields.map(String)
+  return Object.keys(evidence).length ? evidence : undefined
+}
+
 function readExamResults(storage: ReadOnlyStorage, issues: WaseShibuShadowIssue[]): CanonicalExamResult[] {
   const raw = readJson(storage, EXAM_KEY, [], issues)
   if (!Array.isArray(raw)) {
@@ -85,7 +99,10 @@ function readExamResults(storage: ReadOnlyStorage, issues: WaseShibuShadowIssue[
         scoreAuthority: 'school-modelled',
         correctCount: typeof item.correctCount === 'number' ? item.correctCount : undefined,
         wrongCount: typeof item.wrongCount === 'number' ? item.wrongCount : undefined,
-        unansweredCount: typeof item.unansweredCount === 'number' ? item.unansweredCount : undefined
+        unansweredCount: typeof item.unansweredCount === 'number' ? item.unansweredCount : undefined,
+        deviceId: typeof item.deviceId === 'string' ? item.deviceId : undefined,
+        resetVersion: Number.isInteger(item.resetVersion) ? Number(item.resetVersion) : undefined,
+        schoolEvidence: schoolEvidenceForLegacyResult(item)
       }))
     } catch (error) {
       issues.push({ key: EXAM_KEY, message: `record ${index} cannot map canonically: ${error instanceof Error ? error.message : 'unknown error'}` })
@@ -108,6 +125,25 @@ function readDrafts(storage: ReadOnlyStorage, issues: WaseShibuShadowIssue[]) {
   }
 }
 
+function normalizeCompletionLocks(source: Record<string, string[]>) {
+  const result: Record<string, string[]> = {}
+  for (const [targetId, examIds] of Object.entries(source)) {
+    result[targetId] = [...new Set(examIds.filter(examId => REQUIRED_MAIN_EXAM_IDS.has(examId)))]
+  }
+
+  const orderedTargets = [...WASESHIBU_APP_PROFILE.targets].sort((a, b) => a.rank - b.rank)
+  for (let highIndex = orderedTargets.length - 1; highIndex >= 0; highIndex--) {
+    const highId = orderedTargets[highIndex].id
+    for (const examId of result[highId] || []) {
+      for (let lowerIndex = 0; lowerIndex < highIndex; lowerIndex++) {
+        const lowerId = orderedTargets[lowerIndex].id
+        result[lowerId] = [...new Set([...(result[lowerId] || []), examId])]
+      }
+    }
+  }
+  return result
+}
+
 function readRoute(storage: ReadOnlyStorage, issues: WaseShibuShadowIssue[]): CanonicalLearningRouteState {
   const raw = asRecord(readJson(storage, ROUTE_KEY, {}, issues))
 
@@ -126,7 +162,7 @@ function readRoute(storage: ReadOnlyStorage, issues: WaseShibuShadowIssue[]): Ca
 
   let completedExamIdsByTarget: Record<string, string[]> = {}
   try {
-    completedExamIdsByTarget = mapLegacyCompletionByTarget(asRecord(raw.completedCoreByTarget))
+    completedExamIdsByTarget = normalizeCompletionLocks(mapLegacyCompletionByTarget(asRecord(raw.completedCoreByTarget)))
   } catch (error) {
     issues.push({ key: ROUTE_KEY, message: `completion locks cannot map canonically: ${error instanceof Error ? error.message : 'unknown error'}` })
   }
