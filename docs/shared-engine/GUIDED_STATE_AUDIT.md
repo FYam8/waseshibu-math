@@ -1,6 +1,6 @@
 # Guided State Audit
 
-Status: read-only guided state shadow/parity gate implemented; aggregate migration integration intentionally deferred
+Status: read-only guided shadow/parity gate implemented and integrated into aggregate migration rehearsal; production guided writes remain legacy
 
 ## Persisted surfaces
 
@@ -19,7 +19,7 @@ The existing data migration only creates `guided-progress-v2` from v1 when upgra
 
 ## Canonical boundary
 
-The shared contract now defines:
+The shared contract defines:
 
 - `CanonicalGuidedLearningState`
 - `CanonicalGuidedProblemProgress`
@@ -66,6 +66,24 @@ The historical `migratedFrom` field created by the existing data migration is ex
 
 No malformed or unreachable record is silently removed merely to make canonical conversion succeed.
 
+## Aggregate migration integration
+
+Guided state is now part of `CanonicalLearnerStateMigrationCandidate` and the aggregate migration rehearsal.
+
+The integration deliberately preserves the authority split:
+
+1. `guidedLearning.progressByProblemId` contains only v2 active mastery/progress;
+2. v1 review records remain only under `guidedLearning.schoolEvidence.legacyReviewByProblemId`;
+3. both exact raw strings are included in `WASESHIBU_REHEARSAL_SOURCE_KEYS`;
+4. rollback restores both strings byte-for-byte;
+5. current-version cutover never infers or regenerates either v1 or v2 from the other.
+
+The rehearsal contract marker is version `5` after this integration.
+
+`scripts/test-shared-engine-migration-rehearsal.mjs` includes a deliberately divergent but valid v1/v2 pair. It verifies that v2 mastery remains authoritative while the differing v1 final answer/outcome survives as compatibility evidence. It then corrupts/removes both guided source keys in an isolated clone and restores the exact original strings from the raw rollback snapshot.
+
+A malformed v2 record whose map key and stored `questionId` disagree blocks the aggregate rehearsal while retaining the exact raw source for rollback/manual policy.
+
 ## What is unchanged
 
 This checkpoint does not modify:
@@ -77,17 +95,8 @@ This checkpoint does not modify:
 - current localStorage keys or JSON write shapes;
 - data-version migration behavior.
 
-The audit performs zero storage writes.
+All guided audits and the aggregate rehearsal perform zero production storage writes.
 
-## Aggregate migration status
+## Next safe step
 
-Guided state is **not yet** part of `CanonicalLearnerStateMigrationCandidate` or the aggregate migration rehearsal.
-
-That is intentional. Before adding it, the branch must keep the following distinction explicit:
-
-1. v2 is the active mastery timeline;
-2. v1 remains preserved compatibility/fallback evidence;
-3. rollback must restore both raw strings exactly;
-4. neither record may be inferred from the other during a current-version cutover.
-
-Once this independent gate is green, the next step is to add both source keys to the aggregate raw snapshot and add one canonical guided-learning state to the rehearsal candidate without duplicating mastery semantics.
+Proceed to remediation state using the same sequence: inventory the current persisted shape and reader normalization first, then add a strict raw shadow, active/read-only parity gate, fail-closed rules and only after those pass fold remediation into the aggregate rehearsal. Level2, backup/export/import and sync remain later gates.
