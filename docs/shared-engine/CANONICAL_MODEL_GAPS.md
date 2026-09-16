@@ -34,7 +34,7 @@ The exam catalog should expose structured metadata such as:
 
 `year` remains useful metadata but must not be the sole primary key in generic engine code.
 
-WaseShibu can map one exam per year to deterministic exam IDs while preserving all existing production behaviour during migration.
+WaseShibu can map one exam per year to deterministic exam IDs while preserving all existing production behaviour during migration. The foundation profile now uses deterministic WaseShibu exam IDs such as `waseshibu-2024`; these are not wired into production runtime yet.
 
 ## Gap 2 — target identity cannot be fixed to 60/70/75 in the shared contract
 
@@ -51,7 +51,7 @@ Examples of school values may be:
 - WaseShibu: `60`, `70`, `75`
 - Rikkyo: `minimum`, `stable`, `safe`
 
-The engine must not attach universal mathematical meaning to any particular target ID.
+The engine must not attach universal mathematical meaning to any particular target ID. A target definition may carry an optional `scoreThreshold` for a school such as WaseShibu whose policy is genuinely score-based; Rikkyo does not need to provide one.
 
 Existing WaseShibu persisted numeric target values remain compatibility data and require a behaviour-preserving mapping when the canonical target abstraction is introduced.
 
@@ -164,6 +164,28 @@ A school adapter may require a score for WaseShibu while leaving it unavailable 
 
 Target strategy and progress projection must therefore be injected school policy rather than a universal score-gap calculation.
 
+## Gap 9 — progression/locking cannot be keyed by year
+
+Current WaseShibu learning-route state contains year-based assumptions beyond exam scores. Examples include `REQUIRED_MAIN_YEAR_SEQUENCE`, `solvedYears`, `completedCoreByTarget` values that are year arrays, `latestExam(year)`, and reinforcement plans stored under `String(exam.year)`.
+
+That is safe only while one meaningful exam exists per year. In Rikkyo, A and B forms in the same year have different roles. For example, FY25A is diagnostic while FY25B is transfer; FY26A is confirmation while FY26B is evaluation. A year-keyed route could therefore lock, overwrite, or complete the wrong form.
+
+### Canonical requirement
+
+Exam-specific progression state must be keyed by `examId`, not year. The canonical route model should use structures equivalent to:
+
+- ordered required `examId` sequence(s)
+- solved/completed `examId` sets
+- completion locks by `targetId` and `examId`
+- reinforcement plans keyed by source `examId`
+- latest result lookup by `examId`
+
+`year` remains metadata for display/filtering only.
+
+The WaseShibu migration is deterministic because its current required years map one-to-one to WaseShibu canonical exam IDs. Existing WaseShibu year-based localStorage must remain readable and be converted losslessly when this route model is introduced.
+
+The school profile's learning phases must likewise be able to bind to explicit `examIds`; a phase must never rely on `year` alone when concrete exam identity matters.
+
 ## Rikkyo normalization acceptance rules
 
 Before Rikkyo can switch to the common runtime format:
@@ -178,7 +200,8 @@ Before Rikkyo can switch to the common runtime format:
 8. no required canonical field is filled with an unaudited guessed placeholder;
 9. current Rikkyo learner data has an explicit migration to the canonical learner-state shape;
 10. Rikkyo persistence/sync identities remain distinct from WaseShibu despite identical logical shapes;
-11. no official/100-point Rikkyo score is fabricated when the source does not provide an authoritative point model.
+11. no official/100-point Rikkyo score is fabricated when the source does not provide an authoritative point model;
+12. A/B forms remain distinct not only in catalogs and results but also in route completion, locking, reinforcement and phase progression.
 
 ## Phase-1 implementation consequence
 
