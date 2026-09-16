@@ -32,6 +32,10 @@ const entries = [
   'src/schools/waseshibu/prepCompatibility.ts',
   'src/schools/waseshibu/prepShadow.ts',
   'src/schools/waseshibu/prepAudit.ts',
+  'src/schools/waseshibu/guidedCompatibility.ts',
+  'src/schools/waseshibu/guidedLegacyReader.ts',
+  'src/schools/waseshibu/guidedShadow.ts',
+  'src/schools/waseshibu/guidedAudit.ts',
   'src/schools/waseshibu/migrationRehearsal.ts',
   'src/storage.ts',
   'src/learningRoute.ts',
@@ -177,9 +181,46 @@ const seed = {
     skipped: false,
     updatedAt: '2026-09-16T08:45:00.000Z'
   }),
-  // Deliberately outside the expanded rehearsal scope: it must remain untouched.
+  'waseshibu-math-guided-review-v1': JSON.stringify({
+    '2024-Q1-1': {
+      questionId: '2024-Q1-1',
+      step1: '8から2を引く',
+      step2: '6',
+      finalAnswer: '旧記録の6',
+      hintUsed: true,
+      answerSeen: false,
+      outcome: 'guided',
+      updatedAt: '2026-09-16T08:50:00.000Z'
+    }
+  }),
   'waseshibu-math-guided-progress-v2': JSON.stringify({
-    '2024-Q1-1': { questionId: '2024-Q1-1', mastery: 'attempted', updatedAt: '2026-09-16T07:00:00.000Z' }
+    '2024-Q1-1': {
+      questionId: '2024-Q1-1',
+      currentStepId: 'focus',
+      stepProgress: {
+        focus: {
+          stepId: 'focus',
+          answer: '8から2を引く',
+          tries: 1,
+          hintLevelUsed: 1,
+          completed: true,
+          selfAssessment: 'guided'
+        }
+      },
+      finalAnswer: '6',
+      finalAnswerSeen: true,
+      reproductionAttempts: 1,
+      reproductionSucceeded: true,
+      independentSucceeded: false,
+      practiceStreak: 2,
+      mastery: 'reproduced',
+      dependencyMode: 'own',
+      updatedAt: '2026-09-16T09:00:00.000Z'
+    }
+  }),
+  // Deliberately outside the expanded rehearsal scope: it must remain untouched.
+  'waseshibu-math-remediation-progress-v1': JSON.stringify({
+    '2024-Q1-1': { completedProblemIds: ['field-expressions-1'] }
   })
 }
 
@@ -194,7 +235,7 @@ const after = storage.snapshot()
 
 assert.equal(report.ready, true, report.issues.map(x => `${x.surface}: ${x.message}`).join('\n'))
 assert.deepEqual(report.issues, [])
-assert.equal(report.rehearsalContractVersion, 4)
+assert.equal(report.rehearsalContractVersion, 5)
 assert.deepEqual(report.scope, [
   'preferences',
   'examResults',
@@ -204,7 +245,8 @@ assert.deepEqual(report.scope, [
   'dailyPractice',
   'todayRequiredPlan',
   'studyAheadPlan',
-  'preparationCheck'
+  'preparationCheck',
+  'guidedLearning'
 ])
 assert.equal(after, before, 'migration rehearsal must not mutate any persisted state')
 assert.equal(storage.writes, 0, 'migration rehearsal must perform zero storage writes')
@@ -247,21 +289,40 @@ assert.deepEqual(report.canonicalCandidate.preparationCheck.answersByItemId, { '
 assert.deepEqual(report.canonicalCandidate.preparationCheck.triesByItemId, { 'prep-1': 2, 'prep-2': 1 })
 assert.equal(report.canonicalCandidate.preparationCheck.schoolEvidence.legacyVersion, 1)
 
+const guided = report.canonicalCandidate.guidedLearning
+assert.deepEqual(Object.keys(guided.progressByProblemId), ['2024-Q1-1'])
+assert.equal(guided.progressByProblemId['2024-Q1-1'].mastery, 'reproduced')
+assert.equal(guided.progressByProblemId['2024-Q1-1'].finalAnswerText, '6')
+assert.equal(guided.progressByProblemId['2024-Q1-1'].stepsById.focus.maxHintLevelUsed, 1)
+assert.equal(guided.progressByProblemId['2024-Q1-1'].schoolEvidence.legacyDependencyMode, 'own')
+assert.equal(
+  guided.schoolEvidence.legacyReviewByProblemId['2024-Q1-1'].finalAnswer,
+  '旧記録の6',
+  'v1 compatibility evidence must survive without becoming the active mastery timeline'
+)
+assert.equal(
+  guided.schoolEvidence.legacyReviewByProblemId['2024-Q1-1'].outcome,
+  'guided',
+  'v1 outcome may legitimately diverge from v2 mastery'
+)
+
 assert.equal(report.sourceSnapshot['waseshibu-math-data-version'], '8')
 assert.equal(report.sourceSnapshot['waseshibu-math-attempts'], seed['waseshibu-math-attempts'])
 assert.equal(report.sourceSnapshot['waseshibu-math-daily'], seed['waseshibu-math-daily'])
 assert.equal(report.sourceSnapshot['waseshibu-math-daily-required-plan-v2'], seed['waseshibu-math-daily-required-plan-v2'])
 assert.equal(report.sourceSnapshot['waseshibu-math-study-ahead-plan-v1'], seed['waseshibu-math-study-ahead-plan-v1'])
 assert.equal(report.sourceSnapshot['waseshibu-math-prep-check-v1'], seed['waseshibu-math-prep-check-v1'])
+assert.equal(report.sourceSnapshot['waseshibu-math-guided-review-v1'], seed['waseshibu-math-guided-review-v1'])
+assert.equal(report.sourceSnapshot['waseshibu-math-guided-progress-v2'], seed['waseshibu-math-guided-progress-v2'])
 assert.equal(
-  Object.prototype.hasOwnProperty.call(report.sourceSnapshot, 'waseshibu-math-guided-progress-v2'),
+  Object.prototype.hasOwnProperty.call(report.sourceSnapshot, 'waseshibu-math-remediation-progress-v1'),
   false,
   'unmigrated surfaces must not be implied by the rehearsal snapshot'
 )
 
 // Rollback rehearsal: corrupt only source surfaces in an isolated clone, then
-// restore exact captured strings. This proves byte-for-byte restoration before
-// any production canonical write path is introduced.
+// restore exact captured strings. Both guided stores are rollback sources even
+// though only v2 is promoted to the generic active mastery timeline.
 const rollbackClone = new MemoryStorage(seed)
 rollbackClone.setItem('waseshibu-math-preferences', '{"target":60}')
 rollbackClone.removeItem('waseshibu-math-exam-scores')
@@ -270,6 +331,8 @@ rollbackClone.setItem('waseshibu-math-daily', 'null')
 rollbackClone.removeItem('waseshibu-math-daily-required-plan-v2')
 rollbackClone.setItem('waseshibu-math-study-ahead-plan-v1', '{"date":"2099-01-01"}')
 rollbackClone.setItem('waseshibu-math-prep-check-v1', '{"version":999}')
+rollbackClone.setItem('waseshibu-math-guided-review-v1', '{}')
+rollbackClone.removeItem('waseshibu-math-guided-progress-v2')
 rollbackClone.setItem('waseshibu-math-data-version', '999')
 for (const key of rehearsal.WASESHIBU_REHEARSAL_SOURCE_KEYS) {
   const raw = report.sourceSnapshot[key]
@@ -280,9 +343,9 @@ for (const key of rehearsal.WASESHIBU_REHEARSAL_SOURCE_KEYS) {
   assert.equal(rollbackClone.getItem(key), seed[key] ?? null, `rollback source byte parity: ${key}`)
 }
 assert.equal(
-  rollbackClone.getItem('waseshibu-math-guided-progress-v2'),
-  seed['waseshibu-math-guided-progress-v2'],
-  'rollback rehearsal must not touch out-of-scope guided progress'
+  rollbackClone.getItem('waseshibu-math-remediation-progress-v1'),
+  seed['waseshibu-math-remediation-progress-v1'],
+  'rollback rehearsal must not touch out-of-scope remediation state'
 )
 
 // Duplicate result IDs are readable today, but canonical cutover must stop
@@ -388,6 +451,37 @@ assert.equal(fractionalPrep.ready, false)
 assert.ok(fractionalPrep.issues.some(x => x.surface === 'preparationCheck' || x.surface.startsWith('prep:')))
 assert.equal(fractionalPrepStorage.writes, 0)
 
+// Guided runtime readers are forgiving, but canonical migration must not drop
+// or reinterpret a persisted v2 record whose key and questionId disagree.
+const malformedGuidedStorage = new MemoryStorage({
+  'waseshibu-math-data-version': '8',
+  'waseshibu-math-preferences': JSON.stringify({ target: 70 }),
+  'waseshibu-math-guided-progress-v2': JSON.stringify({
+    '2024-Q1-1': {
+      questionId: '2024-Q1-2',
+      stepProgress: {},
+      finalAnswer: '',
+      finalAnswerSeen: false,
+      reproductionAttempts: 0,
+      reproductionSucceeded: false,
+      independentSucceeded: false,
+      practiceStreak: 0,
+      mastery: 'attempted',
+      updatedAt: '2026-09-16T09:00:00.000Z'
+    }
+  })
+})
+installStorage(malformedGuidedStorage)
+const malformedGuided = rehearsal.rehearseWaseShibuCanonicalMigration()
+assert.equal(malformedGuided.ready, false)
+assert.ok(malformedGuided.issues.some(x => x.surface === 'guidedLearning' || x.surface.startsWith('guided:')))
+assert.equal(
+  malformedGuided.sourceSnapshot['waseshibu-math-guided-progress-v2'],
+  malformedGuidedStorage.getItem('waseshibu-math-guided-progress-v2'),
+  'malformed guided bytes remain available for rollback/manual policy'
+)
+assert.equal(malformedGuidedStorage.writes, 0)
+
 // Unmappable legacy route state fails closed and still remains read-only.
 const malformedStorage = new MemoryStorage({
   'waseshibu-math-data-version': '8',
@@ -401,4 +495,4 @@ assert.ok(malformed.issues.some(x => x.surface === 'route' || x.surface === 'sha
 assert.equal(malformedStorage.writes, 0)
 
 console.log('SHARED ENGINE MIGRATION REHEARSAL TEST PASSED')
-console.log('aggregate candidate now includes audited prep + daily/planner/activity state; exact rollback bytes, fail-closed data-loss guards and zero production writes: OK')
+console.log('aggregate candidate now includes one audited guided mastery timeline while preserving both guided raw stores for exact rollback: OK')
