@@ -18,6 +18,11 @@ export const WASESHIBU_APP_PROFILE = {
     footer: '非公式の学習支援アプリです。2019〜2026年度の過去問演習、学習記録、18分野の類題を掲載します。A/B/Cは学習上の優先度です。学習データはこの端末に保存されます。'
   },
   supportedYears: [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026],
+  targets: [
+    { id: '60', label: '60点', rank: 1, legacyValue: 60 },
+    { id: '70', label: '70点', rank: 2, legacyValue: 70 },
+    { id: '75', label: '75点', rank: 3, legacyValue: 75 }
+  ],
   learningPhases: [
     { step: 1, title: '2024年度で診断', year: 2024, role: 'diagnostic' },
     { step: 2, title: '2024年度の弱点を修正・補強', year: 2024, role: 'remediation' },
