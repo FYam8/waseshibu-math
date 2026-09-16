@@ -154,4 +154,7 @@ export type CanonicalLearnerStateShadow = {
  */
 export type CanonicalLearnerStateMigrationCandidate = CanonicalLearnerStateShadow & {
   activityRecords: CanonicalActivityRecord[]
+  dailyPractice: CanonicalDailyPracticeSession | null
+  todayRequiredPlan: CanonicalScheduledTaskPlan | null
+  studyAheadPlan: CanonicalScheduledTaskPlan | null
 }
