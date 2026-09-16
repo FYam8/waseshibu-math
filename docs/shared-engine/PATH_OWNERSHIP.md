@@ -1,19 +1,20 @@
 # Shared Engine Path Ownership
 
-Status: target layout for behaviour-preserving extraction
+Status: target layout + Phase-1 extraction rules
 
 The updater must never decide what is shared by comparing whole repositories. Shared ownership has to be explicit at the path level so a WaseShibu-only change cannot overwrite Rikkyo school data.
 
 ## Target ownership in `FYam8/waseshibu-math`
 
-The Phase-1 extraction should converge on a structure equivalent to:
+The Phase-1 extraction is converging on a structure equivalent to:
 
 ```text
 src/
   engine/                 # canonical shared implementation + canonical data contracts
   schools/
-    waseshibu/            # WaseShibu profile/content bindings
-  main.tsx                # WaseShibu composition/bootstrap only
+    waseshibu/            # WaseShibu profile/content/legacy-compatibility bindings
+  appConfig.ts            # WaseShibu composition root
+  main.tsx                # WaseShibu bootstrap
 ```
 
 The exact filenames may evolve during extraction, but ownership must remain equivalent.
@@ -22,7 +23,7 @@ The exact filenames may evolve during extraction, but ownership must remain equi
 
 May be propagated downstream after tests:
 
-- reusable app-shell/navigation primitives
+- reusable app-shell/navigation primitives once they accept injected configuration
 - reusable learning workflow/state-machine primitives
 - generic answer-input and grading interfaces
 - canonical engine-facing content types
@@ -32,17 +33,27 @@ May be propagated downstream after tests:
 - generic storage/sync abstractions that require school identities as injected configuration
 - engine-level tests and public adapter/profile types
 
+Current first canonical files include:
+
+- `src/engine/appProfile.ts`
+- `src/engine/examContract.ts`
+
 ### WaseShibu-only paths
 
 Must never be copied into Rikkyo by the engine updater:
 
+- `src/schools/waseshibu/**`
+- `src/appConfig.ts`
 - WaseShibu question/past-paper values and figures
 - WaseShibu school labels and learning-plan values
+- WaseShibu legacy compatibility bridge
 - `waseshibu-math-*` persistence identities
 - `waseshibu-progress-sync` IndexedDB identity
 - WaseShibu cloud endpoint/window override/credentials
 - WaseShibu target/year/score projection rules
 - WaseShibu deploy workflow and school-specific tests
+
+The current `src/components/Layout.tsx` has begun reading brand/update/event values through `src/appConfig.ts`. This does **not** make `appConfig.ts` shared. The eventual reusable app-shell primitive must receive configuration through an engine-facing interface; each school retains its own composition root.
 
 ## Target ownership in `FYam8/rikkyo-uk-math`
 
@@ -53,6 +64,7 @@ src/
   engine/                 # vendored from a pinned WaseShibu master SHA
   schools/
     rikkyo/               # Rikkyo profile + canonical-format school package
+  appConfig.ts            # Rikkyo composition root
 
 legacy-source/ or retained source-data/
   ...                     # frozen RC2-era source serialization / audit evidence
@@ -79,9 +91,10 @@ A useful target split is:
 src/engine/               # shared code + contracts
 src/schools/waseshibu/    # WaseShibu values, only in master app
 src/schools/rikkyo/       # Rikkyo values, only in Rikkyo app
+src/appConfig.ts          # school-local composition root; never mirrored across schools
 ```
 
-Both school packages satisfy the same interfaces.
+Both school packages satisfy the same interfaces. Composition roots select/inject the appropriate school package without making school values part of the vendored engine.
 
 ## Rikkyo source-to-canonical conversion
 
@@ -150,7 +163,7 @@ Rikkyo should eventually carry a small machine-readable manifest such as `engine
 }
 ```
 
-The updater may refresh only the declared shared path(s). School-owned paths are deny-listed from engine synchronization even if filenames happen to match.
+The updater may refresh only the declared shared path(s). School-owned paths are deny-listed from engine synchronization even if filenames happen to match. In particular, `src/schools/**` and `src/appConfig.ts` are never copied from WaseShibu into Rikkyo.
 
 ## Update flow
 
