@@ -10,6 +10,17 @@ export type MathLearningPhaseRole =
   | 'evaluation'
   | 'final'
 
+export type MathTargetDefinition = {
+  /** Opaque school-defined target identity used by the canonical engine. */
+  id: string
+  /** Learner-visible label; policy/meaning remains school-owned. */
+  label: string
+  /** Increasing school-defined ordering for UI/progression comparisons. */
+  rank: number
+  /** Existing persisted value, if a school needs compatibility migration. */
+  legacyValue?: string | number
+}
+
 export type MathAppProfile = {
   id: string
   schoolLabel: string
@@ -20,6 +31,7 @@ export type MathAppProfile = {
     footer: string
   }
   supportedYears: readonly number[]
+  targets: readonly MathTargetDefinition[]
   learningPhases: readonly {
     step: number
     title: string
