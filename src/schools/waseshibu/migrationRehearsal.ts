@@ -1,9 +1,11 @@
-import type { CanonicalLearnerStateShadow } from '../../engine/learnerState'
+import type { CanonicalLearnerStateMigrationCandidate } from '../../engine/learnerState'
 import { DATA_VERSION_KEY } from '../../dataMigration'
 import { WASESHIBU_APP_PROFILE } from './appProfile'
 import { WASESHIBU_EXAM_CATALOG } from './legacyCompatibility'
 import { auditWaseShibuDualRead } from './dualReadAudit'
+import { auditWaseShibuActivities } from './activityAudit'
 
+const ATTEMPT_KEY = 'waseshibu-math-attempts'
 const PREF_KEY = 'waseshibu-math-preferences'
 const EXAM_KEY = 'waseshibu-math-exam-scores'
 const DRAFT_KEY = 'waseshibu-math-exam-drafts-v2'
@@ -13,12 +15,12 @@ const META_KEY = 'waseshibu-math-sync-meta'
 /**
  * Exact legacy source bytes covered by the current rehearsal.
  *
- * This is intentionally narrower than the final learner-state migration: the
- * current phase covers preferences, exam results, drafts and learning-route
- * state plus compatibility metadata. Attempts/daily/guided/remediation/etc.
- * are not declared migrated by this rehearsal.
+ * The scope now includes the legacy attempts container after it passed its own
+ * independent activity shadow/parity gate. Daily/guided/remediation/Level2 and
+ * other state families are still intentionally outside this rehearsal.
  */
 export const WASESHIBU_REHEARSAL_SOURCE_KEYS = [
+  ATTEMPT_KEY,
   PREF_KEY,
   EXAM_KEY,
   DRAFT_KEY,
@@ -39,10 +41,10 @@ export type WaseShibuMigrationRehearsalReport = {
   /** Ready only for the next migration-engine step for the audited scope. */
   ready: boolean
   /** This is a rehearsal/read-model contract marker, not the app data version. */
-  rehearsalContractVersion: 1
-  scope: readonly ['preferences', 'examResults', 'drafts', 'route']
+  rehearsalContractVersion: 2
+  scope: readonly ['preferences', 'examResults', 'drafts', 'route', 'activityRecords']
   sourceSnapshot: WaseShibuRawSnapshot
-  canonicalCandidate: CanonicalLearnerStateShadow
+  canonicalCandidate: CanonicalLearnerStateMigrationCandidate
   issues: WaseShibuMigrationRehearsalIssue[]
 }
 
@@ -56,7 +58,7 @@ function sameRawSnapshot(left: WaseShibuRawSnapshot, right: WaseShibuRawSnapshot
   return WASESHIBU_REHEARSAL_SOURCE_KEYS.every(key => left[key] === right[key])
 }
 
-function validateCanonicalCandidate(state: CanonicalLearnerStateShadow) {
+function validateCanonicalCandidate(state: CanonicalLearnerStateMigrationCandidate) {
   const issues: WaseShibuMigrationRehearsalIssue[] = []
   const knownExamIds = new Set<string>(WASESHIBU_EXAM_CATALOG.map(exam => exam.examId))
   const knownTargetIds = new Set<string>(WASESHIBU_APP_PROFILE.targets.map(target => target.id))
@@ -108,6 +110,21 @@ function validateCanonicalCandidate(state: CanonicalLearnerStateShadow) {
     }
   }
 
+  const activityIds = new Set<string>()
+  for (const activity of state.activityRecords) {
+    if (activityIds.has(activity.id)) {
+      issues.push({ surface: 'activityRecords', message: `duplicate activity id requires an explicit migration policy: ${activity.id}` })
+    }
+    activityIds.add(activity.id)
+
+    if (activity.kind === 'exam-exposure' && !knownExamIds.has(activity.examId)) {
+      issues.push({ surface: 'activityRecords', message: `unknown exposure examId: ${activity.examId}` })
+    }
+    if (activity.kind === 'problem-attempt' && activity.examId !== undefined && !knownExamIds.has(activity.examId)) {
+      issues.push({ surface: 'activityRecords', message: `unknown problem-attempt examId: ${activity.examId}` })
+    }
+  }
+
   return issues
 }
 
@@ -116,9 +133,10 @@ function validateCanonicalCandidate(state: CanonicalLearnerStateShadow) {
  *
  * The active legacy readers remain authoritative. This function:
  * 1. captures the exact legacy source strings needed for rollback evidence;
- * 2. requires legacy-vs-canonical dual-read parity;
- * 3. validates the canonical candidate against known WaseShibu exam/target IDs;
- * 4. verifies that the rehearsal itself changed no persisted source string.
+ * 2. requires legacy-vs-canonical dual-read parity for exam/route state;
+ * 3. requires independent legacy-attempt vs canonical-activity parity;
+ * 4. validates the combined canonical candidate against known identities;
+ * 5. verifies that the rehearsal itself changed no persisted source string.
  *
  * It never writes, removes, renames or migrates a localStorage key. A later
  * production migration must still use the app's backup/restore-point safety
@@ -127,12 +145,21 @@ function validateCanonicalCandidate(state: CanonicalLearnerStateShadow) {
 export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehearsalReport {
   const before = captureRawSnapshot()
   const dualRead = auditWaseShibuDualRead()
+  const activityAudit = auditWaseShibuActivities()
   const issues: WaseShibuMigrationRehearsalIssue[] = dualRead.mismatches.map(mismatch => ({
     surface: mismatch.surface,
     message: mismatch.message
   }))
+  issues.push(...activityAudit.mismatches.map(mismatch => ({
+    surface: mismatch.surface === 'activityRecords' ? 'activityRecords' : `activity:${mismatch.surface}`,
+    message: mismatch.message
+  })))
 
-  issues.push(...validateCanonicalCandidate(dualRead.canonicalShadow))
+  const canonicalCandidate: CanonicalLearnerStateMigrationCandidate = {
+    ...dualRead.canonicalShadow,
+    activityRecords: activityAudit.canonicalShadow
+  }
+  issues.push(...validateCanonicalCandidate(canonicalCandidate))
 
   const after = captureRawSnapshot()
   if (!sameRawSnapshot(before, after)) {
@@ -141,10 +168,10 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
 
   return {
     ready: issues.length === 0,
-    rehearsalContractVersion: 1,
-    scope: ['preferences', 'examResults', 'drafts', 'route'],
+    rehearsalContractVersion: 2,
+    scope: ['preferences', 'examResults', 'drafts', 'route', 'activityRecords'],
     sourceSnapshot: before,
-    canonicalCandidate: dualRead.canonicalShadow,
+    canonicalCandidate,
     issues
   }
 }
