@@ -1,7 +1,7 @@
-import type { TargetScore } from '../../targetStrategy'
-
 export const LEGACY_DAILY_REQUIRED_PLAN_KEY = 'waseshibu-math-daily-required-plan-v2'
 export const LEGACY_STUDY_AHEAD_PLAN_KEY = 'waseshibu-math-study-ahead-plan-v1'
+
+export type LegacyPlannerTargetScore = 60 | 70 | 75
 
 export type LegacyPlannerTask = {
   id: string
@@ -16,7 +16,7 @@ export type LegacyPlannerTask = {
 
 export type LegacyDailyRequiredPlan = {
   date: string
-  target: TargetScore
+  target: LegacyPlannerTargetScore
   pendingIds: string[]
   completedIds: string[]
   fallbackTask?: LegacyPlannerTask
@@ -39,7 +39,7 @@ type ReadOnlyStorage = Pick<Storage, 'getItem'>
 export function readLegacyDailyRequiredPlanForAudit(
   storage: ReadOnlyStorage,
   date: string,
-  target: TargetScore
+  target: LegacyPlannerTargetScore
 ): LegacyDailyRequiredPlan {
   try {
     const parsed = JSON.parse(storage.getItem(LEGACY_DAILY_REQUIRED_PLAN_KEY) || 'null') as LegacyDailyRequiredPlan | null
