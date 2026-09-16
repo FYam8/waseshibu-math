@@ -17,8 +17,27 @@ export type MathTargetDefinition = {
   label: string
   /** Increasing school-defined ordering for UI/progression comparisons. */
   rank: number
+  /** Optional score threshold for schools whose target policy is score-based. */
+  scoreThreshold?: number
   /** Existing persisted value, if a school needs compatibility migration. */
   legacyValue?: string | number
+}
+
+export type MathLearningPhase = {
+  step: number
+  title: string
+  role: MathLearningPhaseRole
+  /**
+   * Canonical exam bindings. Generic engine logic must use examId rather than
+   * year whenever a phase is tied to one or more concrete exams.
+   */
+  examIds?: readonly string[]
+  /**
+   * Optional display/legacy metadata. This must never be the sole generic key
+   * for exam-specific progression because another school may have A/B forms in
+   * the same year.
+   */
+  year?: number
 }
 
 export type MathAppProfile = {
@@ -32,12 +51,7 @@ export type MathAppProfile = {
   }
   supportedYears: readonly number[]
   targets: readonly MathTargetDefinition[]
-  learningPhases: readonly {
-    step: number
-    title: string
-    year?: number
-    role: MathLearningPhaseRole
-  }[]
+  learningPhases: readonly MathLearningPhase[]
   runtime: {
     /**
      * Namespace for school-owned browser state. Existing legacy keys remain
