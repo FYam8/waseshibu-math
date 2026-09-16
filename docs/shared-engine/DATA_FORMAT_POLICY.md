@@ -11,7 +11,7 @@ Status: architecture decision / no production runtime change
 This decision applies to both:
 
 1. school/content data consumed by the learning engine; and
-2. learner-state shapes such as attempts, scores, daily state, guided progress, remediation progress, learning route, backup/export and migration records.
+2. learner-state shapes such as attempts, results, daily state, guided progress, remediation progress, learning route, backup/export and migration records.
 
 The **shape and semantics of the engine contract are shared**. The **school identity, content values and browser/cloud namespaces remain separate**.
 
@@ -21,7 +21,7 @@ The target is the WaseShibu **post-extraction canonical engine contract**, not a
 
 WaseShibu currently has school-specific assumptions distributed across `src/data/*`, history/migration modules and progress sync. Phase 1 will extract and, where needed, generalize those engine-facing shapes while proving that current WaseShibu behaviour and stored learner data remain compatible. Rikkyo will then be converted to those same canonical shapes.
 
-The concrete legacy assumptions found by the first audit are recorded in `CANONICAL_MODEL_GAPS.md`. In particular, the canonical contract must not remain year-only for exam identity, must not hard-wire target identity to 60/70/75, and must not treat WaseShibu's current split content files as the final universal problem schema.
+The concrete legacy assumptions found by the first audit are recorded in `CANONICAL_MODEL_GAPS.md`. In particular, the canonical contract must not remain year-only for exam identity, must not hard-wire target identity to 60/70/75, must not require a 0–100 exam score when a school has no authoritative point model, and must not treat WaseShibu's current split content files as the final universal problem schema.
 
 The common contract must cover at least:
 
@@ -38,7 +38,7 @@ The common contract must cover at least:
 - practice/remediation/transfer/retention/evaluation/confirmation role
 - review/ambiguity flags
 - attempt records without requiring legacy WaseShibu-only route labels
-- exam-score records keyed by exam identity rather than year alone
+- exam-result records keyed by exam identity, with score optional and score authority explicit
 - daily/route state
 - guided/remediation/mastery history
 - backup/export package
@@ -95,6 +95,8 @@ When the WaseShibu canonical contract requires a field that the current Rikkyo a
 
 Examples of generally mappable Rikkyo fields include year, A/B form, major/minor location, skill labels, difficulty, answer type/specification, explanation steps, source-page references and learning-role metadata. School-specific target semantics must not be silently reinterpreted as WaseShibu score semantics; the shared format is the same while the school profile supplies different target IDs, labels and rules.
 
+The same rule applies to scoring. Rikkyo currently has no official small-question point allocation, so normalization must not invent a 100-point score merely because WaseShibu currently uses one. The canonical result shape can carry optional score/max-score fields plus an explicit authority/model, while Rikkyo may rely on supported correct/wrong/unanswered or mastery evidence.
+
 ## Learner-state alignment
 
 Rikkyo will also converge on the same logical learner-state model and migration framework as WaseShibu so future engine changes do not require two unrelated persistence implementations.
@@ -122,6 +124,7 @@ Even with one data format, these values remain school-owned:
 - stable/source problem IDs
 - answer authority and review flags
 - target IDs/labels and school-specific priority semantics
+- score/point authority and school-specific result interpretation
 - source-page assets
 - persistence namespace
 - backup `app` identity
@@ -140,11 +143,12 @@ Before Rikkyo may cut over to the canonical format, tests must prove:
 3. answers, grading specs, explanations and source references survive normalization;
 4. `REVIEW_REQUIRED` and other quality flags survive normalization;
 5. the normalized data satisfies the WaseShibu canonical engine contract;
-6. A/B exam forms remain distinguishable in catalog, score and attempt history;
+6. A/B exam forms remain distinguishable in catalog, result and attempt history;
 7. target policy remains school-correct without silently converting minimum/stable/safe into WaseShibu 60/70/75 semantics;
-8. current Rikkyo v3 learner data has an explicit migration path into the common learner-state format;
-9. Rikkyo persistence/sync identities are distinct from every WaseShibu identity;
-10. the Rikkyo content/scoring/storage/release/isolation regression suites are green.
+8. no official/100-point Rikkyo score is fabricated when the source does not provide an authoritative point model;
+9. current Rikkyo v3 learner data has an explicit migration path into the common learner-state format;
+10. Rikkyo persistence/sync identities are distinct from every WaseShibu identity;
+11. the Rikkyo content/scoring/storage/release/isolation regression suites are green.
 
 ## Direction of ownership
 
