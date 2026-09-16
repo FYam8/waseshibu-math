@@ -1,12 +1,27 @@
 # Legacy Compatibility Bridge
 
-Status: Phase-1 migration plan / no production runtime change
+Status: Phase-1 migration plan + pure compatibility helpers implemented; learner-state migration not wired
 
 ## Purpose
 
 The canonical engine will use `examId`, school-defined `targetId`, generic attempt purposes, and optional score evidence. Current WaseShibu production cannot switch those identities abruptly because existing URLs and learner state are year/score based.
 
 This bridge defines how WaseShibu remains behaviour-compatible while the internal engine becomes capable of representing Rikkyo A/B forms losslessly.
+
+## Current implementation status
+
+The branch now contains pure, non-writing helpers in `src/schools/waseshibu/legacyCompatibility.ts` for:
+
+- deterministic WaseShibu `year <-> examId` mapping;
+- numeric legacy target `<-> targetId` mapping;
+- pure conversion of year-keyed records to examId-keyed records;
+- pure conversion of legacy completion locks to `targetId -> examId[]`.
+
+`src/engine/examContract.ts` also defines the first canonical exam/result types, including optional numeric score plus explicit score authority. These helpers are covered by `scripts/test-shared-engine-compat.mjs`, which is now a required build gate.
+
+No learner localStorage record is rewritten by these helpers. Actual storage migration remains a later Phase-1 step after the compatibility bridge is fully regression-tested.
+
+The app shell has begun a separate behaviour-preserving profile extraction: visible brand strings and the existing update/event identities are now read through the WaseShibu composition profile, with exact legacy values locked by the same compatibility test. This does not change the values seen or used by existing users.
 
 ## Current WaseShibu compatibility surfaces
 
@@ -95,9 +110,9 @@ The canonical exam-result contract makes score optional so Rikkyo is not forced 
 
 Generic progression logic must therefore ask the school policy for target/progress evaluation instead of universally calculating `targetScore - score`.
 
-## Acceptance gate before WaseShibu runtime wiring
+## Acceptance gate before WaseShibu learner-state wiring
 
-The Phase-1 runtime bridge is not mergeable until tests prove all of the following:
+The Phase-1 learner-state bridge is not mergeable until tests prove all of the following:
 
 1. existing `?year=YYYY` WaseShibu navigation still opens the same paper;
 2. existing year-keyed drafts resume the same answers and timer state;
