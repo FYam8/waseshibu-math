@@ -1,6 +1,6 @@
 # Legacy Compatibility Bridge
 
-Status: Phase-1 migration plan + pure compatibility helpers implemented; learner-state migration not wired
+Status: Phase-1 compatibility helpers + read-only shadow + dual-read parity implemented; learner-state migration not wired
 
 ## Purpose
 
@@ -17,11 +17,36 @@ The branch now contains pure, non-writing helpers in `src/schools/waseshibu/lega
 - pure conversion of year-keyed records to examId-keyed records;
 - pure conversion of legacy completion locks to `targetId -> examId[]`.
 
-`src/engine/examContract.ts` also defines the first canonical exam/result types, including optional numeric score plus explicit score authority. These helpers are covered by `scripts/test-shared-engine-compat.mjs`, which is now a required build gate.
+`src/engine/examContract.ts` defines the first canonical exam/result types, including optional numeric score plus explicit score authority. `src/engine/learnerState.ts` defines the canonical learner-state read model used during extraction.
 
-No learner localStorage record is rewritten by these helpers. Actual storage migration remains a later Phase-1 step after the compatibility bridge is fully regression-tested.
+The branch also contains `src/schools/waseshibu/shadowState.ts`, a read-only canonical shadow reader. It reads current WaseShibu preferences, exam results, year-keyed drafts, route completion and reinforcement state and exposes the equivalent canonical `examId`/`targetId` view without writing, deleting or renaming any learner record.
 
-The app shell has begun a separate behaviour-preserving profile extraction: visible brand strings and the existing update/event identities are now read through the WaseShibu composition profile, with exact legacy values locked by the same compatibility test. This does not change the values seen or used by existing users.
+The shadow reader deliberately preserves current WaseShibu read semantics, including:
+
+- default target 70 when the persisted target is absent/invalid;
+- current `legacy-device` fallback for old exam-score records;
+- current `examScoresResetVersion` fallback from `waseshibu-math-sync-meta`;
+- current completion-lock closure from 75 -> 70 -> 60 and 70 -> 60;
+- exact ordering produced by the current route normalizer;
+- current epoch default for route/preference timestamps;
+- WaseShibu-only score evidence such as reproducible/recoverable/time-candidate scores, first/retake and score-validity markers.
+
+`src/schools/waseshibu/dualReadAudit.ts` then reads the same learner state twice:
+
+1. through the **actual current legacy runtime readers** (`loadPreferences`, `loadExamScores`, `loadLearningRoute` plus the current draft container); and
+2. through the canonical shadow reader.
+
+It projects both into the same canonical value model and fails closed when they differ. The audit snapshots the relevant storage keys before/after and treats any write during the audit as a failure.
+
+The required build gates are now:
+
+- `scripts/test-shared-engine-compat.mjs` — identity/contracts;
+- `scripts/test-shared-engine-shadow.mjs` — canonical shadow mapping + zero-write behaviour;
+- `scripts/test-shared-engine-dual-read.mjs` — actual legacy readers equal canonical shadow, plus fail-closed mismatch detection.
+
+No learner localStorage record is rewritten by these helpers or audits. Actual storage migration remains a later Phase-1 step after parity is proven over the required compatibility surfaces.
+
+The app shell has begun a separate behaviour-preserving profile extraction: visible brand strings and the existing update/event identities are now read through the WaseShibu composition profile, with exact legacy values locked by compatibility tests. This does not change the values seen or used by existing users.
 
 ## Current WaseShibu compatibility surfaces
 
@@ -74,7 +99,7 @@ Rikkyo is not required to imitate the legacy WaseShibu year-only URL and may nav
 
 Existing WaseShibu learner records must not be rewritten blindly.
 
-A compatibility reader/migration layer will map old year-keyed state to canonical exam-keyed state, for example:
+The compatibility reader maps old year-keyed state to canonical exam-keyed state, for example:
 
 ```text
 legacy draft["2025"]
@@ -84,7 +109,7 @@ legacy completedCoreByTarget["70"] = [2024, 2023]
   -> canonical completion[targetId="70"] = ["waseshibu-2024", "waseshibu-2023"]
 ```
 
-The migration must preserve a rollback/restore point and must be covered by preservation tests before runtime cutover.
+The current shadow/dual-read stage proves this mapping without persisting the canonical representation. A future write migration must preserve a rollback/restore point and must be covered by preservation tests before runtime cutover.
 
 Rikkyo starts the shared-engine cutover with exam-keyed canonical state so A/B forms never share one year bucket.
 
@@ -121,8 +146,12 @@ The Phase-1 learner-state bridge is not mergeable until tests prove all of the f
 5. numeric 60/70/75 target preferences retain the same learner-visible behaviour;
 6. current WaseShibu score calculations and target strategy are unchanged;
 7. no existing localStorage key is silently renamed before a tested migration;
-8. Rikkyo A/B forms remain independent in exam result, draft, route, lock and reinforcement state;
-9. Rikkyo does not write any WaseShibu persistence/IndexedDB/channel/cloud identity.
+8. read-only shadow conversion performs zero persistence writes;
+9. dual-read parity is green for preferences, exam results, drafts and route/reinforcement state;
+10. legacy fallback metadata (`legacy-device`, resetVersion) remains equivalent in the canonical view;
+11. malformed/unmappable state fails closed rather than being silently invented or discarded;
+12. Rikkyo A/B forms remain independent in exam result, draft, route, lock and reinforcement state;
+13. Rikkyo does not write any WaseShibu persistence/IndexedDB/channel/cloud identity.
 
 ## Principle
 
@@ -130,7 +159,7 @@ The migration direction is:
 
 ```text
 WaseShibu legacy representation
-        ↓ compatibility adapter / tested migration
+        ↓ compatibility adapter / shadow / dual-read / tested migration
 canonical engine identity
         ↑
 Rikkyo canonical school data
