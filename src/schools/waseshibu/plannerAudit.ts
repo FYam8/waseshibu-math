@@ -1,12 +1,12 @@
 import type { CanonicalScheduledTaskPlan } from '../../engine/learnerState'
-import type { TargetScore } from '../../targetStrategy'
 import { legacyTargetForTargetId } from './legacyCompatibility'
 import { projectWaseShibuScheduledTaskPlan } from './plannerCompatibility'
 import {
   LEGACY_DAILY_REQUIRED_PLAN_KEY,
   LEGACY_STUDY_AHEAD_PLAN_KEY,
   readLegacyDailyRequiredPlanForAudit,
-  readLegacyStudyAheadPlanForAudit
+  readLegacyStudyAheadPlanForAudit,
+  type LegacyPlannerTargetScore
 } from './plannerLegacyReader'
 import { readWaseShibuCanonicalPlannerShadow, type WaseShibuPlannerShadow } from './plannerShadow'
 
@@ -47,7 +47,7 @@ function snapshot(storage: ReadOnlyStorage) {
   }
 }
 
-function targetScoreForTargetId(targetId: string): TargetScore {
+function targetScoreForTargetId(targetId: string): LegacyPlannerTargetScore {
   const value = legacyTargetForTargetId(targetId)
   if (value === 60 || value === 70 || value === 75) return value
   throw new Error(`targetId does not resolve to the current WaseShibu TargetScore: ${targetId}`)
