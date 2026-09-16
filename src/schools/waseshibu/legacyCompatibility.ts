@@ -3,16 +3,18 @@ import { WASESHIBU_APP_PROFILE } from './appProfile'
 
 const SUPPORTED_YEARS = WASESHIBU_APP_PROFILE.supportedYears
 
+type WaseShibuTarget = (typeof WASESHIBU_APP_PROFILE.targets)[number]
+
 export const WASESHIBU_EXAM_CATALOG: readonly CanonicalExamDefinition[] = SUPPORTED_YEARS.map(year => ({
   examId: `waseshibu-${year}`,
   year,
   label: `${year}年度`
 }))
 
-const examByYear = new Map(WASESHIBU_EXAM_CATALOG.map(exam => [exam.year, exam]))
-const examById = new Map(WASESHIBU_EXAM_CATALOG.map(exam => [exam.examId, exam]))
-const targetByLegacy = new Map(WASESHIBU_APP_PROFILE.targets.map(target => [String(target.legacyValue), target]))
-const targetById = new Map(WASESHIBU_APP_PROFILE.targets.map(target => [target.id, target]))
+const examByYear = new Map<number, CanonicalExamDefinition>(WASESHIBU_EXAM_CATALOG.map(exam => [exam.year, exam]))
+const examById = new Map<string, CanonicalExamDefinition>(WASESHIBU_EXAM_CATALOG.map(exam => [exam.examId, exam]))
+const targetByLegacy = new Map<string, WaseShibuTarget>(WASESHIBU_APP_PROFILE.targets.map(target => [String(target.legacyValue), target]))
+const targetById = new Map<string, WaseShibuTarget>(WASESHIBU_APP_PROFILE.targets.map(target => [target.id, target]))
 
 /** Resolve a legacy WaseShibu year key without changing the public URL/state yet. */
 export function examIdForLegacyYear(year: number): string {
