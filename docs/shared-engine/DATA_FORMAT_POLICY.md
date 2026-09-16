@@ -1,6 +1,6 @@
 # Shared Math Engine Data Format Policy
 
-Status: architecture decision / no production runtime change
+Status: architecture decision + Phase-1 contract extraction in progress
 
 ## Decision
 
@@ -19,9 +19,17 @@ The **shape and semantics of the engine contract are shared**. The **school iden
 
 The target is the WaseShibu **post-extraction canonical engine contract**, not a blind copy of every current WaseShibu source file or legacy state type.
 
-WaseShibu currently has school-specific assumptions distributed across `src/data/*`, history/migration modules and progress sync. Phase 1 will extract and, where needed, generalize those engine-facing shapes while proving that current WaseShibu behaviour and stored learner data remain compatible. Rikkyo will then be converted to those same canonical shapes.
+WaseShibu currently has school-specific assumptions distributed across `src/data/*`, history/migration modules and progress sync. Phase 1 extracts and, where needed, generalizes those engine-facing shapes while proving that current WaseShibu behaviour and stored learner data remain compatible. Rikkyo will then be converted to those same canonical shapes.
 
 The concrete legacy assumptions found by the first audit are recorded in `CANONICAL_MODEL_GAPS.md`. In particular, the canonical contract must not remain year-only for exam identity, must not hard-wire target identity to 60/70/75, must not require a 0–100 exam score when a school has no authoritative point model, and must not treat WaseShibu's current split content files as the final universal problem schema.
+
+The first executable contract pieces now exist on the draft branch:
+
+- `src/engine/appProfile.ts` for shared school/profile vocabulary;
+- `src/engine/examContract.ts` for canonical exam identity and optional-score result evidence;
+- `src/schools/waseshibu/legacyCompatibility.ts` for pure WaseShibu legacy mappings;
+- `src/appConfig.ts` as the WaseShibu composition root;
+- `scripts/test-shared-engine-compat.mjs` as a required build gate.
 
 The common contract must cover at least:
 
@@ -95,7 +103,7 @@ When the WaseShibu canonical contract requires a field that the current Rikkyo a
 
 Examples of generally mappable Rikkyo fields include year, A/B form, major/minor location, skill labels, difficulty, answer type/specification, explanation steps, source-page references and learning-role metadata. School-specific target semantics must not be silently reinterpreted as WaseShibu score semantics; the shared format is the same while the school profile supplies different target IDs, labels and rules.
 
-The same rule applies to scoring. Rikkyo currently has no official small-question point allocation, so normalization must not invent a 100-point score merely because WaseShibu currently uses one. The canonical result shape can carry optional score/max-score fields plus an explicit authority/model, while Rikkyo may rely on supported correct/wrong/unanswered or mastery evidence.
+The same rule applies to scoring. Rikkyo currently has no official small-question point allocation, so normalization must not invent a 100-point score merely because WaseShibu currently uses one. The canonical result shape carries optional score/max-score fields plus an explicit authority/model, while Rikkyo may rely on supported correct/wrong/unanswered or mastery evidence.
 
 ## Learner-state alignment
 
@@ -113,6 +121,19 @@ The exact Rikkyo namespace will be frozen before cutover.
 The current Rikkyo v3 family (`rikkyoMathFull:${NS}:v3`, with v1/v2 legacy keys) therefore becomes a **migration source**, not the permanent target schema. A one-time Rikkyo-only migration will convert it into the canonical learner-state shapes under Rikkyo-specific keys. It must never write to `waseshibu-math-*` keys.
 
 The canonical learner-state contract must support `examId` so A/B forms do not collide, and it must use school-defined target identity rather than making WaseShibu's numeric score targets universal. Existing WaseShibu serialized values remain compatibility inputs and are migrated without learner-data loss.
+
+## Score/result policy
+
+A numeric score is evidence, not a universal requirement.
+
+WaseShibu may populate `score`, `maxScore` and a supported score authority because its current learning strategy is score-oriented. Rikkyo may omit score when no authoritative small-question point model exists and instead retain supported evidence such as correct/wrong/unanswered counts, mastery, transfer and retention status.
+
+The canonical result contract therefore distinguishes:
+
+- scored evidence with explicit authority; and
+- unscored evidence with `scoreAuthority: "not-available"`.
+
+Missing score must never be interpreted as zero. A fabricated 100-point conversion is prohibited.
 
 ## What remains school-specific
 
@@ -144,11 +165,12 @@ Before Rikkyo may cut over to the canonical format, tests must prove:
 4. `REVIEW_REQUIRED` and other quality flags survive normalization;
 5. the normalized data satisfies the WaseShibu canonical engine contract;
 6. A/B exam forms remain distinguishable in catalog, result and attempt history;
-7. target policy remains school-correct without silently converting minimum/stable/safe into WaseShibu 60/70/75 semantics;
-8. no official/100-point Rikkyo score is fabricated when the source does not provide an authoritative point model;
-9. current Rikkyo v3 learner data has an explicit migration path into the common learner-state format;
-10. Rikkyo persistence/sync identities are distinct from every WaseShibu identity;
-11. the Rikkyo content/scoring/storage/release/isolation regression suites are green.
+7. A/B forms remain distinct in draft, route, completion-lock and reinforcement state;
+8. target policy remains school-correct without silently converting minimum/stable/safe into WaseShibu 60/70/75 semantics;
+9. no official/100-point Rikkyo score is fabricated when the source does not provide an authoritative point model;
+10. current Rikkyo v3 learner data has an explicit migration path into the common learner-state format;
+11. Rikkyo persistence/sync identities are distinct from every WaseShibu identity;
+12. the Rikkyo content/scoring/storage/release/isolation regression suites are green.
 
 ## Direction of ownership
 
