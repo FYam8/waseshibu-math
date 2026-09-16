@@ -17,28 +17,33 @@ The **shape and semantics of the engine contract are shared**. The **school iden
 
 ## What “same format” means
 
-The target is the WaseShibu **post-extraction canonical engine contract**, not a blind copy of every current WaseShibu source file.
+The target is the WaseShibu **post-extraction canonical engine contract**, not a blind copy of every current WaseShibu source file or legacy state type.
 
-WaseShibu currently has school-specific assumptions distributed across `src/data/*`, history/migration modules and progress sync. Phase 1 will first make those engine-facing shapes explicit without changing WaseShibu behaviour. Rikkyo will then be converted to those same shapes.
+WaseShibu currently has school-specific assumptions distributed across `src/data/*`, history/migration modules and progress sync. Phase 1 will extract and, where needed, generalize those engine-facing shapes while proving that current WaseShibu behaviour and stored learner data remain compatible. Rikkyo will then be converted to those same canonical shapes.
+
+The concrete legacy assumptions found by the first audit are recorded in `CANONICAL_MODEL_GAPS.md`. In particular, the canonical contract must not remain year-only for exam identity, must not hard-wire target identity to 60/70/75, and must not treat WaseShibu's current split content files as the final universal problem schema.
 
 The common contract must cover at least:
 
 - app/school profile
-- exam catalog (year/form/role/source metadata)
-- problem identity and structured location (year, exam/form, major/minor)
+- exam catalog with opaque `examId` plus year/form/role/source metadata
+- leaf problem identity and structured location (year, exam/form, major/minor)
 - topic/field classification
 - learning priority/difficulty band
+- school-defined target identity/rules (`targetId`)
 - answer input and deterministic grading specification
+- answer-authority / verification metadata
 - hints and guided/explanation steps
 - source-page / figure references
-- practice/remediation/transfer/retention role
+- practice/remediation/transfer/retention/evaluation/confirmation role
 - review/ambiguity flags
-- attempt records
-- exam-score records
+- attempt records without requiring legacy WaseShibu-only route labels
+- exam-score records keyed by exam identity rather than year alone
 - daily/route state
 - guided/remediation/mastery history
 - backup/export package
 - migration versioning
+- independent canonical-contract versioning
 - optional progress-sync projection
 
 ## Rikkyo content preservation while changing format
@@ -88,7 +93,7 @@ When the WaseShibu canonical contract requires a field that the current Rikkyo a
 4. run mathematical/content QA before the field is accepted;
 5. never insert a guessed placeholder merely to satisfy a TypeScript or JSON schema.
 
-Examples of generally mappable Rikkyo fields include year, A/B form, major/minor location, skill labels, difficulty, answer type/specification, explanation steps, source-page references and learning-role metadata. School-specific target semantics must not be silently reinterpreted as WaseShibu score semantics; the shared format may be the same while the school profile supplies different labels/rules.
+Examples of generally mappable Rikkyo fields include year, A/B form, major/minor location, skill labels, difficulty, answer type/specification, explanation steps, source-page references and learning-role metadata. School-specific target semantics must not be silently reinterpreted as WaseShibu score semantics; the shared format is the same while the school profile supplies different target IDs, labels and rules.
 
 ## Learner-state alignment
 
@@ -105,6 +110,8 @@ The exact Rikkyo namespace will be frozen before cutover.
 
 The current Rikkyo v3 family (`rikkyoMathFull:${NS}:v3`, with v1/v2 legacy keys) therefore becomes a **migration source**, not the permanent target schema. A one-time Rikkyo-only migration will convert it into the canonical learner-state shapes under Rikkyo-specific keys. It must never write to `waseshibu-math-*` keys.
 
+The canonical learner-state contract must support `examId` so A/B forms do not collide, and it must use school-defined target identity rather than making WaseShibu's numeric score targets universal. Existing WaseShibu serialized values remain compatibility inputs and are migrated without learner-data loss.
+
 ## What remains school-specific
 
 Even with one data format, these values remain school-owned:
@@ -114,7 +121,7 @@ Even with one data format, these values remain school-owned:
 - exam and problem content
 - stable/source problem IDs
 - answer authority and review flags
-- target labels and school-specific priority semantics
+- target IDs/labels and school-specific priority semantics
 - source-page assets
 - persistence namespace
 - backup `app` identity
@@ -133,9 +140,11 @@ Before Rikkyo may cut over to the canonical format, tests must prove:
 3. answers, grading specs, explanations and source references survive normalization;
 4. `REVIEW_REQUIRED` and other quality flags survive normalization;
 5. the normalized data satisfies the WaseShibu canonical engine contract;
-6. current Rikkyo v3 learner data has an explicit migration path into the common learner-state format;
-7. Rikkyo persistence/sync identities are distinct from every WaseShibu identity;
-8. the Rikkyo content/scoring/storage/release/isolation regression suites are green.
+6. A/B exam forms remain distinguishable in catalog, score and attempt history;
+7. target policy remains school-correct without silently converting minimum/stable/safe into WaseShibu 60/70/75 semantics;
+8. current Rikkyo v3 learner data has an explicit migration path into the common learner-state format;
+9. Rikkyo persistence/sync identities are distinct from every WaseShibu identity;
+10. the Rikkyo content/scoring/storage/release/isolation regression suites are green.
 
 ## Direction of ownership
 
