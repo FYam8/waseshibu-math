@@ -85,6 +85,35 @@ export type CanonicalDailyPracticeSession = {
   updatedAt?: string
 }
 
+/**
+ * Opaque reference to one scheduler task. Generic engine code may retain a
+ * stable task identity and optional problem lineage, but school-owned labels,
+ * routes and presentation metadata stay in `schoolEvidence`.
+ */
+export type CanonicalScheduledTaskReference = {
+  taskId: string
+  problemId?: string
+  schoolEvidence?: Record<string, unknown>
+}
+
+/**
+ * Persisted scheduled-task plan. This is deliberately separate from
+ * `CanonicalDailyPracticeSession`: a plan schedules actions, while the daily
+ * practice session records progress through concrete practice problems.
+ *
+ * `targetId` and task IDs are opaque. Queue/reconciliation versions and other
+ * school-specific scheduler metadata belong in `schoolEvidence`.
+ */
+export type CanonicalScheduledTaskPlan = {
+  planKind: 'today-required' | 'study-ahead'
+  date: string
+  targetId: string
+  pendingTaskIds: string[]
+  completedTaskIds: string[]
+  fallbackTask?: CanonicalScheduledTaskReference
+  schoolEvidence?: Record<string, unknown>
+}
+
 export type CanonicalReinforcementState = {
   /** Concrete source exam whose weaknesses created this plan. */
   sourceExamId: string
@@ -109,8 +138,8 @@ export type CanonicalLearningRouteState = {
  * Read model used during behaviour-preserving extraction. It is deliberately a
  * value object: persistence code is school-owned and injected separately.
  *
- * Activity records and daily practice are separately audited before they are
- * added to the aggregate migration surface.
+ * Activity records, daily practice and scheduler plans are separately audited
+ * before they are added to the aggregate migration surface.
  */
 export type CanonicalLearnerStateShadow = {
   preferences: CanonicalLearnerPreferences
