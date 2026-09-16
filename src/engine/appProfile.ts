@@ -7,6 +7,7 @@ export type MathLearningPhaseRole =
   | 'transfer'
   | 'retention'
   | 'confirmation'
+  | 'evaluation'
   | 'final'
 
 export type MathAppProfile = {
