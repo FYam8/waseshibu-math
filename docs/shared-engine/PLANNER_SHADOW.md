@@ -1,6 +1,6 @@
 # Scheduler Planner Shadow Checkpoint
 
-Status: persisted raw shadow + read-only legacy-reader parity gate implemented; aggregate migration integration intentionally deferred
+Status: persisted planner shadow + read-only legacy-reader parity + aggregate rehearsal coverage implemented; reconciliation writes remain legacy
 
 ## Scope
 
@@ -9,7 +9,7 @@ This checkpoint covers the two WaseShibu scheduler records:
 - `waseshibu-math-daily-required-plan-v2`
 - `waseshibu-math-study-ahead-plan-v1`
 
-It does not cover the separate 8-question practice session in `waseshibu-math-daily`.
+It does not collapse them into the separate 8-question practice session in `waseshibu-math-daily`.
 
 ## Canonical boundary
 
@@ -34,36 +34,17 @@ WaseShibu-specific presentation/action data stays under `schoolEvidence`, includ
 
 The engine must not parse `review-*`, `practice-*`, `progression:*` or route strings to infer meaning.
 
-## Two independent read-only views
+## Read-only guarantee
 
-`plannerShadow.ts` reads the exact two persisted records directly and applies the strict canonical projection.
+`plannerShadow.ts` reads the two persisted records directly. It never calls WaseShibu reconciliation functions, which can freeze/refill/promote planner state and therefore may write.
 
-`plannerLegacyReader.ts` separately mirrors the current private reader semantics in `dailyPlan.ts` without invoking any reconciliation API:
+`plannerLegacyReader.ts` separately mirrors only the private read semantics from `dailyPlan.ts`. `plannerAudit.ts` compares valid legacy-reader projections with the strict raw-storage shadow without executing task generation, target switching, next-day promotion, queue refill or any localStorage write.
 
-- the required-plan reader keeps the current date-scoped behavior and target fallback;
-- the study-ahead reader keeps the current invalid/missing -> `null` behavior;
-- neither reader writes, freezes, refills, promotes or regenerates persisted state.
-
-`plannerAudit.ts` compares valid persisted plans from the legacy-reader mirror against the canonical raw shadow. The audit captures the scheduler source strings before/after and fails if they change.
-
-Because the live private functions remain embedded in `dailyPlan.ts`, the test also pins the compatibility mirror to the current source-level reader signatures/normalization expressions. If those runtime readers change, the parity gate requires the compatibility mirror to be reviewed before migration claims can advance.
-
-This is deliberately safer than calling high-level planner APIs during audit, because the high-level APIs reconcile and can write state.
-
-## Important behavior distinction
-
-Absence/staleness has different runtime and persistence meanings:
-
-- no persisted required plan => canonical persisted shadow is `null`;
-- the current runtime required-plan reader still synthesizes an empty ephemeral plan for the requested date/target;
-- a stored plan for another date is likewise treated as an empty ephemeral current-day plan;
-- the persisted shadow does not invent that ephemeral value.
-
-The parity audit therefore compares canonical persisted values only when a corresponding valid raw record exists, while separately testing the legacy absent/stale behavior.
+The parity test also source-pins the private reader logic in `dailyPlan.ts`, so a later change to those reader conditions cannot silently invalidate the audit mirror.
 
 ## Fail-closed rules
 
-The strict canonical planner projection rejects:
+The strict planner projection rejects:
 
 - corrupt JSON;
 - unknown plan fields;
@@ -73,17 +54,33 @@ The strict canonical planner projection rejects:
 - unsupported fallback task fields;
 - non-integer queue-version evidence.
 
-This remains intentional even though the current runtime reader is more forgiving. A malformed record may be ignored/regenerated for runtime continuity, but migration must not silently discard unknown learner state.
+The legacy runtime may regenerate or ignore some broken planner state. Migration intentionally does not copy that forgiving behavior: unknown persisted information must not be silently discarded merely to fit the canonical contract.
 
 ## Build gates
 
-- `test:shared-engine-planner-shadow` verifies exact persisted projection, task order, target mapping, fallback lineage, school-only route evidence, absent-key behavior and zero writes.
-- `test:shared-engine-planner-parity` verifies the read-only legacy-reader semantics against the canonical raw shadow for valid plans, preserves stale/absent behavior, fails closed on unsupported raw state and performs zero writes.
+- `test:shared-engine-planner-shadow` verifies persisted projection, task-order preservation, target mapping, fallback lineage, school-only route evidence, absent-key behavior and zero writes.
+- `test:shared-engine-planner-parity` verifies read-only legacy-reader semantics against the strict shadow, stale/absent behavior and source-level reader drift guards.
+- `test:shared-engine-migration-rehearsal` now includes both persisted planner plans in the aggregate candidate and exact rollback snapshot.
 
-Both are required by the normal build.
+## Aggregate migration status
 
-## Still not yet claimed
+Both planner records are now part of `CanonicalLearnerStateMigrationCandidate` as:
 
-Planner state is **not yet added to the aggregate migration rehearsal**.
+- `todayRequiredPlan`
+- `studyAheadPlan`
 
-The next safe step is to combine the already-audited daily-practice session with both planner records in one expanded in-memory rehearsal, add exact rollback bytes for all three daily-family keys and prove the existing 10-task/no-11th-refill/next-day-promotion behavior remains outside the migration adapter rather than being reimplemented as universal engine policy.
+Their exact raw source strings are captured by the aggregate rehearsal and restored byte-for-byte in the isolated rollback proof.
+
+This integration still does **not** move WaseShibu scheduler policy into the shared engine. The following behavior remains in legacy runtime code and is not executed by the rehearsal:
+
+- maximum 10 required tasks;
+- no automatic 11th refill;
+- target-change replacement while preserving the cap;
+- fallback-task completion handling;
+- next-day study-ahead creation and promotion into Today.
+
+Those are behavior baselines to preserve during later runtime extraction, not generic persistence semantics to infer from the stored task IDs.
+
+## Next safe step
+
+With daily practice and both persisted planner records under aggregate rehearsal/rollback coverage, the next learner-state families to audit are prep-check, guided review/progress, remediation and Level2 state. Production migration writes remain prohibited until those state families plus backup/export and cloud projection are covered.
