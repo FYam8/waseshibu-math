@@ -58,8 +58,8 @@ function sameRawSnapshot(left: WaseShibuRawSnapshot, right: WaseShibuRawSnapshot
 
 function validateCanonicalCandidate(state: CanonicalLearnerStateShadow) {
   const issues: WaseShibuMigrationRehearsalIssue[] = []
-  const knownExamIds = new Set(WASESHIBU_EXAM_CATALOG.map(exam => exam.examId))
-  const knownTargetIds = new Set(WASESHIBU_APP_PROFILE.targets.map(target => target.id))
+  const knownExamIds = new Set<string>(WASESHIBU_EXAM_CATALOG.map(exam => exam.examId))
+  const knownTargetIds = new Set<string>(WASESHIBU_APP_PROFILE.targets.map(target => target.id))
 
   if (!knownTargetIds.has(state.preferences.targetId)) {
     issues.push({ surface: 'preferences', message: `unknown canonical targetId: ${state.preferences.targetId}` })
