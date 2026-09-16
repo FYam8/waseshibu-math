@@ -17,7 +17,7 @@ The first downstream consumer is `FYam8/rikkyo-uk-math`.
 5. **Engine propagation is gated, not blind.** A WaseShibu engine change can update Rikkyo automatically, but Rikkyo tests must pass before its deployable branch is advanced.
 6. **Path separation is not a data-isolation mechanism.** Browser localStorage, IndexedDB, and BroadcastChannel are origin-scoped. If separate project sites are served under the same web origin, all persistence/sync names still have to be unique per school.
 
-The exact audited identities are recorded in `docs/shared-engine/COMPATIBILITY_BASELINE.md` and are treated as Phase-1 regression invariants.
+The exact audited identities are recorded in `docs/shared-engine/COMPATIBILITY_BASELINE.md` and are treated as Phase-1 regression invariants. Canonical/shared versus school-owned path rules are recorded in `docs/shared-engine/PATH_OWNERSHIP.md`.
 
 ## Repository roles
 
@@ -84,7 +84,9 @@ The shared engine must consume a school adapter instead of importing school cont
 - cloud-progress projection logic when year/target semantics differ by school
 - school-specific exclusions/review flags
 
-`src/appProfile.ts` is the first explicit profile contract. At this foundation stage it mirrors current WaseShibu values and is intentionally not wired into production runtime yet.
+`src/engine/appProfile.ts` now contains only the shared profile types. `src/schools/waseshibu/appProfile.ts` contains the current WaseShibu values. Neither is wired into production runtime at this foundation stage.
+
+This split is deliberate: shared engine code must not import a global WaseShibu singleton. The WaseShibu composition layer will inject the WaseShibu profile; a Rikkyo composition layer will inject a Rikkyo profile.
 
 ### Persistence rule
 
@@ -114,13 +116,13 @@ The pinned-source model also means a WaseShibu engine change does not mutate a r
 
 ### Phase 0 — foundation (this branch)
 - document canonical ownership and safety invariants
-- add a typed school-profile contract with the current WaseShibu values
+- add a typed shared profile contract and separate WaseShibu school profile
 - record exact WaseShibu and Rikkyo compatibility baselines
 - do not change runtime behaviour
 
 ### Phase 1 — behaviour-preserving extraction in WaseShibu
-- move brand/year/learning-plan literals behind the profile
-- move event/storage/update/sync identities behind a persistence profile while preserving the exact existing WaseShibu strings
+- move brand/year/learning-plan literals behind the injected WaseShibu profile
+- move event/storage/update/sync identities behind an injected persistence profile while preserving the exact existing WaseShibu strings
 - parameterize school-specific progress projections rather than sharing WaseShibu year/target assumptions
 - introduce engine-facing content provider interfaces
 - add tests proving existing WaseShibu localStorage keys, backup identity, IndexedDB identity, routes, scoring, learner-history migration, and cloud sync are unchanged
