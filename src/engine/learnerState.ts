@@ -15,6 +15,55 @@ export type CanonicalExamDraft<TPayload = unknown> = {
   payload: TPayload
 }
 
+export type CanonicalActivityOutcome = 'correct' | 'wrong' | 'deferred'
+
+/**
+ * Shared metadata for one persisted learning activity.
+ *
+ * `schoolEvidence` is intentionally opaque to generic engine code. It exists so
+ * a school adapter can preserve legacy-only fields during migration without
+ * turning those fields into universal semantics.
+ */
+export type CanonicalActivityBase = {
+  id: string
+  at: string
+  deviceId?: string
+  resetVersion?: number
+  topicLabel?: string
+  schoolEvidence?: Record<string, unknown>
+}
+
+/** A learner actually answered, skipped or deferred one concrete problem. */
+export type CanonicalProblemAttemptActivity = CanonicalActivityBase & {
+  kind: 'problem-attempt'
+  problemId: string
+  examId?: string
+  outcome: CanonicalActivityOutcome
+  answerText?: string
+  flagged?: boolean
+  durationSeconds?: number
+}
+
+/** Opening a concrete exam is exposure evidence, not a problem answer attempt. */
+export type CanonicalExamExposureActivity = CanonicalActivityBase & {
+  kind: 'exam-exposure'
+  examId: string
+}
+
+/**
+ * Legacy apps may persist mastery markers in an attempt-like container. Keep
+ * them explicit so generic attempt analytics never mistake them for answers.
+ */
+export type CanonicalMasteryMarkerActivity = CanonicalActivityBase & {
+  kind: 'mastery-marker'
+  markerId: string
+}
+
+export type CanonicalActivityRecord =
+  | CanonicalProblemAttemptActivity
+  | CanonicalExamExposureActivity
+  | CanonicalMasteryMarkerActivity
+
 export type CanonicalReinforcementState = {
   /** Concrete source exam whose weaknesses created this plan. */
   sourceExamId: string
@@ -38,6 +87,9 @@ export type CanonicalLearningRouteState = {
 /**
  * Read model used during behaviour-preserving extraction. It is deliberately a
  * value object: persistence code is school-owned and injected separately.
+ *
+ * Activity records are being introduced behind a separate WaseShibu audit gate
+ * before they are added to this aggregate migration surface.
  */
 export type CanonicalLearnerStateShadow = {
   preferences: CanonicalLearnerPreferences
