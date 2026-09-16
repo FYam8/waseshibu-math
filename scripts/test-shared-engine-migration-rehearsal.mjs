@@ -19,6 +19,9 @@ const entries = [
   'src/schools/waseshibu/legacyCompatibility.ts',
   'src/schools/waseshibu/shadowState.ts',
   'src/schools/waseshibu/dualReadAudit.ts',
+  'src/schools/waseshibu/activityCompatibility.ts',
+  'src/schools/waseshibu/activityShadow.ts',
+  'src/schools/waseshibu/activityAudit.ts',
   'src/schools/waseshibu/migrationRehearsal.ts',
   'src/storage.ts',
   'src/learningRoute.ts',
@@ -103,8 +106,22 @@ const seed = {
     completedCoreByTarget: { '75': [2024], '70': [2023], '60': [] },
     updatedAt: '2026-09-12T11:00:00.000Z'
   }),
+  'waseshibu-math-attempts': JSON.stringify([
+    {
+      id: 'attempt-exam', questionId: 'exam-2024-Q1-1', mode: 'multi', topic: '数式計算',
+      status: 'wrong', answer: '5', seconds: 30, at: '2026-09-11T10:05:00.000Z'
+    },
+    {
+      id: 'attempt-exposure', questionId: 'exposure-2025', mode: 'multi', topic: '2025年度 過去問',
+      status: 'deferred', at: '2026-09-12T09:00:00.000Z'
+    },
+    {
+      id: 'attempt-mastery', questionId: 'mastery-expressions', mode: 'multi', topic: '式の計算',
+      status: 'correct', at: '2026-09-12T11:00:00.000Z'
+    }
+  ]),
   // Deliberately outside the current rehearsal scope: it must remain untouched.
-  'waseshibu-math-attempts': JSON.stringify([{ id: 'attempt-keep', questionId: 'exam-2024-Q1-1', status: 'wrong', at: '2026-09-11T10:00:00.000Z' }])
+  'waseshibu-math-daily': JSON.stringify({ date: '2026-09-16', questionIds: ['field-expressions-1'], completed: false })
 }
 
 const storage = new MemoryStorage(seed)
@@ -118,8 +135,8 @@ const after = storage.snapshot()
 
 assert.equal(report.ready, true, report.issues.map(x => `${x.surface}: ${x.message}`).join('\n'))
 assert.deepEqual(report.issues, [])
-assert.equal(report.rehearsalContractVersion, 1)
-assert.deepEqual(report.scope, ['preferences', 'examResults', 'drafts', 'route'])
+assert.equal(report.rehearsalContractVersion, 2)
+assert.deepEqual(report.scope, ['preferences', 'examResults', 'drafts', 'route', 'activityRecords'])
 assert.equal(after, before, 'migration rehearsal must not mutate any persisted state')
 assert.equal(storage.writes, 0, 'migration rehearsal must perform zero storage writes')
 assert.equal(report.canonicalCandidate.preferences.targetId, '70')
@@ -131,8 +148,18 @@ assert.deepEqual(report.canonicalCandidate.route.completedExamIdsByTarget, {
   '70': ['waseshibu-2023', 'waseshibu-2024'],
   '75': ['waseshibu-2024']
 })
+assert.equal(report.canonicalCandidate.activityRecords.length, 3)
+const activities = new Map(report.canonicalCandidate.activityRecords.map(record => [record.id, record]))
+assert.equal(activities.get('attempt-exam').kind, 'problem-attempt')
+assert.equal(activities.get('attempt-exam').examId, 'waseshibu-2024')
+assert.equal(activities.get('attempt-exam').deviceId, 'legacy-device')
+assert.equal(activities.get('attempt-exam').resetVersion, 4)
+assert.equal(activities.get('attempt-exposure').kind, 'exam-exposure')
+assert.equal(activities.get('attempt-exposure').examId, 'waseshibu-2025')
+assert.equal(activities.get('attempt-mastery').kind, 'mastery-marker')
 assert.equal(report.sourceSnapshot['waseshibu-math-data-version'], '8')
-assert.equal(Object.prototype.hasOwnProperty.call(report.sourceSnapshot, 'waseshibu-math-attempts'), false, 'unmigrated surfaces must not be implied by the rehearsal snapshot')
+assert.equal(report.sourceSnapshot['waseshibu-math-attempts'], seed['waseshibu-math-attempts'])
+assert.equal(Object.prototype.hasOwnProperty.call(report.sourceSnapshot, 'waseshibu-math-daily'), false, 'unmigrated surfaces must not be implied by the rehearsal snapshot')
 
 // Rollback rehearsal: corrupt only the source surfaces in an isolated clone,
 // then restore the exact captured raw strings. This proves byte-for-byte source
@@ -140,6 +167,7 @@ assert.equal(Object.prototype.hasOwnProperty.call(report.sourceSnapshot, 'wasesh
 const rollbackClone = new MemoryStorage(seed)
 rollbackClone.setItem('waseshibu-math-preferences', '{"target":60}')
 rollbackClone.removeItem('waseshibu-math-exam-scores')
+rollbackClone.setItem('waseshibu-math-attempts', '[]')
 rollbackClone.setItem('waseshibu-math-data-version', '999')
 for (const key of rehearsal.WASESHIBU_REHEARSAL_SOURCE_KEYS) {
   const raw = report.sourceSnapshot[key]
@@ -149,11 +177,11 @@ for (const key of rehearsal.WASESHIBU_REHEARSAL_SOURCE_KEYS) {
 for (const key of rehearsal.WASESHIBU_REHEARSAL_SOURCE_KEYS) {
   assert.equal(rollbackClone.getItem(key), seed[key] ?? null, `rollback source byte parity: ${key}`)
 }
-assert.equal(rollbackClone.getItem('waseshibu-math-attempts'), seed['waseshibu-math-attempts'], 'rollback rehearsal must not touch out-of-scope learner data')
+assert.equal(rollbackClone.getItem('waseshibu-math-daily'), seed['waseshibu-math-daily'], 'rollback rehearsal must not touch out-of-scope learner data')
 
-// Duplicate legacy IDs are currently readable, but canonical cutover must stop
+// Duplicate result IDs are readable today, but canonical cutover must stop
 // until an explicit no-loss duplicate policy exists.
-const duplicateStorage = new MemoryStorage({
+const duplicateResultStorage = new MemoryStorage({
   'waseshibu-math-data-version': '8',
   'waseshibu-math-preferences': JSON.stringify({ target: 70 }),
   'waseshibu-math-exam-scores': JSON.stringify([
@@ -161,13 +189,42 @@ const duplicateStorage = new MemoryStorage({
     { id: 'duplicate', year: 2025, score: 70, at: '2026-09-02T00:00:00.000Z' }
   ])
 })
-installStorage(duplicateStorage)
-const duplicate = rehearsal.rehearseWaseShibuCanonicalMigration()
-assert.equal(duplicate.ready, false, 'duplicate result identities must block migration rehearsal')
-assert.ok(duplicate.issues.some(x => x.message.includes('duplicate result id')))
-assert.equal(duplicateStorage.writes, 0)
+installStorage(duplicateResultStorage)
+const duplicateResult = rehearsal.rehearseWaseShibuCanonicalMigration()
+assert.equal(duplicateResult.ready, false, 'duplicate result identities must block migration rehearsal')
+assert.ok(duplicateResult.issues.some(x => x.message.includes('duplicate result id')))
+assert.equal(duplicateResultStorage.writes, 0)
 
-// Unmappable legacy state fails closed and still remains read-only.
+// Attempt IDs may also be duplicated in legacy raw data. Preserve the source
+// bytes, but stop the migration until a no-loss identity policy is explicit.
+const duplicateActivityStorage = new MemoryStorage({
+  'waseshibu-math-data-version': '8',
+  'waseshibu-math-preferences': JSON.stringify({ target: 70 }),
+  'waseshibu-math-attempts': JSON.stringify([
+    { id: 'duplicate-activity', questionId: 'field-expressions-1', status: 'wrong', at: '2026-09-01T00:00:00.000Z' },
+    { id: 'duplicate-activity', questionId: 'field-equations-1', status: 'correct', at: '2026-09-02T00:00:00.000Z' }
+  ])
+})
+installStorage(duplicateActivityStorage)
+const duplicateActivity = rehearsal.rehearseWaseShibuCanonicalMigration()
+assert.equal(duplicateActivity.ready, false, 'duplicate activity identities must block migration rehearsal')
+assert.ok(duplicateActivity.issues.some(x => x.message.includes('duplicate activity id')))
+assert.equal(duplicateActivityStorage.writes, 0)
+
+// A record silently filtered by today's loadAttempts() is a data-loss risk for
+// migration, so aggregate rehearsal must inherit the activity audit's fail-close.
+const filteredActivityStorage = new MemoryStorage({
+  'waseshibu-math-data-version': '8',
+  'waseshibu-math-preferences': JSON.stringify({ target: 70 }),
+  'waseshibu-math-attempts': JSON.stringify([{ id: 'missing-question', at: '2026-09-01T00:00:00.000Z' }])
+})
+installStorage(filteredActivityStorage)
+const filteredActivity = rehearsal.rehearseWaseShibuCanonicalMigration()
+assert.equal(filteredActivity.ready, false)
+assert.ok(filteredActivity.issues.some(x => x.surface.startsWith('activity:') || x.surface === 'activityRecords'))
+assert.equal(filteredActivityStorage.writes, 0)
+
+// Unmappable legacy route state fails closed and still remains read-only.
 const malformedStorage = new MemoryStorage({
   'waseshibu-math-data-version': '8',
   'waseshibu-math-preferences': JSON.stringify({ target: 70 }),
@@ -180,4 +237,4 @@ assert.ok(malformed.issues.some(x => x.surface === 'route' || x.surface === 'sha
 assert.equal(malformedStorage.writes, 0)
 
 console.log('SHARED ENGINE MIGRATION REHEARSAL TEST PASSED')
-console.log('legacy -> canonical candidate, dual-read validation, exact source snapshot, simulated rollback, zero production writes: OK')
+console.log('legacy -> canonical candidate now includes audited activities, exact source rollback evidence, duplicate-ID fail-close and zero production writes: OK')
