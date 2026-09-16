@@ -18,6 +18,12 @@ The canonical shadow deliberately blocks migration when legacy data would otherw
 
 The effective shadow still mirrors current last-entry-wins runtime behavior when a collision exists, so parity can be diagnosed without silently approving the collision. Exact normalized legacy records are retained as school evidence.
 
+## Aggregate migration rehearsal
+
+Remediation is now part of `migrationRehearsal.ts` contract version `6`. The aggregate `ready` gate includes remediation reader/shadow parity, validates source-problem identity and normalized counters, captures the exact remediation storage string as rollback evidence, and keeps `waseshibu-math-level2-history-v1` explicitly outside the rehearsal until its own parity contract exists.
+
+The rollback test corrupts remediation only in an isolated in-memory clone and restores the exact captured string. A collision or a record that today's runtime would silently drop makes the aggregate rehearsal fail closed while leaving the original bytes untouched.
+
 ## Not changed
 
-This audit does not yet authorize a storage migration or make the canonical remediation state authoritative at runtime. The active WaseShibu key and write path remain unchanged. Level2 state, backup/export/import conflict semantics, cloud/IndexedDB sync projection, and Rikkyo production remain separate follow-up gates.
+This audit does not authorize a storage migration or make the canonical remediation state authoritative at runtime. The active WaseShibu key and write path remain unchanged. Level2 state, backup/export/import conflict semantics, cloud/IndexedDB sync projection, and Rikkyo production remain separate follow-up gates.

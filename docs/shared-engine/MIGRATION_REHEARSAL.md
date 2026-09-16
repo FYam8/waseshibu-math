@@ -1,6 +1,6 @@
 # Canonical Learner-State Migration Rehearsal
 
-Status: Phase-1 read-only rehearsal includes audited activities, daily/planner state, preparation-check state and guided state; production learner-state writes remain legacy
+Status: Phase-1 read-only rehearsal includes audited activities, daily/planner state, preparation-check state, guided state and remediation state; production learner-state writes remain legacy
 
 ## Purpose
 
@@ -21,7 +21,8 @@ The aggregate rehearsal currently covers:
 - the persisted Today required-task plan;
 - the persisted next-day study-ahead plan;
 - preparation/onboarding check progress;
-- guided-learning state, with v2 as the one active mastery timeline and v1 retained only as compatibility/final-answer-fallback evidence.
+- guided-learning state, with v2 as the one active mastery timeline and v1 retained only as compatibility/final-answer-fallback evidence;
+- remediation progress, projected by opaque source problem while WaseShibu field/rank/cursor details remain school evidence.
 
 The attempts container is not treated as one universal attempt schema. Its audited canonical projection distinguishes `problem-attempt`, `exam-exposure` and `mastery-marker` records so marker/exposure evidence cannot be counted as an answer attempt.
 
@@ -30,6 +31,8 @@ Daily practice and the scheduler plans remain separate canonical concepts. The s
 Preparation state also remains content-neutral. The canonical state stores an opaque item cursor, answer/try maps and completion flags; the WaseShibu five fixed prep prompts and their answer rules remain school-owned content.
 
 Guided state deliberately has one generic active mastery map. `waseshibu-math-guided-progress-v2` supplies that map. `waseshibu-math-guided-review-v1` remains preserved under guided `schoolEvidence` because the current UI still reads/writes it and may use its final answer as fallback, but it is not promoted into a second mastery timeline.
+
+Remediation is a separate state family, not guided mastery and not a generic answer-attempt stream. Its canonical projection keeps source problem identity, source-attempt time, status, streak, attempt count and the concrete correct problem IDs in the current streak. WaseShibu `field`, A/B/C `rank`, `currentIndex` and any additional normalized legacy fields stay in `schoolEvidence.legacyRecord`.
 
 The exact legacy source strings captured as rollback evidence are:
 
@@ -40,6 +43,7 @@ The exact legacy source strings captured as rollback evidence are:
 - `waseshibu-math-prep-check-v1`
 - `waseshibu-math-guided-review-v1`
 - `waseshibu-math-guided-progress-v2`
+- `waseshibu-math-remediation-progress-v1`
 - `waseshibu-math-preferences`
 - `waseshibu-math-exam-scores`
 - `waseshibu-math-exam-drafts-v2`
@@ -49,7 +53,6 @@ The exact legacy source strings captured as rollback evidence are:
 
 This list is still intentionally narrower than the final learner-state migration. The following are **not yet declared migrated by this rehearsal**:
 
-- remediation progress;
 - Level2 history/mastery state;
 - backup/export/import package semantics;
 - progress-sync IndexedDB/cloud projection.
@@ -67,14 +70,15 @@ No production cutover may occur while those remaining state surfaces are outside
 5. run the persisted planner shadow vs read-only legacy planner-reader parity audit;
 6. run the active `loadPrepState()` vs strict raw prep shadow parity audit;
 7. run guided v1 compatibility parity and v2 active-progress parity as separate surfaces;
-8. reject the candidate if any audit reports a mismatch, filtered record, corruption or unmappable value;
-9. combine the audited projections into one in-memory `CanonicalLearnerStateMigrationCandidate`, adding only one generic guided mastery timeline;
-10. validate canonical exam IDs, target IDs, planner identities, preparation state and guided problem/step identities;
-11. reject duplicate exam-result IDs and duplicate activity IDs until explicit no-loss identity policies exist;
-12. capture the source strings again and fail if the rehearsal changed any persisted value;
-13. return the canonical candidate only as an in-memory value object.
+8. run remediation runtime-normalization parity while separately detecting raw entries that would be dropped or collapsed;
+9. reject the candidate if any audit reports a mismatch, filtered record, collision, corruption or unmappable value;
+10. combine the audited projections into one in-memory candidate, adding one generic guided mastery timeline and generic remediation state;
+11. validate canonical exam IDs, target IDs, planner identities, preparation state, guided problem/step identities and remediation source identity/counters;
+12. reject duplicate exam-result IDs and duplicate activity IDs until explicit no-loss identity policies exist;
+13. capture the source strings again and fail if the rehearsal changed any persisted value;
+14. return the canonical candidate only as an in-memory value object.
 
-The rehearsal contract marker is version `5` because guided state joined the aggregate candidate. This marker is independent from WaseShibu app/data versions and from the future shared content contract version.
+The rehearsal contract marker is version `6` because remediation state joined the aggregate candidate and rollback source set. This marker is independent from WaseShibu app/data versions and from the future shared content contract version.
 
 A `ready: true` rehearsal means only that the **currently audited scope** is safe to advance to the next migration-engine step. It does not mean WaseShibu learner state is ready for production cutover.
 
@@ -108,11 +112,17 @@ The aggregate candidate therefore has one `guidedLearning.progressByProblemId` m
 
 The aggregate gate fails closed on corrupt guided JSON, unsupported fields, key/`questionId` mismatches, malformed step records, invalid mastery/self-assessment values, invalid counters/timestamps or any guided reader/shadow parity drift. See `GUIDED_STATE_AUDIT.md` for the detailed boundary.
 
+## Remediation safety rules
+
+The remediation legacy reader is unusually forgiving: it coerces identifiers and counters, defaults A/B/C rank, clamps streaks, truncates the current-streak ID list to the last four entries and silently skips non-object records. Distinct persisted keys can also normalize to the same `sourceQuestionId`, with the later entry winning in runtime memory.
+
+The canonical audit preserves those effective normalization semantics for parity but treats silent drops and identity collisions as migration blockers. Non-finite normalized cursors/counters and invalid timestamp evidence also fail closed rather than being guessed. The entire normalized legacy record remains in school evidence so WaseShibu-only policy fields are not lost or accidentally universalized. See `REMEDIATION_STATE_AUDIT.md`.
+
 ## Rollback proof
 
 `scripts/test-shared-engine-migration-rehearsal.mjs` takes the exact raw source snapshot returned by the rehearsal, mutates an isolated in-memory clone, then restores every audited source key from those captured raw strings.
 
-The test requires byte/string parity for every audited source key after the simulated rollback, including attempts, daily practice, both scheduler plans, prep check and both guided stores. It also verifies that still-out-of-scope learner data such as `waseshibu-math-remediation-progress-v1` remains untouched.
+The test requires byte/string parity for every audited source key after the simulated rollback, including attempts, daily practice, both scheduler plans, prep check, both guided stores and remediation. It also verifies that still-out-of-scope learner data such as `waseshibu-math-level2-history-v1` remains untouched.
 
 This is rollback **evidence**, not the final production rollback mechanism. Any real write migration must still use the app's established backup/restore-point safety framework and must restore both source keys and any newly introduced canonical keys atomically on failure.
 
@@ -129,6 +139,7 @@ The current rehearsal blocks advancement when, for example:
 - daily/planner/prep state is malformed or contains unsupported persisted fields;
 - a future prep version would otherwise be silently downgraded to v1;
 - guided v1/v2 state is malformed, unsupported or internally misidentified;
+- remediation raw entries would be silently dropped, collide on normalized source identity, contain non-finite normalized positions/counters, or carry invalid timestamp evidence;
 - the rehearsal itself changes persisted source data.
 
 No guessed value, silent record drop, inferred v1/v2 rewrite or implicit deduplication is allowed merely to make the migration pass.
@@ -145,11 +156,12 @@ The normal production build now runs these shared-engine learner-state safety ga
 6. `test:shared-engine-planner-parity`
 7. `test:shared-engine-prep`
 8. `test:shared-engine-guided`
-9. `test:shared-engine-dual-read`
-10. `test:shared-engine-migration-rehearsal`
+9. `test:shared-engine-remediation`
+10. `test:shared-engine-dual-read`
+11. `test:shared-engine-migration-rehearsal`
 
 A failure in any of these blocks the PR/deploy build.
 
 ## Next migration step
 
-Before a production write path is designed, the same shadow/parity/rehearsal pattern must be expanded to remediation and Level2 state, followed by backup/export/import semantics and IndexedDB/cloud projection. Only after the full backup-relevant state is covered should the branch add a candidate write migration with restore-point creation, atomic rollback and post-write parity verification.
+Before a production write path is designed, the same shadow/parity/rehearsal pattern must be expanded to Level2 state, followed by backup/export/import semantics and IndexedDB/cloud projection. Only after the full backup-relevant state is covered should the branch add a candidate write migration with restore-point creation, atomic rollback and post-write parity verification.

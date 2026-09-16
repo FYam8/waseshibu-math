@@ -2,6 +2,7 @@ import type {
   CanonicalLearnerStateMigrationCandidate,
   CanonicalScheduledTaskPlan
 } from '../../engine/learnerState'
+import type { CanonicalRemediationState } from '../../engine/remediationContract'
 import { DATA_VERSION_KEY } from '../../dataMigration'
 import { WASESHIBU_APP_PROFILE } from './appProfile'
 import { WASESHIBU_EXAM_CATALOG } from './legacyCompatibility'
@@ -11,6 +12,7 @@ import { auditWaseShibuDailyPractice } from './dailyAudit'
 import { auditWaseShibuPlannerReaderParity } from './plannerAudit'
 import { auditWaseShibuPrepState } from './prepAudit'
 import { auditWaseShibuGuidedState } from './guidedAudit'
+import { auditWaseShibuRemediationState } from './remediationAudit'
 import {
   LEGACY_DAILY_REQUIRED_PLAN_KEY,
   LEGACY_STUDY_AHEAD_PLAN_KEY
@@ -20,6 +22,7 @@ import {
   LEGACY_GUIDED_PROGRESS_KEY,
   LEGACY_GUIDED_REVIEW_KEY
 } from './guidedCompatibility'
+import { LEGACY_REMEDIATION_PROGRESS_KEY } from './remediationCompatibility'
 
 const ATTEMPT_KEY = 'waseshibu-math-attempts'
 const DAILY_KEY = 'waseshibu-math-daily'
@@ -33,9 +36,10 @@ const META_KEY = 'waseshibu-math-sync-meta'
  * Exact legacy source bytes covered by the current rehearsal.
  *
  * Both guided keys are included because v2 is the active mastery timeline while
- * v1 is still compatibility/final-answer-fallback evidence. Rollback must
- * restore both exactly even though only one generic mastery map is canonical.
- * Remediation/Level2 and later state families remain outside this rehearsal.
+ * v1 is still compatibility/final-answer-fallback evidence. Remediation keeps
+ * its current runtime-normalized record as school evidence and its exact source
+ * bytes here for rollback. Level2 and later state families remain outside this
+ * rehearsal until their own parity gates exist.
  */
 export const WASESHIBU_REHEARSAL_SOURCE_KEYS = [
   ATTEMPT_KEY,
@@ -45,6 +49,7 @@ export const WASESHIBU_REHEARSAL_SOURCE_KEYS = [
   WASESHIBU_PREP_KEY,
   LEGACY_GUIDED_REVIEW_KEY,
   LEGACY_GUIDED_PROGRESS_KEY,
+  LEGACY_REMEDIATION_PROGRESS_KEY,
   PREF_KEY,
   EXAM_KEY,
   DRAFT_KEY,
@@ -55,6 +60,9 @@ export const WASESHIBU_REHEARSAL_SOURCE_KEYS = [
 
 export type WaseShibuRehearsalSourceKey = (typeof WASESHIBU_REHEARSAL_SOURCE_KEYS)[number]
 export type WaseShibuRawSnapshot = Record<WaseShibuRehearsalSourceKey, string | null>
+export type WaseShibuCanonicalMigrationCandidate = CanonicalLearnerStateMigrationCandidate & {
+  remediation: CanonicalRemediationState
+}
 
 export type WaseShibuMigrationRehearsalIssue = {
   surface: string
@@ -65,7 +73,7 @@ export type WaseShibuMigrationRehearsalReport = {
   /** Ready only for the next migration-engine step for the audited scope. */
   ready: boolean
   /** This is a rehearsal/read-model contract marker, not the app data version. */
-  rehearsalContractVersion: 5
+  rehearsalContractVersion: 6
   scope: readonly [
     'preferences',
     'examResults',
@@ -76,10 +84,11 @@ export type WaseShibuMigrationRehearsalReport = {
     'todayRequiredPlan',
     'studyAheadPlan',
     'preparationCheck',
-    'guidedLearning'
+    'guidedLearning',
+    'remediation'
   ]
   sourceSnapshot: WaseShibuRawSnapshot
-  canonicalCandidate: CanonicalLearnerStateMigrationCandidate
+  canonicalCandidate: WaseShibuCanonicalMigrationCandidate
   issues: WaseShibuMigrationRehearsalIssue[]
 }
 
@@ -109,7 +118,7 @@ function validatePlannerPlan(
   }
 }
 
-function validateCanonicalCandidate(state: CanonicalLearnerStateMigrationCandidate) {
+function validateCanonicalCandidate(state: WaseShibuCanonicalMigrationCandidate) {
   const issues: WaseShibuMigrationRehearsalIssue[] = []
   const knownExamIds = new Set<string>(WASESHIBU_EXAM_CATALOG.map(exam => exam.examId))
   const knownTargetIds = new Set<string>(WASESHIBU_APP_PROFILE.targets.map(target => target.id))
@@ -214,6 +223,28 @@ function validateCanonicalCandidate(state: CanonicalLearnerStateMigrationCandida
     }
   }
 
+  for (const [sourceProblemId, progress] of Object.entries(state.remediation.progressBySourceProblemId)) {
+    if (progress.sourceProblemId !== sourceProblemId) {
+      issues.push({
+        surface: 'remediation',
+        message: `remediation source identity mismatch: ${sourceProblemId} / ${progress.sourceProblemId}`
+      })
+    }
+    if (!Number.isInteger(progress.streak) || progress.streak < 0 || progress.streak > 4) {
+      issues.push({ surface: 'remediation', message: `invalid remediation streak for ${sourceProblemId}: ${progress.streak}` })
+    }
+    if (!Number.isInteger(progress.attemptCount) || progress.attemptCount < 0) {
+      issues.push({ surface: 'remediation', message: `invalid remediation attempt count for ${sourceProblemId}: ${progress.attemptCount}` })
+    }
+    if (progress.status === 'in-progress' && progress.streak >= 4) {
+      issues.push({ surface: 'remediation', message: `in-progress remediation cannot have a four-problem streak: ${sourceProblemId}` })
+    }
+    const legacyRecord = progress.schoolEvidence?.legacyRecord
+    if (!legacyRecord || typeof legacyRecord !== 'object' || Array.isArray(legacyRecord)) {
+      issues.push({ surface: 'remediation', message: `WaseShibu remediation legacy evidence is missing: ${sourceProblemId}` })
+    }
+  }
+
   return issues
 }
 
@@ -225,9 +256,10 @@ function validateCanonicalCandidate(state: CanonicalLearnerStateMigrationCandida
  * 2. requires legacy-vs-canonical parity for exam/route/activity/daily/prep;
  * 3. requires persisted planner parity without invoking reconciliation writes;
  * 4. requires guided v1 compatibility and v2 active-progress parity separately;
- * 5. adds only one generic guided mastery timeline to the candidate;
- * 6. validates combined canonical identities;
- * 7. verifies that the rehearsal itself changed no persisted source string.
+ * 5. requires remediation runtime-normalization parity and no-loss blockers;
+ * 6. adds one generic guided timeline plus generic remediation state to the candidate;
+ * 7. validates combined canonical identities;
+ * 8. verifies that the rehearsal itself changed no persisted source string.
  *
  * It never writes, removes, renames or migrates a localStorage key. A later
  * production migration must still use the app's backup/restore-point safety
@@ -241,6 +273,7 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
   const plannerAudit = auditWaseShibuPlannerReaderParity()
   const prepAudit = auditWaseShibuPrepState()
   const guidedAudit = auditWaseShibuGuidedState()
+  const remediationAudit = auditWaseShibuRemediationState()
 
   const issues: WaseShibuMigrationRehearsalIssue[] = dualRead.mismatches.map(mismatch => ({
     surface: mismatch.surface,
@@ -270,15 +303,20 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
       : `guided:${mismatch.surface}`,
     message: mismatch.message
   })))
+  issues.push(...remediationAudit.mismatches.map(mismatch => ({
+    surface: mismatch.surface === 'remediation' ? 'remediation' : `remediation:${mismatch.surface}`,
+    message: mismatch.message
+  })))
 
-  const canonicalCandidate: CanonicalLearnerStateMigrationCandidate = {
+  const canonicalCandidate: WaseShibuCanonicalMigrationCandidate = {
     ...dualRead.canonicalShadow,
     activityRecords: activityAudit.canonicalShadow,
     dailyPractice: dailyAudit.canonicalShadow,
     todayRequiredPlan: plannerAudit.canonicalShadow.todayRequiredPlan,
     studyAheadPlan: plannerAudit.canonicalShadow.studyAheadPlan,
     preparationCheck: prepAudit.canonicalShadow,
-    guidedLearning: guidedAudit.canonicalShadow.guidedLearning
+    guidedLearning: guidedAudit.canonicalShadow.guidedLearning,
+    remediation: remediationAudit.canonicalShadow
   }
   issues.push(...validateCanonicalCandidate(canonicalCandidate))
 
@@ -289,7 +327,7 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
 
   return {
     ready: issues.length === 0,
-    rehearsalContractVersion: 5,
+    rehearsalContractVersion: 6,
     scope: [
       'preferences',
       'examResults',
@@ -300,7 +338,8 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
       'todayRequiredPlan',
       'studyAheadPlan',
       'preparationCheck',
-      'guidedLearning'
+      'guidedLearning',
+      'remediation'
     ],
     sourceSnapshot: before,
     canonicalCandidate,
