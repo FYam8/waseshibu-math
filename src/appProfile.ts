@@ -1,3 +1,14 @@
+export type MathLearningPhaseRole =
+  | 'diagnostic'
+  | 'training'
+  | 'remediation'
+  | 'checkpoint'
+  | 'practice'
+  | 'transfer'
+  | 'retention'
+  | 'confirmation'
+  | 'final'
+
 export type MathAppProfile = {
   id: string
   schoolLabel: string
@@ -12,13 +23,31 @@ export type MathAppProfile = {
     step: number
     title: string
     year?: number
-    role: 'diagnostic' | 'remediation' | 'checkpoint' | 'practice' | 'final'
+    role: MathLearningPhaseRole
   }[]
   runtime: {
+    /**
+     * Namespace for school-owned browser state. Existing WaseShibu legacy keys
+     * remain authoritative and must not be renamed merely by deriving them from
+     * this value.
+     */
     storageNamespace: string
+    /** Backup package identity; also a compatibility boundary between schools. */
+    backupAppId: string
+    /** Prefix used by WaseShibu CustomEvent names. */
     eventNamespace: string
+    /** BroadcastChannel used to coordinate safe app-version updates. */
     updateChannel: string
-    progressApiEnv: 'VITE_PROGRESS_API_BASE'
+    progressSync: {
+      /** Origin-scoped IndexedDB name. Must differ for every school app. */
+      indexedDbName: string
+      /** App/tenant identity carried by cloud progress events. */
+      appId: string
+      /** Build-time API base variable. The resolved endpoint is school-specific. */
+      apiEnv: 'VITE_PROGRESS_API_BASE'
+      /** Optional browser override used by the current WaseShibu runtime. */
+      windowOverrideKey: string
+    }
   }
 }
 
@@ -27,7 +56,8 @@ export type MathAppProfile = {
  *
  * This file is intentionally not wired into runtime yet. The first shared-engine
  * migration step is to make the existing production contract explicit without
- * changing behaviour, storage keys, routes, scoring, or learner data.
+ * changing behaviour, storage keys, routes, scoring, sync identities, or learner
+ * data.
  */
 export const WASESHIBU_APP_PROFILE = {
   id: 'waseshibu',
@@ -49,9 +79,15 @@ export const WASESHIBU_APP_PROFILE = {
   ],
   runtime: {
     storageNamespace: 'waseshibu-math',
+    backupAppId: 'waseshibu-math',
     eventNamespace: 'waseshibu',
     updateChannel: 'waseshibu-math-updates',
-    progressApiEnv: 'VITE_PROGRESS_API_BASE'
+    progressSync: {
+      indexedDbName: 'waseshibu-progress-sync',
+      appId: 'math',
+      apiEnv: 'VITE_PROGRESS_API_BASE',
+      windowOverrideKey: '__WASESHIBU_PROGRESS_API__'
+    }
   }
 } as const satisfies MathAppProfile
 
