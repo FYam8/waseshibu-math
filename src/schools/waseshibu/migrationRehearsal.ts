@@ -1,11 +1,21 @@
-import type { CanonicalLearnerStateMigrationCandidate } from '../../engine/learnerState'
+import type {
+  CanonicalLearnerStateMigrationCandidate,
+  CanonicalScheduledTaskPlan
+} from '../../engine/learnerState'
 import { DATA_VERSION_KEY } from '../../dataMigration'
 import { WASESHIBU_APP_PROFILE } from './appProfile'
 import { WASESHIBU_EXAM_CATALOG } from './legacyCompatibility'
 import { auditWaseShibuDualRead } from './dualReadAudit'
 import { auditWaseShibuActivities } from './activityAudit'
+import { auditWaseShibuDailyPractice } from './dailyAudit'
+import { auditWaseShibuPlannerReaderParity } from './plannerAudit'
+import {
+  LEGACY_DAILY_REQUIRED_PLAN_KEY,
+  LEGACY_STUDY_AHEAD_PLAN_KEY
+} from './plannerLegacyReader'
 
 const ATTEMPT_KEY = 'waseshibu-math-attempts'
+const DAILY_KEY = 'waseshibu-math-daily'
 const PREF_KEY = 'waseshibu-math-preferences'
 const EXAM_KEY = 'waseshibu-math-exam-scores'
 const DRAFT_KEY = 'waseshibu-math-exam-drafts-v2'
@@ -15,12 +25,15 @@ const META_KEY = 'waseshibu-math-sync-meta'
 /**
  * Exact legacy source bytes covered by the current rehearsal.
  *
- * The scope now includes the legacy attempts container after it passed its own
- * independent activity shadow/parity gate. Daily/guided/remediation/Level2 and
- * other state families are still intentionally outside this rehearsal.
+ * The scope includes attempts, the 8-question daily-practice session and both
+ * persisted scheduler plans after each passed an independent read-only parity
+ * gate. Guided/remediation/Level2 and other state families remain outside.
  */
 export const WASESHIBU_REHEARSAL_SOURCE_KEYS = [
   ATTEMPT_KEY,
+  DAILY_KEY,
+  LEGACY_DAILY_REQUIRED_PLAN_KEY,
+  LEGACY_STUDY_AHEAD_PLAN_KEY,
   PREF_KEY,
   EXAM_KEY,
   DRAFT_KEY,
@@ -41,8 +54,17 @@ export type WaseShibuMigrationRehearsalReport = {
   /** Ready only for the next migration-engine step for the audited scope. */
   ready: boolean
   /** This is a rehearsal/read-model contract marker, not the app data version. */
-  rehearsalContractVersion: 2
-  scope: readonly ['preferences', 'examResults', 'drafts', 'route', 'activityRecords']
+  rehearsalContractVersion: 3
+  scope: readonly [
+    'preferences',
+    'examResults',
+    'drafts',
+    'route',
+    'activityRecords',
+    'dailyPractice',
+    'todayRequiredPlan',
+    'studyAheadPlan'
+  ]
   sourceSnapshot: WaseShibuRawSnapshot
   canonicalCandidate: CanonicalLearnerStateMigrationCandidate
   issues: WaseShibuMigrationRehearsalIssue[]
@@ -56,6 +78,22 @@ function captureRawSnapshot(storage: Pick<Storage, 'getItem'> = localStorage): W
 
 function sameRawSnapshot(left: WaseShibuRawSnapshot, right: WaseShibuRawSnapshot) {
   return WASESHIBU_REHEARSAL_SOURCE_KEYS.every(key => left[key] === right[key])
+}
+
+function validatePlannerPlan(
+  surface: 'todayRequiredPlan' | 'studyAheadPlan',
+  plan: CanonicalScheduledTaskPlan | null,
+  expectedKind: CanonicalScheduledTaskPlan['planKind'],
+  knownTargetIds: Set<string>,
+  issues: WaseShibuMigrationRehearsalIssue[]
+) {
+  if (!plan) return
+  if (plan.planKind !== expectedKind) {
+    issues.push({ surface, message: `planner kind mismatch: expected ${expectedKind}, got ${plan.planKind}` })
+  }
+  if (!knownTargetIds.has(plan.targetId)) {
+    issues.push({ surface, message: `unknown canonical targetId: ${plan.targetId}` })
+  }
 }
 
 function validateCanonicalCandidate(state: CanonicalLearnerStateMigrationCandidate) {
@@ -125,6 +163,9 @@ function validateCanonicalCandidate(state: CanonicalLearnerStateMigrationCandida
     }
   }
 
+  validatePlannerPlan('todayRequiredPlan', state.todayRequiredPlan, 'today-required', knownTargetIds, issues)
+  validatePlannerPlan('studyAheadPlan', state.studyAheadPlan, 'study-ahead', knownTargetIds, issues)
+
   return issues
 }
 
@@ -134,9 +175,10 @@ function validateCanonicalCandidate(state: CanonicalLearnerStateMigrationCandida
  * The active legacy readers remain authoritative. This function:
  * 1. captures the exact legacy source strings needed for rollback evidence;
  * 2. requires legacy-vs-canonical dual-read parity for exam/route state;
- * 3. requires independent legacy-attempt vs canonical-activity parity;
- * 4. validates the combined canonical candidate against known identities;
- * 5. verifies that the rehearsal itself changed no persisted source string.
+ * 3. requires independent attempt/activity and daily-practice parity;
+ * 4. requires persisted planner shadow vs read-only legacy-reader parity;
+ * 5. validates the combined canonical candidate against known identities;
+ * 6. verifies that the rehearsal itself changed no persisted source string.
  *
  * It never writes, removes, renames or migrates a localStorage key. A later
  * production migration must still use the app's backup/restore-point safety
@@ -146,6 +188,9 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
   const before = captureRawSnapshot()
   const dualRead = auditWaseShibuDualRead()
   const activityAudit = auditWaseShibuActivities()
+  const dailyAudit = auditWaseShibuDailyPractice()
+  const plannerAudit = auditWaseShibuPlannerReaderParity()
+
   const issues: WaseShibuMigrationRehearsalIssue[] = dualRead.mismatches.map(mismatch => ({
     surface: mismatch.surface,
     message: mismatch.message
@@ -154,10 +199,23 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
     surface: mismatch.surface === 'activityRecords' ? 'activityRecords' : `activity:${mismatch.surface}`,
     message: mismatch.message
   })))
+  issues.push(...dailyAudit.mismatches.map(mismatch => ({
+    surface: mismatch.surface === 'dailyPractice' ? 'dailyPractice' : `daily:${mismatch.surface}`,
+    message: mismatch.message
+  })))
+  issues.push(...plannerAudit.mismatches.map(mismatch => ({
+    surface: mismatch.surface === 'todayRequiredPlan' || mismatch.surface === 'studyAheadPlan'
+      ? mismatch.surface
+      : `planner:${mismatch.surface}`,
+    message: mismatch.message
+  })))
 
   const canonicalCandidate: CanonicalLearnerStateMigrationCandidate = {
     ...dualRead.canonicalShadow,
-    activityRecords: activityAudit.canonicalShadow
+    activityRecords: activityAudit.canonicalShadow,
+    dailyPractice: dailyAudit.canonicalShadow,
+    todayRequiredPlan: plannerAudit.canonicalShadow.todayRequiredPlan,
+    studyAheadPlan: plannerAudit.canonicalShadow.studyAheadPlan
   }
   issues.push(...validateCanonicalCandidate(canonicalCandidate))
 
@@ -168,8 +226,17 @@ export function rehearseWaseShibuCanonicalMigration(): WaseShibuMigrationRehears
 
   return {
     ready: issues.length === 0,
-    rehearsalContractVersion: 2,
-    scope: ['preferences', 'examResults', 'drafts', 'route', 'activityRecords'],
+    rehearsalContractVersion: 3,
+    scope: [
+      'preferences',
+      'examResults',
+      'drafts',
+      'route',
+      'activityRecords',
+      'dailyPractice',
+      'todayRequiredPlan',
+      'studyAheadPlan'
+    ],
     sourceSnapshot: before,
     canonicalCandidate,
     issues
