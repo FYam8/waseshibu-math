@@ -1,6 +1,6 @@
 # Shared Math Engine Architecture
 
-Status: foundation / no production runtime change
+Status: Phase 1 started / behaviour-preserving extraction on draft PR
 
 ## Goal
 
@@ -8,7 +8,7 @@ Status: foundation / no production runtime change
 
 The first downstream consumer is `FYam8/rikkyo-uk-math`.
 
-The architecture decision for data is now explicit: **Rikkyo will converge on the same canonical runtime data format as WaseShibu.** Existing Rikkyo analysed content remains authoritative, but its current serialization is migration input rather than a permanent second runtime schema. See `DATA_FORMAT_POLICY.md`.
+The architecture decision for data is explicit: **Rikkyo will converge on the same canonical runtime data format as WaseShibu.** Existing Rikkyo analysed content remains authoritative, but its current serialization is migration input rather than a permanent second runtime schema. See `DATA_FORMAT_POLICY.md`.
 
 ## Non-negotiable safety rules
 
@@ -19,7 +19,7 @@ The architecture decision for data is now explicit: **Rikkyo will converge on th
 5. **Engine propagation is gated, not blind.** A WaseShibu engine change can update Rikkyo automatically, but Rikkyo tests must pass before its deployable branch is advanced.
 6. **Path separation is not a data-isolation mechanism.** Browser localStorage, IndexedDB and BroadcastChannel are origin-scoped. If separate project sites are served under the same web origin, all persistence/sync names still have to be unique per school.
 
-The exact audited identities are recorded in `COMPATIBILITY_BASELINE.md`; path ownership is recorded in `PATH_OWNERSHIP.md`; shared-format policy is recorded in `DATA_FORMAT_POLICY.md`.
+The exact audited identities are recorded in `COMPATIBILITY_BASELINE.md`; path ownership is recorded in `PATH_OWNERSHIP.md`; shared-format policy is recorded in `DATA_FORMAT_POLICY.md`; legacy WaseShibu compatibility is recorded in `LEGACY_COMPATIBILITY_PLAN.md`.
 
 ## Repository roles
 
@@ -83,7 +83,7 @@ Phase 1 first makes the WaseShibu engine-facing shapes explicit while preserving
 - hints / guided explanations
 - figure/source-page resolver
 - field/topic taxonomy
-- attempt/exam-score/daily/route state
+- attempt/exam-result/daily/route state
 - guided/remediation/mastery history
 - persistence namespace, backup identity and schema version
 - update-event / BroadcastChannel identities
@@ -92,9 +92,34 @@ Phase 1 first makes the WaseShibu engine-facing shapes explicit while preserving
 - cloud-progress projection logic
 - school-specific exclusions/review flags
 
-`src/engine/appProfile.ts` contains shared profile types. `src/schools/waseshibu/appProfile.ts` contains current WaseShibu values. Neither is wired into production runtime at this foundation stage.
+`src/engine/appProfile.ts` contains shared profile types. `src/engine/examContract.ts` contains the first canonical exam/result contract. `src/schools/waseshibu/appProfile.ts` contains current WaseShibu values. `src/appConfig.ts` is the WaseShibu composition root.
 
-Shared engine code must not import a global WaseShibu singleton. The WaseShibu composition layer injects WaseShibu configuration; the Rikkyo composition layer injects Rikkyo configuration using the same contract.
+Shared engine code must not import a global WaseShibu singleton. The WaseShibu composition layer injects WaseShibu configuration; the Rikkyo composition layer will inject Rikkyo configuration using the same contract.
+
+## Phase-1 implementation now present on the draft branch
+
+The first behaviour-preserving runtime extraction has started, but no learner-state migration has been enabled.
+
+Implemented so far:
+
+- deterministic WaseShibu `year <-> examId` compatibility mapping;
+- deterministic numeric target `<-> targetId` compatibility mapping;
+- pure conversion helpers for year-keyed records and completion locks;
+- canonical exam-result type with optional numeric score and explicit score authority;
+- WaseShibu app composition root;
+- app-shell branding, BroadcastChannel and CustomEvent listener names resolved through the WaseShibu profile while retaining the exact existing strings;
+- `scripts/test-shared-engine-compat.mjs` added as a required `npm run build` gate.
+
+Not yet enabled:
+
+- rewriting existing localStorage data;
+- changing public WaseShibu routes or query parameters;
+- changing score calculation or target strategy;
+- changing question/content data;
+- changing cloud-sync identities or endpoint;
+- deploying Rikkyo from the shared engine.
+
+This separation is deliberate: compatibility readers/types and invariants are proven first, then learner-state modules can be migrated one subsystem at a time.
 
 ## Rikkyo normalization strategy
 
@@ -153,14 +178,13 @@ A Rikkyo failure never blocks or mutates WaseShibu production. A WaseShibu engin
 
 ## Rollout phases
 
-### Phase 0 — foundation (this branch)
+### Phase 0 — foundation
 - document canonical ownership and safety invariants
 - split shared profile types from WaseShibu school values
 - record exact WaseShibu and Rikkyo compatibility baselines
 - establish WaseShibu-derived canonical data-format policy
-- do not change production runtime behaviour
 
-### Phase 1 — behaviour-preserving extraction in WaseShibu
+### Phase 1 — behaviour-preserving extraction in WaseShibu (in progress on draft PR)
 - make WaseShibu's current runtime data shapes explicit as canonical engine contracts
 - move brand/year/learning-plan literals behind injected WaseShibu profile values
 - move event/storage/update/sync identities behind injected school configuration while preserving exact existing WaseShibu strings
@@ -201,6 +225,7 @@ Before a shared-engine extraction PR can merge:
 - progress-sync IndexedDB/app identity is unchanged
 - WaseShibu grading/content behaviour is unchanged
 - no Rikkyo data or identity is imported by WaseShibu production runtime
+- shared-engine compatibility test is green
 
 ### Rikkyo gate
 
