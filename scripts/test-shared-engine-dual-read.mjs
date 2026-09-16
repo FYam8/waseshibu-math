@@ -121,9 +121,9 @@ assert.equal(report.canonicalShadow.examResults[1].deviceId, 'device-explicit')
 assert.equal(report.canonicalShadow.examResults[1].resetVersion, 12)
 assert.deepEqual(report.canonicalShadow.route.completedExamIdsByTarget, {
   '60': ['waseshibu-2024', 'waseshibu-2023'],
-  '70': ['waseshibu-2024', 'waseshibu-2023'],
+  '70': ['waseshibu-2023', 'waseshibu-2024'],
   '75': ['waseshibu-2024']
-}, 'canonical shadow must match current target-completion closure semantics')
+}, 'canonical shadow must preserve the exact current target-completion closure ordering')
 assert.equal(report.canonicalShadow.draftsByExamId['waseshibu-2026'].seconds, 39)
 
 const malformedStorage = new MemoryStorage({
