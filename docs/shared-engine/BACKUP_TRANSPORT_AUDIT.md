@@ -4,6 +4,8 @@
 
 This phase audits the existing WaseShibu JSON backup/export/import boundary without changing `collectBackup()`, `restoreBackup()`, the backup schema version, learner-visible UI or any persisted key.
 
+Device-local rollback is specified separately in `LOCAL_RESTORE_POINT_AUDIT.md`. Internal restore points retain an exact local snapshot, including device identity and sync reset/tombstone metadata, while their downloadable payload remains this portable package.
+
 The goal is to distinguish **portable learner data** from **school-local runtime identity/sync state**, then expose current merge cases that are not demonstrably lossless enough for a future canonical cutover.
 
 ## Runtime identity boundary

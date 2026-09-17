@@ -1,8 +1,10 @@
 import { backupStats, collectBackup, restoreBackup, type BackupPackage, type StorageLike } from './dataBackup'
+import { captureExactLocalSnapshot, restoreExactLocalSnapshot, type ExactLocalSnapshot } from './engine/localRestoreContract'
+import { WASESHIBU_LOCAL_RESTORE_PROFILE, type WaseShibuLocalRestoreKey } from './schools/waseshibu/localRestoreProfile'
 import { APP_VERSION } from './version'
 
 export type RestoreReason='pre_upgrade'|'daily'|'exam_complete'|'before_import'|'manual'
-export type RestorePoint={id:string;createdAt:string;reason:RestoreReason;appVersion:string;dataVersion:number;checksum:string;payload:BackupPackage;pinned:boolean}
+export type RestorePoint={id:string;createdAt:string;reason:RestoreReason;appVersion:string;dataVersion:number;checksum:string;payload:BackupPackage;localSnapshot?:ExactLocalSnapshot<WaseShibuLocalRestoreKey>;pinned:boolean}
 const DB_NAME='waseshibu-math-safety',STORE='restorePoints',FALLBACK_KEY='waseshibu-math-auto-restore-points-v1',DAILY_KEY='waseshibu-math-last-daily-snapshot'
 
 const stable=(value:unknown):string=>{
@@ -15,6 +17,7 @@ async function checksum(value:unknown){
   if(typeof crypto!=='undefined'&&crypto.subtle){const data=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(data)].map(x=>x.toString(16).padStart(2,'0')).join('')}
   let hash=2166136261;for(let i=0;i<text.length;i++){hash^=text.charCodeAt(i);hash=Math.imul(hash,16777619)}return `fnv-${(hash>>>0).toString(16)}`
 }
+const pointChecksumValue=(point:Pick<RestorePoint,'payload'|'localSnapshot'>)=>point.localSnapshot?{payload:point.payload,localSnapshot:point.localSnapshot}:point.payload
 const newId=()=>typeof crypto!=='undefined'&&'randomUUID' in crypto?crypto.randomUUID():`restore-${Date.now()}-${Math.random().toString(36).slice(2)}`
 
 function openDb():Promise<IDBDatabase>{
@@ -39,16 +42,22 @@ async function cleanup(storage:StorageLike=localStorage){
 }
 
 export async function createRestorePoint(reason:RestoreReason,storage:StorageLike=localStorage,pinned=reason==='pre_upgrade'){
-  const payload=collectBackup(storage),point:RestorePoint={id:newId(),createdAt:new Date().toISOString(),reason,appVersion:APP_VERSION,dataVersion:payload.dataVersion,checksum:await checksum(payload),payload,pinned}
+  const createdAt=new Date().toISOString(),payload=collectBackup(storage),localSnapshot=captureExactLocalSnapshot(WASESHIBU_LOCAL_RESTORE_PROFILE,storage,createdAt)
+  const point:RestorePoint={id:newId(),createdAt,reason,appVersion:APP_VERSION,dataVersion:payload.dataVersion,checksum:'',payload,localSnapshot,pinned}
+  point.checksum=await checksum(pointChecksumValue(point))
   await savePoint(point,storage)
   const verified=(await allPoints(storage)).find(x=>x.id===point.id)
-  if(!verified||verified.checksum!==await checksum(verified.payload))throw new Error('自動復元ポイントを検証できませんでした')
+  if(!verified||verified.checksum!==await checksum(pointChecksumValue(verified)))throw new Error('自動復元ポイントを検証できませんでした')
   await cleanup(storage);return point
 }
 export async function listRestorePoints(storage:StorageLike=localStorage){return (await allPoints(storage)).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))}
-export async function getRestorePoint(id:string,storage:StorageLike=localStorage){const point=(await allPoints(storage)).find(x=>x.id===id);if(!point)throw new Error('復元ポイントが見つかりません');if(point.checksum!==await checksum(point.payload))throw new Error('復元ポイントが壊れています');return point}
-export async function restorePointPayload(id:string,storage:StorageLike=localStorage){const point=await getRestorePoint(id,storage);restoreBackup(storage,point.payload,'replace');return point}
-export async function restoreFromPoint(id:string,storage:StorageLike=localStorage){const point=await getRestorePoint(id,storage),current=await createRestorePoint('manual',storage);restoreBackup(storage,point.payload,'replace');return {restored:point,current}}
+export async function getRestorePoint(id:string,storage:StorageLike=localStorage){const point=(await allPoints(storage)).find(x=>x.id===id);if(!point)throw new Error('復元ポイントが見つかりません');if(point.checksum!==await checksum(pointChecksumValue(point)))throw new Error('復元ポイントが壊れています');return point}
+function applyRestorePoint(point:RestorePoint,storage:StorageLike){
+  if(point.localSnapshot)restoreExactLocalSnapshot(WASESHIBU_LOCAL_RESTORE_PROFILE,point.localSnapshot,storage)
+  else restoreBackup(storage,point.payload,'replace')
+}
+export async function restorePointPayload(id:string,storage:StorageLike=localStorage){const point=await getRestorePoint(id,storage);applyRestorePoint(point,storage);return point}
+export async function restoreFromPoint(id:string,storage:StorageLike=localStorage){const point=await getRestorePoint(id,storage),current=await createRestorePoint('manual',storage);applyRestorePoint(point,storage);return {restored:point,current}}
 export async function removeRestorePoint(id:string,storage:StorageLike=localStorage){await deletePoint(id,storage)}
 export async function createDailyRestorePoint(storage:StorageLike=localStorage){const today=new Date().toISOString().slice(0,10);if(storage.getItem(DAILY_KEY)===today)return null;const stats=backupStats(collectBackup(storage));if(stats.attempts+stats.scores+stats.drafts===0&&!stats.prepStarted)return null;const point=await createRestorePoint('daily',storage,false);storage.setItem(DAILY_KEY,today);return point}
 export function downloadRestorePoint(point:RestorePoint){const blob=new Blob([JSON.stringify(point.payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`waseshibu-math-restore-${point.createdAt.slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}

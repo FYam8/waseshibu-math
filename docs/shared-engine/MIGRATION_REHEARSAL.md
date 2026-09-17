@@ -59,8 +59,10 @@ School-local runtime identity such as `waseshibu-math-device-id` is intentionall
 
 The remaining major pre-cutover surfaces are:
 
-- backup/export/import package and conflict/merge semantics;
-- progress-sync IndexedDB/cloud projection and school-specific sync identity.
+- an explicit no-loss policy for legacy portable records and destructive import/merge conflicts;
+- routing the current progress-sync runtime identity through the audited school profile without changing its IndexedDB/cloud projection behavior.
+
+The device-local rollback boundary is now implemented separately from portable transport. New internal restore points preserve exact raw learner keys plus device identity and sync reset/tombstone metadata; their downloadable payload remains portable and excludes those runtime keys. See `LOCAL_RESTORE_POINT_AUDIT.md`.
 
 No production cutover may occur while those surfaces are outside the canonical migration gate.
 
@@ -112,7 +114,7 @@ No guessed value, silent record drop, inferred guided rewrite, Level2 reader pre
 
 The test requires byte/string parity for every audited source key after the simulated rollback, now including Level2 history. It separately verifies that school-local device identity is outside the source snapshot and remains untouched.
 
-This is rollback **evidence**, not the final production rollback mechanism. Any real write migration must still use the app's established backup/restore-point safety framework and must restore both source keys and any newly introduced canonical keys atomically on failure.
+This rehearsal snapshot remains rollback **evidence**, not a production write migration. The established restore-point framework now has a separate exact local snapshot with verified rollback. Before any new canonical key is written, that key must first be added to the applicable school local-restore profile and covered by its exact-restore gate.
 
 ## Required build gates
 
@@ -128,11 +130,14 @@ The normal production build now runs these shared-engine learner-state safety ga
 8. `test:shared-engine-guided`
 9. `test:shared-engine-remediation`
 10. `test:shared-engine-level2`
-11. `test:shared-engine-dual-read`
-12. `test:shared-engine-migration-rehearsal`
+11. `test:shared-engine-backup`
+12. `test:shared-engine-local-restore`
+13. `test:shared-engine-sync-boundary`
+14. `test:shared-engine-dual-read`
+15. `test:shared-engine-migration-rehearsal`
 
 A failure in any of these blocks the PR/deploy build.
 
 ## Next migration step
 
-Before a production write path is designed, the same preservation audit must cover backup/export/import semantics and IndexedDB/cloud projection. Only after the full backup- and sync-relevant state is covered should the branch add a candidate write migration with restore-point creation, atomic rollback and post-write parity verification.
+Before a production write path is designed, the unresolved portable legacy/merge policies must be made no-loss and the audited sync identity profile must be wired into the existing runtime under exact parity. Only then should the branch add a candidate write migration with restore-point creation, exact local rollback and post-write parity verification.
