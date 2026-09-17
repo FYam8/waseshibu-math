@@ -2,7 +2,7 @@
 
 ## Scope
 
-This phase defines and tests the boundary between reusable engine concepts and WaseShibu's existing external progress-sync adapter. It does **not** change `progressSync.ts`, IndexedDB, registration credentials, cloud payloads, the deployed endpoint or learner-visible behaviour.
+This phase defines and tests the boundary between reusable engine concepts and WaseShibu's existing external progress-sync adapter. `progressSync.ts` now reads its concrete identity from the WaseShibu school profile; IndexedDB values, registration credentials, cloud payloads, the deployed endpoint and learner-visible behaviour are unchanged.
 
 The reusable contract is intentionally identity-shaped only. Projection semantics stay school-owned.
 
@@ -43,12 +43,12 @@ It also verifies that the sync module does not call learner-state writers such a
 
 ## Build gate
 
-`test:shared-engine-sync-boundary` is build-required. It source-pins the current WaseShibu sync identity and deployed endpoint, confirms the fixed year/target projection remains explicitly school-owned, protects the raw-answer/content exclusion, and checks that the generic engine contract contains no WaseShibu-specific constants.
+`test:shared-engine-sync-boundary` is build-required. It pins the current WaseShibu sync profile and deployed endpoint, requires the active adapter to obtain database/app/environment/override identity through that profile, confirms the fixed year/target projection remains explicitly school-owned, protects the raw-answer/content exclusion, and checks that the generic engine contract contains no WaseShibu-specific constants.
 
 The existing `test-progress-cloud-sync.mjs` remains in the workflow as an independent regression gate.
 
-## Next step
+## Runtime cutover completed
 
-The profile is currently an audited specification; `progressSync.ts` still holds its existing literals. A later behaviour-preserving extraction may route those identity constants through the WaseShibu composition root, but only after exact source/runtime parity is protected. Rikkyo must not reuse WaseShibu's sync identity during that extraction.
+The active adapter now resolves its IndexedDB name/version, cloud app ID, environment-key binding and browser override key from `WASESHIBU_SYNC_PROFILE`. The Vite environment value remains a statically analyzable `import.meta.env.VITE_PROGRESS_API_BASE` access and is bound under the profile-declared key, preserving the existing production build behavior.
 
-No production canonical learner-state write cutover is authorized by this audit. Portable-backup legacy/merge policy and eventual local restore-point atomicity remain separate blockers.
+No projection policy moved into the generic engine, and no production canonical learner-state write cutover is authorized by this step. Rikkyo must provide a distinct profile and examId/A-B-aware projection. Portable-backup legacy/merge policy remains a separate blocker.
