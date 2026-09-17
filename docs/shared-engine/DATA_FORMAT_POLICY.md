@@ -2,6 +2,21 @@
 
 Status: architecture decision + Phase-1 contract extraction in progress
 
+## Canonical contract v1 checkpoint
+
+`src/engine/contentContract.ts` now defines and validates the first complete
+leaf-problem package boundary. It requires opaque `problemId`/`sourceProblemId`,
+explicit exam/location fields, school-owned target relevance, answer authority,
+quality flags and independent content/grading revisions. The validator never
+parses identifiers to infer year, form or question location.
+
+`src/engine/noLossTransport.ts` adds the production-cutover policy primitives:
+legacy provenance may be materialized only from the audited source runtime
+identity/reset epoch, and same-ID or same-map-key conflicts fail closed instead
+of choosing an incoming or local winner. `candidateWriteContract.ts` provides a
+verified staged write with byte-exact rollback coverage. None of these helpers
+is wired into current WaseShibu production persistence.
+
 ## Decision
 
 **Rikkyo will use the same canonical runtime data format as WaseShibu.**

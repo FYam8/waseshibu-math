@@ -70,3 +70,15 @@ These are **cutover blockers for an eventual canonical import/merge policy**, no
 The audit deliberately does not choose a policy for legacy portable records or destructive merge conflicts. Before canonical learner-state writes are enabled, the branch still needs an explicit import policy for legacy records that depend on local reset epochs, plus a no-loss conflict policy for merge mode.
 
 The next major safety surface is IndexedDB/cloud projection. WaseShibu's sync database, app ID, endpoint, reset-version reconciliation and route/year projections are school-specific and must remain isolated when the reusable engine is extracted.
+
+## No-loss policy checkpoint
+
+The canonical engine now contains pure policy helpers in
+`src/engine/noLossTransport.ts`. A legacy record may become portable only by
+materializing the exact fallback device/reset interpretation already supplied
+by its source runtime. Record and map collisions with differing evidence fail
+closed; there is no shallow overwrite or implicit winner. The current
+WaseShibu `collectBackup()` / `restoreBackup()` behavior remains unchanged.
+
+`test:shared-engine-contract-v1` verifies this policy and a staged canonical
+candidate write that restores every covered key byte-for-byte on failure.
