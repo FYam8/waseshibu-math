@@ -2,10 +2,11 @@ import { loadAttempts, loadExamScores, loadPreferences, loadSyncMeta } from './s
 import { loadLearningRoute } from './learningRoute'
 import { loadLevel2History } from './level2History'
 import { loadGuidedProgressState } from './guidedReview'
+import { WASESHIBU_SYNC_PROFILE } from './schools/waseshibu/syncProfile'
 
-const SYNC_DB='waseshibu-progress-sync'
-const SYNC_DB_VERSION=7
-const APP_ID='math'
+const SYNC_DB=WASESHIBU_SYNC_PROFILE.localDatabaseName
+const SYNC_DB_VERSION=WASESHIBU_SYNC_PROFILE.localDatabaseVersion
+const APP_ID=WASESHIBU_SYNC_PROFILE.appId
 const MAX_BATCH=10
 const RECONCILE_INTERVAL_MS=60_000
 const CONTROL_REFRESH_INTERVAL_MS=5*60_000
@@ -21,8 +22,11 @@ type StateRecord={sourceRecordId:string;eventType:string;occurredAt:string;paylo
 type RegistrationSeed={registration?:any;pending?:any}
 
 function apiBase(){
-  const env=import.meta.env.VITE_PROGRESS_API_BASE||''
-  const win=typeof window!=='undefined'?(window as any).__WASESHIBU_PROGRESS_API__||'':''
+  const environmentValues={
+    [WASESHIBU_SYNC_PROFILE.apiEnvironmentKey]:import.meta.env.VITE_PROGRESS_API_BASE
+  }
+  const env=environmentValues[WASESHIBU_SYNC_PROFILE.apiEnvironmentKey]||''
+  const win=typeof window!=='undefined'?(window as any)[WASESHIBU_SYNC_PROFILE.browserApiOverrideKey]||'':''
   return String(env||win).replace(/\/+$/,'')
 }
 function canonicalize(v:any):any{return Array.isArray(v)?v.map(canonicalize):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonicalize(v[k])])):v}

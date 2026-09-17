@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const root=process.cwd(),read=p=>fs.readFileSync(path.join(root,p),'utf8')
-const home=read('src/pages/Home.tsx'),eta=read('src/targetEta.ts'),route=read('src/learningRoute.ts'),main=read('src/main.tsx'),storage=read('src/storage.ts'),dataManager=read('src/pages/DataManager.tsx'),paper=read('src/pages/PastPapers.tsx'),remediation=read('src/pages/Remediation.tsx'),css=read('src/homeRoute.css')
+const home=read('src/pages/Home.tsx'),eta=read('src/targetEta.ts'),route=read('src/learningRoute.ts'),main=read('src/main.tsx'),storage=read('src/storage.ts'),appConfig=read('src/appConfig.ts'),profile=read('src/schools/waseshibu/appProfile.ts'),dataManager=read('src/pages/DataManager.tsx'),paper=read('src/pages/PastPapers.tsx'),remediation=read('src/pages/Remediation.tsx'),css=read('src/homeRoute.css')
 const fail=msg=>{throw new Error(msg)}
 
 if(!home.includes('buildGoalDayEstimates'))fail('Home does not build goal day estimates')
@@ -13,8 +13,10 @@ const completionBody=route.match(/export function requiredYearComplete[\s\S]*?\n
 if(!completionBody)fail('requiredYearComplete body not found')
 if(completionBody.includes('markRequiredYearComplete('))fail('requiredYearComplete must stay side-effect free during render')
 if(!main.includes('syncRequiredYearCompletionLocks()'))fail('legacy completion locks must be persisted before React render')
-if(!storage.includes("new CustomEvent('waseshibu-preferences-change')"))fail('target changes must announce a completion-lock resync')
-if(!main.includes("addEventListener('waseshibu-preferences-change'"))fail('target-change completion-lock resync listener missing')
+if(!storage.includes('new CustomEvent(APP_EVENT_NAMES.preferencesChange)'))fail('target changes must announce a completion-lock resync through the app profile')
+if(!main.includes('addEventListener(APP_EVENT_NAMES.preferencesChange'))fail('target-change completion-lock resync listener missing')
+if(!appConfig.includes('preferencesChange: `${APP_PROFILE.runtime.eventNamespace}-preferences-change`'))fail('preferences-change event must be derived from the school event namespace')
+if(!profile.includes("eventNamespace: 'waseshibu'"))fail('WaseShibu legacy event namespace must remain unchanged')
 if(!dataManager.includes('restoreBackup(localStorage,incoming,mode);syncRequiredYearCompletionLocks()'))fail('import must resync legacy completion locks')
 if(!dataManager.includes('await restoreFromPoint(point.id);syncRequiredYearCompletionLocks()'))fail('restore point must resync legacy completion locks')
 if(!paper.includes('!targetWrong)markRequiredYearComplete(year,target)'))fail('clean required-year exam must lock completion before an optional retake')

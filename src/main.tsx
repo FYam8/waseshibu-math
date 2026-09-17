@@ -9,6 +9,7 @@ import { bootstrapSafety } from './safetyBootstrap'
 import { syncRequiredYearCompletionLocks } from './learningRoute'
 import SafetyMode from './SafetyMode'
 import { initMathProgressSync } from './progressSync'
+import { APP_EVENT_NAMES } from './appConfig'
 
 const root=ReactDOM.createRoot(document.getElementById('root')!)
 root.render(<main className="boot-screen"><b>学習データを確認しています…</b><span>保存済みの続きはそのまま引き継ぎます。</span></main>)
@@ -18,7 +19,7 @@ void bootstrapSafety().then(result=>{
   // 旧版ですでに本線を完了している年度は、React renderの外で完了ロックへ昇格する。
   syncRequiredYearCompletionLocks()
   // 目標変更後も、その目標ですでに完了している旧履歴を任意再受験より先に固定する。
-  window.addEventListener('waseshibu-preferences-change',()=>syncRequiredYearCompletionLocks())
+  window.addEventListener(APP_EVENT_NAMES.preferencesChange,()=>syncRequiredYearCompletionLocks())
   // Cloud同期はlocal-first。失敗しても数学学習・既存localStorage/IndexedDBには影響させない。
   try{initMathProgressSync()}catch{/* local-only fallback */}
   root.render(<React.StrictMode><HashRouter><App /></HashRouter></React.StrictMode>)
