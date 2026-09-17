@@ -7,6 +7,7 @@ import { gradeInTarget, type TargetScore } from './targetStrategy'
 import { isMainCheckYear } from './learningRoute'
 import { loadLevel2SessionSummaries } from './level2ProgressView'
 import { requiredPracticeCount } from './practiceLoad'
+import { orderCanonicalTodayCandidates, type CanonicalTodayCandidate } from './engine/todayPlanner'
 
 export type TodayTaskKind='review'|'practice'|'past-paper'
 export type TodayTask={
@@ -120,10 +121,12 @@ export function buildLearningQueue(target:TargetScore,now=new Date(),nextActionT
   const base=buildTodayTaskCandidates(target,now)
   if(!nextActionTask)return base
 
+  const ordered=(candidates:CanonicalTodayCandidate<TodayTask>[])=>orderCanonicalTodayCandidates(candidates).map(item=>item.value)
+
   // 途中の採点・過去問・準備問題は、弱点候補よりも先に「今続けるべき作業」として扱う。
   const isResume=/\/past-papers\?year=\d+(?:&review=1)?$/.test(nextActionTask.to)||nextActionTask.to==='/setup-check'
   if(isResume){
-    return [nextActionTask,...base.filter(task=>task.id!==nextActionTask.id)]
+    return ordered([{lane:'route-resume',value:nextActionTask},...base.filter(task=>task.id!==nextActionTask.id).map(value=>({lane:'practice' as const,value}))])
   }
 
   // 未解決問題の一覧を指す場合は、その年度の具体的な1問を先頭に並べる。
@@ -132,7 +135,7 @@ export function buildLearningQueue(target:TargetScore,now=new Date(),nextActionT
     const year=Number(mistakeYear)
     const same=base.filter(task=>task.questionId&&questionMap.get(task.questionId)?.year===year)
     const rest=base.filter(task=>!same.some(x=>x.id===task.id))
-    return same.length?[...same,...rest]:[nextActionTask,...rest]
+    return ordered(same.length?[...same.map(value=>({lane:'reinforcement' as const,value})),...rest.map(value=>({lane:'practice' as const,value}))]:[{lane:'reinforcement',value:nextActionTask},...rest.map(value=>({lane:'practice' as const,value}))])
   }
 
   // 類題・旧年度補強では、その出典年度に紐づくpractice課題を先頭にする。
@@ -141,11 +144,11 @@ export function buildLearningQueue(target:TargetScore,now=new Date(),nextActionT
     const token=`source=${reinforceYear}`
     const same=base.filter(task=>task.kind==='practice'&&task.to.includes(token))
     const rest=base.filter(task=>!same.some(x=>x.id===task.id))
-    return same.length?[...same,...rest]:[nextActionTask,...rest]
+    return ordered(same.length?[...same.map(value=>({lane:'reinforcement' as const,value})),...rest.map(value=>({lane:'practice' as const,value}))]:[{lane:'reinforcement',value:nextActionTask},...rest.map(value=>({lane:'practice' as const,value}))])
   }
 
   // 新しい過去問・仕上げなど具体候補に置き換えられない行動は共通キューの先頭に置く。
-  return [nextActionTask,...base.filter(task=>task.id!==nextActionTask.id)]
+  return ordered([{lane:'past-paper',value:nextActionTask},...base.filter(task=>task.id!==nextActionTask.id).map(value=>({lane:'practice' as const,value}))])
 }
 
 const DAILY_REQUIRED_PLAN_KEY='waseshibu-math-daily-required-plan-v2'
