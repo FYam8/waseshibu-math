@@ -13,7 +13,7 @@ console.log('PASS: source repair -> fixed practice is the required flow; separat
 
 // 2) 固定類題で不正解でも完了数を増やさず、未正解問題だけを再挑戦する。
 if(!/qualifying\s*=\s*!stale\s*&&\s*input\.firstSubmission\s*&&\s*input\.correct\s*&&\s*!usedHint\s*&&\s*!usedExplanation\s*&&\s*!revealedAnswer/.test(history))throw new Error('wrong/assisted fixed-practice answers can qualify as completed')
-if(!/completedIds\s*=\s*qualifying/.test(history))throw new Error('fixed-practice completion does not depend on a qualifying correct answer')
+if(!/applyCanonicalFixedSetResult\(\{set:[\s\S]*problemId:input\.question\.id,qualifying\}\)/.test(history))throw new Error('fixed-practice completion does not delegate the qualifying result to the shared state machine')
 if(!remediation.includes('誤答や補助利用があっても正解済み問題は維持し、未正解問題だけを周回します'))throw new Error('fixed-practice retry behavior is not explained to the learner')
 console.log('PASS: wrong fixed-practice answers stay unresolved without resetting completed questions')
 

@@ -1,6 +1,7 @@
 import { canWriteLearningData, notifyWriteBlocked } from './version'
 import { LEVEL2_ASSIGNMENT_SET_REVISION, assignmentRevision, currentFieldId, directQuestionForSource, level2FieldById, level2QuestionById, type Level2Question } from './data/level2Data'
 import { requiredPracticeCount } from './practiceLoad'
+import { applyCanonicalFixedSetResult, reconcileCanonicalFixedSet } from './engine/learningFlow'
 
 export const LEVEL2_HISTORY_STORAGE_KEY='waseshibu-math-level2-history-v1'
 export type Level2Bank='core160'|'past-paper'|'field-support'|'legacy72'
@@ -114,18 +115,15 @@ export function selectLevel2Question(sourceQuestionId:string|null,requestedField
   const completedOutsideFixed=session.completedQuestionIds.some(id=>!validFixedQuestionIds.includes(id))
   if(validFixedQuestionIds.length!==session.requiredCount||validFixedQuestionIds.length!==session.fixedQuestionIds.length||completedOutsideFixed){
     const ordered=orderedCandidates(ids,history,session,storage)
-    const retained=session.completedQuestionIds.filter(id=>ids.includes(id))
     // 旧形式・不完全なimportで固定セットが途中までしかない場合も、
-    // 既存の問題を入れ替えず、不足分だけ異なる問題で補う。
-    const retainedFixed=session.fixedQuestionIds.filter(id=>ids.includes(id)&&!retained.includes(id))
-    const directFirst=directId&&ids.includes(directId)&&!retained.includes(directId)&&!retainedFixed.includes(directId)&&!session.lastQuestionId?[directId]:[]
-    const fixed=uniqueIds([...retained,...retainedFixed,...directFirst,...ordered.filter(id=>!directFirst.includes(id)&&!retained.includes(id)&&!retainedFixed.includes(id)&&id!==session.lastQuestionId),...(session.lastQuestionId&&ids.includes(session.lastQuestionId)?[session.lastQuestionId]:[])]).slice(0,session.requiredCount)
-    if(!fixed.length)throw new Error('出題可能な問題がありません')
-    const completedQuestionIds=retained.filter(id=>fixed.includes(id))
-    session={...session,requiredCount:fixed.length,fixedQuestionIds:fixed,bagRemaining:fixed.filter(id=>!completedQuestionIds.includes(id)),status:'active',
-      pendingAssistance:session.pendingAssistance&&fixed.includes(session.pendingAssistance.questionId)?session.pendingAssistance:null,
-      currentStreak:completedQuestionIds.length,currentStreakQuestionIds:completedQuestionIds,completedQuestionIds,retryQuestionIds:[]}
-    if(session.completedQuestionIds.length>=session.requiredCount){
+    // 共通エンジンが既存の問題を維持し、不足分だけ補う。
+    const fixedSet=reconcileCanonicalFixedSet({requiredCount:session.requiredCount,eligibleProblemIds:ids,fixedProblemIds:session.fixedQuestionIds,
+      completedProblemIds:session.completedQuestionIds,orderedCandidateIds:ordered,directProblemId:directId,lastProblemId:session.lastQuestionId})
+    if(!fixedSet.problemIds.length)throw new Error('出題可能な問題がありません')
+    session={...session,requiredCount:fixedSet.requiredCount,fixedQuestionIds:fixedSet.problemIds,bagRemaining:fixedSet.pendingProblemIds,status:fixedSet.status,
+      pendingAssistance:session.pendingAssistance&&fixedSet.problemIds.includes(session.pendingAssistance.questionId)?session.pendingAssistance:null,
+      currentStreak:fixedSet.completedProblemIds.length,currentStreakQuestionIds:fixedSet.completedProblemIds,completedQuestionIds:fixedSet.completedProblemIds,retryQuestionIds:fixedSet.retryProblemIds}
+    if(fixedSet.status==='completed'){
       session={...session,currentStreak:session.requiredCount,currentStreakQuestionIds:session.completedQuestionIds,status:'completed',updatedAt:now()}
       if(!history.masteryEvents.some(event=>event.fieldId===session.fieldIdAtSessionStart&&event.achievedAt===session.updatedAt)){
         history.masteryEvents.push({fieldId:session.fieldIdAtSessionStart,achievedAt:session.updatedAt,fieldAssignmentRevision:LEVEL2_ASSIGNMENT_SET_REVISION,questionIds:session.completedQuestionIds,requiredCount:session.requiredCount,label:'いったん克服'})
@@ -179,11 +177,12 @@ export function recordLevel2Attempt(input:RecordLevel2Input,storage:StorageWrite
   history.attempts.push(attempt)
   history.questionStats[input.question.id]={attemptCount:old.attemptCount+1,correctCount:old.correctCount+(input.correct?1:0),qualifyingCorrectCount:old.qualifyingCorrectCount+(qualifying?1:0),lastAttemptAt:at,lastResult:input.correct}
   if(stale){saveLevel2History(history,storage);return {attempt,session,qualifying:false,completed:false,stale:true}}
-  const completedIds=qualifying&&!session.completedQuestionIds.includes(input.question.id)?[...session.completedQuestionIds,input.question.id]:session.completedQuestionIds
-  const retryIds=qualifying?session.retryQuestionIds.filter(id=>id!==input.question.id):[...session.retryQuestionIds.filter(id=>id!==input.question.id),input.question.id]
-  const progress=completedIds.length,best=Math.max(session.bestStreak,progress),completed=progress>=session.requiredCount
-  history.sessions[input.key]={...session,currentStreak:progress,currentStreakQuestionIds:completedIds,completedQuestionIds:completedIds,retryQuestionIds:retryIds,bagRemaining:session.bagRemaining.filter(id=>id!==input.question.id),pendingAssistance:pending?null:session.pendingAssistance,bestStreak:best,status:completed?'completed':'active',updatedAt:at}
-  if(completed)history.masteryEvents.push({fieldId:session.fieldIdAtSessionStart,achievedAt:at,fieldAssignmentRevision:LEVEL2_ASSIGNMENT_SET_REVISION,questionIds:completedIds,requiredCount:session.requiredCount,label:'いったん克服'})
+  const fixedSet=applyCanonicalFixedSetResult({set:{problemIds:session.fixedQuestionIds,completedProblemIds:session.completedQuestionIds,
+    retryProblemIds:session.retryQuestionIds,pendingProblemIds:session.bagRemaining,requiredCount:session.requiredCount,status:session.status},problemId:input.question.id,qualifying})
+  const progress=fixedSet.completedProblemIds.length,best=Math.max(session.bestStreak,progress),completed=fixedSet.status==='completed'
+  history.sessions[input.key]={...session,currentStreak:progress,currentStreakQuestionIds:fixedSet.completedProblemIds,completedQuestionIds:fixedSet.completedProblemIds,
+    retryQuestionIds:fixedSet.retryProblemIds,bagRemaining:fixedSet.pendingProblemIds,pendingAssistance:pending?null:session.pendingAssistance,bestStreak:best,status:fixedSet.status,updatedAt:at}
+  if(completed)history.masteryEvents.push({fieldId:session.fieldIdAtSessionStart,achievedAt:at,fieldAssignmentRevision:LEVEL2_ASSIGNMENT_SET_REVISION,questionIds:fixedSet.completedProblemIds,requiredCount:session.requiredCount,label:'いったん克服'})
   saveLevel2History(history,storage)
   return {attempt,session:history.sessions[input.key],qualifying,completed,stale:false}
 }
