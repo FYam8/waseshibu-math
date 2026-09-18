@@ -37,3 +37,6 @@ const bundled=spawnSync(esbuild,['src/engine/todayPlanner.ts','--bundle','--form
 if(bundled.status!==0)throw new Error(`today planner runtime build failed\n${bundled.stdout}\n${bundled.stderr}`)
 assert.equal(fs.readFileSync(runtime,'utf8'),fs.readFileSync(path.join(root,'src/engine/todayPlanner.runtime.js'),'utf8'),'checked-in browser runtime drifted from canonical TypeScript')
 console.log('PASS shared Today planner: school-neutral lanes, opaque route IDs, WaseShibu consumer, deterministic browser runtime')
+
+assert.deepEqual(planner.uniqueCanonicalTodayCandidates([{lane:'past-paper',value:{id:'A',action:'start'}},{lane:'route-resume',value:{id:'A',action:'resume'}},{lane:'past-paper',value:{id:'B',action:'start'}}],x=>x.id).map(x=>x.value),[{id:'A',action:'resume'},{id:'B',action:'start'}])
+assert.throws(()=>planner.uniqueCanonicalTodayCandidates([{lane:'practice',value:{id:''}}],x=>x.id),/identity/)
