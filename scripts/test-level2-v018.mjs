@@ -94,7 +94,7 @@ assert.match(remediationUi,/q\.problemTable[\s\S]*<table className="level2-table
 assert.match(remediationUi,/isOfficial[\s\S]*<FocusedQuestionView/,'official practice questions must render the verified official-page crop')
 assert.match(remediationUi,/isOfficial\?isExamAnswerCorrect/,'official practice questions must use official answer grading')
 assert.match(remediationUi,/isOfficial\?`target-\$\{q\.id\}`:q\.id/,'official practice history must use the canonical target-prefixed ID')
-for(const symbol of ['≦','≧','＜','＞','＝'])assert.ok(mathAnswerInputUi.includes(`label:'${symbol}'`),`math keypad must provide ${symbol}`)
+for(const symbol of ['≦','≧','＜','＞','＝'])assert.ok(fs.readFileSync('src/engine/mathInput.ts','utf8').includes(`label:'${symbol}'`),`math keypad must provide ${symbol}`)
 for(const symbol of ['≦','≧','＜','＞','＝'])assert.ok(pastPapersUi.includes(`['${symbol}'`),`past-paper keypad must provide ${symbol}`)
 assert.match(remediationUi,/<MathAnswerInput value=\{answer\}/,'fixed-practice answer entry must use the math keypad')
 assert.doesNotMatch(reinforcementUi,/<MathAnswerInput/,'reinforcement progress list must delegate answer entry to Remediation')

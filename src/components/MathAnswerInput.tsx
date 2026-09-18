@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { cleanAnswerInput } from '../answer'
+import { canonicalMathKeys, insertCanonicalMathText, deleteCanonicalMathText } from '../engine/mathInput'
 
 type Props={value:string;onChange:(value:string)=>void;onEnter?:()=>void;disabled?:boolean;autoFocus?:boolean;placeholder?:string}
-const keys=[{label:'分数 a/b',text:'/'},{label:'√',text:'√()'},{label:'x²',text:'^2'},{label:'( )',text:'()'},{label:'−',text:'-'},{label:'±',text:'±'},{label:'π',text:'π'},{label:':',text:':'},{label:',',text:','},{label:'≦',text:'≦'},{label:'≧',text:'≧'},{label:'＜',text:'<'},{label:'＞',text:'>'},{label:'＝',text:'='}]
+const keys=canonicalMathKeys
 
 export default function MathAnswerInput({value,onChange,onEnter,disabled,autoFocus,placeholder='答えを入力'}:Props){
   const ref=useRef<HTMLInputElement>(null)
@@ -13,20 +14,17 @@ export default function MathAnswerInput({value,onChange,onEnter,disabled,autoFoc
   }
   const insert=(text:string)=>{
     const input=ref.current
-    const {start,end}=selectionRef.current
-    const safeStart=Math.min(start,value.length),safeEnd=Math.min(end,value.length)
-    onChange(cleanAnswerInput(value.slice(0,safeStart)+text+value.slice(safeEnd)))
-    const pos=safeStart+text.length-(text.endsWith('()')?1:0)
+    const edit=insertCanonicalMathText(value,selectionRef.current,text)
+    onChange(cleanAnswerInput(edit.value))
+    const pos=edit.position
     selectionRef.current={start:pos,end:pos}
     requestAnimationFrame(()=>{input?.focus();input?.setSelectionRange(pos,pos)})
   }
   const backspace=()=>{
     const input=ref.current
-    const {start,end}=selectionRef.current
-    const safeStart=Math.min(start,value.length),safeEnd=Math.min(end,value.length)
-    let pos=safeStart
-    if(safeStart!==safeEnd){onChange(value.slice(0,safeStart)+value.slice(safeEnd));pos=safeStart}
-    else if(safeStart>0){onChange(value.slice(0,safeStart-1)+value.slice(safeStart));pos=safeStart-1}
+    const edit=deleteCanonicalMathText(value,selectionRef.current)
+    if(edit.value!==value)onChange(edit.value)
+    const pos=edit.position
     selectionRef.current={start:pos,end:pos}
     requestAnimationFrame(()=>{input?.focus();input?.setSelectionRange(pos,pos)})
   }
