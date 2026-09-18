@@ -11,6 +11,7 @@ import { loadPreferences } from '../storage'
 import { gradeAdvice, targetGoalLabel } from '../targetStrategy'
 import { modelingHintForTopic, modelingHintKindForTopic } from '../modelingHint'
 import { examScopeNote } from '../data/examConfig'
+import { canAdvanceCanonicalGuidedStep } from '../engine/learningFlow'
 
 export default function GuidedReview(){
   const [params]=useSearchParams(),questionId=params.get('q')||''
@@ -34,6 +35,7 @@ export default function GuidedReview(){
   const modelingHintSubject=`${q.title} ${q.topic}`
   const modelingHint=modelingHintForTopic(modelingHintSubject),modelingHintKind=modelingHintKindForTopic(modelingHintSubject),hasStructuredOpening=modelingHintKind!=='generic'
   const currentResponse=responses[current?.id]||'',currentResponseValid=!!current&&validateGuidedStepResponse(current,currentResponse)
+  const canAdvanceCurrent=canAdvanceCanonicalGuidedStep({assessment:stepAssessments[current?.id],responseValid:currentResponseValid,hintLevel})
   const progress=loadGuidedProgress(q.id)
   const dependencies=solution.context.dependsOn||[]
   const scopeNote=examScopeNote(q.year)
@@ -58,9 +60,7 @@ export default function GuidedReview(){
   }
   const completeStep=()=>{
     const value=responses[current.id]||'',assessment=stepAssessments[current.id]
-    if(!assessment||assessment==='unclear')return
-    if(assessment==='matched'&&!validateGuidedStepResponse(current,value))return
-    if(assessment==='guided'&&hintLevel<3&&!validateGuidedStepResponse(current,value))return
+    if(!canAdvanceCanonicalGuidedStep({assessment,responseValid:validateGuidedStepResponse(current,value),hintLevel}))return
     recordGuidedStep(q.id,current.id,value,hintLevel,true)
     assessGuidedStep(q.id,current.id,assessment)
     persistLegacy(undefined,progress.finalAnswerSeen,Object.values({...hintLevels,[current.id]:hintLevel}).some(v=>v>0))
@@ -108,7 +108,7 @@ export default function GuidedReview(){
               <button className={`button ${stepAssessments[current.id]==='matched'?'primary':''}`} disabled={!currentResponseValid} onClick={()=>assessStep('matched')}>自分の考えを記録した（正誤未確認）</button>
               <button className={`button ${stepAssessments[current.id]==='guided'?'primary':''}`} disabled={hintLevel<1||(!currentResponseValid&&hintLevel<3)} onClick={()=>assessStep('guided')}>ヒント・確認を見て分かった</button>
               <button className={`button ${stepAssessments[current.id]==='unclear'?'primary':''}`} onClick={()=>assessStep('unclear')}>まだ分からない</button>
-              {stepIndex<steps.length-1?<button className="button primary" disabled={!stepAssessments[current.id]||stepAssessments[current.id]==='unclear'||(stepAssessments[current.id]==='matched'&&!currentResponseValid)||(stepAssessments[current.id]==='guided'&&hintLevel<3&&!currentResponseValid)} onClick={completeStep}>次のSTEPへ</button>:<button className="button primary" disabled={!stepAssessments[current.id]||stepAssessments[current.id]==='unclear'||(stepAssessments[current.id]==='matched'&&!currentResponseValid)||(stepAssessments[current.id]==='guided'&&hintLevel<3&&!currentResponseValid)} onClick={()=>{completeStep();setMode('retry');setFinalAnswer('');setResult(null)}}>解説を閉じて自力再現へ</button>}
+              {stepIndex<steps.length-1?<button className="button primary" disabled={!canAdvanceCurrent} onClick={completeStep}>次のSTEPへ</button>:<button className="button primary" disabled={!canAdvanceCurrent} onClick={()=>{completeStep();setMode('retry');setFinalAnswer('');setResult(null)}}>解説を閉じて自力再現へ</button>}
               <button className="button" onClick={revealAnswer}>この1問の答えを見る</button>
             </div>
           </div>
@@ -119,4 +119,3 @@ export default function GuidedReview(){
     </div>
   </>
 }
-
