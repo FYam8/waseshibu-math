@@ -3,6 +3,7 @@ import raw from './data/guidedSolutions.json'
 import questions from './data/questions.json'
 import { getExamAnswer, isExamAnswerCorrect } from './data/examAnswers'
 import { canWriteLearningData, notifyWriteBlocked } from './version'
+import { deriveCanonicalGuidedFinal } from './engine/learningFlow'
 import type { MajorQuestion } from './types'
 
 export const GUIDED_REVIEW_KEY='waseshibu-math-guided-review-v1'
@@ -192,25 +193,11 @@ export function revealGuidedFinalAnswer(questionId:string,storage:Pick<Storage,'
 }
 export function recordGuidedFinal(questionId:string,input:string,mode:'guided'|'retry',storage:Pick<Storage,'getItem'|'setItem'>=localStorage){
   const current=loadGuidedProgress(questionId,storage),correct=isExamAnswerCorrect(normalizeGuidedQuestionId(questionId),input)
-  const hintUsed=Object.values(current.stepProgress).some(x=>x.hintLevelUsed>0)
-  const stepAnswerSeen=Object.values(current.stepProgress).some(x=>x.hintLevelUsed>=3)
-  const answerExposed=current.finalAnswerSeen||stepAnswerSeen
-  let mastery=current.mastery
-  let reproductionAttempts=current.reproductionAttempts
-  let reproductionSucceeded=current.reproductionSucceeded
-  let independentSucceeded=current.independentSucceeded
-  if(mode==='retry')reproductionAttempts++
-  if(correct){
-    // すでに定着済みの問題を忘却防止で再確認して正解した場合は、定着状態を下げない。
-    if(current.mastery==='consolidated')mastery='consolidated'
-    else if(mode==='retry'&&answerExposed){mastery='reproduced';reproductionSucceeded=true}
-    else if(!answerExposed&&!hintUsed&&current.dependencyMode!=='official'){mastery='independent';independentSucceeded=true}
-    else if(answerExposed){mastery='reproduced';reproductionSucceeded=true}
-    else mastery='guided'
-  }else{
-    // 定着済みでも再度間違えたら「克服済み」のままにしない。
-    mastery='attempted'
-  }
+  const {mastery,reproductionAttempts,reproductionSucceeded,independentSucceeded}=deriveCanonicalGuidedFinal({
+    currentMastery:current.mastery,correct,mode,finalAnswerSeen:current.finalAnswerSeen,
+    stepHintLevels:Object.values(current.stepProgress).map(x=>x.hintLevelUsed),dependencyMode:current.dependencyMode,
+    reproductionAttempts:current.reproductionAttempts,reproductionSucceeded:current.reproductionSucceeded,independentSucceeded:current.independentSucceeded
+  })
   updateGuidedProgress(questionId,{finalAnswer:input,reproductionAttempts,reproductionSucceeded,independentSucceeded,mastery,practiceStreak:correct?current.practiceStreak:0},storage)
   return {correct,mastery}
 }
