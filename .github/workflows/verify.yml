@@ -23,3 +23,10 @@ jobs:
       - run: npm run verify-critical
       - run: node scripts/test-progress-cloud-sync.mjs
       - run: npm run build
+      - run: npm run test:v01710-browser-bugs
+      - name: Install browser regression dependencies
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Verify mobile and desktop math input
+        run: python scripts/test-math-input-browser.py
