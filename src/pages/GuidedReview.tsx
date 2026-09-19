@@ -1,3 +1,5 @@
+import SkillCheck from '../components/SkillCheck'
+import { bankForSource } from '../data/skillChecks'
 
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -29,8 +31,10 @@ export default function GuidedReview(){
   const [mastery,setMastery]=useState(initialProgress?.mastery||'unseen')
   const [dependencyMode,setDependencyMode]=useState<'own'|'official'>(initialProgress?.dependencyMode||'own')
   const prefs=loadPreferences()
+  const [checking,setChecking]=useState(()=>params.get('check')==='1'&&!!bankForSource(questionId))
 
   if(!q||!solution)return <section className="card warning-card"><h1>問題専用解説を特定できませんでした</h1><p>間違い直し一覧から開き直してください。</p><Link className="button primary" to="/mistakes">間違い直しへ</Link></section>
+  if(checking)return <SkillCheck source={questionId} onContinue={()=>setChecking(false)}/>
   const steps=solution.steps,current=steps[Math.min(stepIndex,steps.length-1)],hintLevel=hintLevels[current?.id]||0
   const modelingHintSubject=`${q.title} ${q.topic}`
   const modelingHint=modelingHintForTopic(modelingHintSubject),modelingHintKind=modelingHintKindForTopic(modelingHintSubject),hasStructuredOpening=modelingHintKind!=='generic'

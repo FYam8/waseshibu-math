@@ -40,7 +40,7 @@ export default function ExamMarkReview({year,majors,answers,flags,statusFor,setO
         <div className={`mark-status ${status}`}><b>{status==='correct'?'○ 正解':status==='wrong'?'× 不正解':'— 未回答'}</b><span>{current.sub.topic}</span></div>
         <div className="single-answer-compare"><div><span>自分の答え</span><b>{answers[current.key]||'未入力'}</b></div><div><span>この小問の正答</span><b>{expected?.answer||'正答データを確認できません'}</b></div></div>
         <button className="grade-override" onClick={()=>setOverrides(v=>({...v,[current.key]:status==='correct'?'wrong':'correct'}))}>{status==='correct'?'不正解に修正':'正解に修正'}</button>
-        {status!=='correct'&&<><p className="muted">原因の入力は不要です。まずこの問題の手順を確認し、解き直しの結果に合わせて練習を進めます。誤答だけで原因を決めつけません。</p><Link className="button primary" to={`/guided-review?q=${encodeURIComponent(current.key)}`}>この1問の解説・解き直しへ</Link></>}
+        {status!=='correct'&&<><p className="muted">原因の入力は不要です。まずこの問題の手順を確認し、解き直しの結果に合わせて練習を進めます。誤答だけで原因を決めつけません。</p><Link className="button primary" to={`/guided-review?q=${encodeURIComponent(current.key)}&check=1`}>この1問の解説・解き直しへ</Link></>}
         {flags[current.key]&&<div className="notice-box">この問題は「迷い」として記録されています。</div>}
         <div className="mark-focus-nav"><button className="button" disabled={safeIndex===0} onClick={()=>move(safeIndex-1)}>← 前の小問</button>{safeIndex<reviewOrder.length-1?<button className="button primary" onClick={()=>move(safeIndex+1)}>次の小問 →</button>:<button className="button primary" onClick={onFinish}>採点結果を保存</button>}</div>
         <p className="muted">順番は「不正解 → 未回答 → 正解」です。まず失点した問題だけを確認できます。</p>
