@@ -1,6 +1,6 @@
 import { APP_EVENT_NAMES } from './appConfig'
 
-export const APP_VERSION='0.18.1'
+export const APP_VERSION='0.18.2'
 export const ACTIVE_APP_VERSION_KEY='waseshibu-math-active-app-version'
 export const LAST_APP_VERSION_KEY='waseshibu-math-last-app-version'
 export const SAFE_MODE_KEY='waseshibu-math-safe-mode-v1'

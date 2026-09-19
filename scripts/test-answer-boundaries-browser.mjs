@@ -12,7 +12,7 @@ const server=http.createServer((req,res)=>{
   res.setHeader('Content-Type',types[path.extname(file)]||'application/octet-stream');fs.createReadStream(file).pipe(res)
 })
 await new Promise(r=>server.listen(0,'127.0.0.1',r))
-const base=`http://127.0.0.1:${server.address().port}/waseshibu-math/`
+const base=process.env.TEST_BASE_URL || `http://127.0.0.1:${server.address().port}/waseshibu-math/`
 const browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{}),args:['--no-sandbox']})
 try{
   for(const width of [390,1280]){
@@ -20,6 +20,19 @@ try{
     // No synthetic learning record may leave this isolated localhost context.
     await context.route('**/*',route=>route.request().url().startsWith(base)?route.continue():route.abort())
     const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(String(e)))
+    await page.goto(base)
+    await page.getByRole('heading').first().waitFor()
+    const legacyAttempt={id:'upgrade-preservation',questionId:'exam-2024-Q1-1',status:'wrong',answer:'old-answer',mistakeTag:'計算ミス',at:'2026-09-11T00:00:00Z'}
+    await page.evaluate(record=>{
+      localStorage.setItem('waseshibu-math-attempts',JSON.stringify([record]))
+      localStorage.setItem('waseshibu-math-active-app-version','0.18.1')
+      localStorage.setItem('waseshibu-math-last-app-version','0.18.1')
+    },legacyAttempt)
+    await page.reload()
+    await page.getByRole('heading').first().waitFor()
+    assert.equal(await page.evaluate(()=>localStorage.getItem('waseshibu-math-active-app-version')),'0.18.2')
+    assert.equal(await page.evaluate(()=>localStorage.getItem('waseshibu-math-safe-mode-v1')),null)
+    assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('waseshibu-math-attempts'))),[legacyAttempt])
     await page.goto(base+'#/past-papers?year=2026')
     await page.getByRole('button',{name:'理解して開始する',exact:true}).click()
     if(width===390)await page.locator('.answer-dock-toggle').click()
