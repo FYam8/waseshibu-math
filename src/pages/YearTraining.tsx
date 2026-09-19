@@ -6,7 +6,6 @@ import { isAcceptedAnswer } from '../answer'
 import { createRecordId, saveAttempt } from '../storage'
 import MathAnswerInput from '../components/MathAnswerInput'
 
-const mistakeTags = ['知識不足','解法未習得','読み落とし','計算ミス','符号ミス','場合分け不足','時間不足','答え方の不備']
 
 export default function YearTraining() {
   const [params]=useSearchParams()
@@ -16,7 +15,6 @@ export default function YearTraining() {
   const [answer,setAnswer]=useState('')
   const [result,setResult]=useState<boolean|null>(null)
   const [showPlan,setShowPlan]=useState(false)
-  const [mistake,setMistake]=useState('解法未習得')
   const lesson=useMemo(()=>yearTraining.find(x=>x.year===year&&x.major===major)!,[year,major])
   let completedValues:string[]=[]
   try {
@@ -34,7 +32,7 @@ export default function YearTraining() {
   }
   const recordAndNext=()=>{
     if(result===null)return
-    saveAttempt({id:createRecordId(lesson.id),questionId:`year-${lesson.id}`,mode:'multi',topic:lesson.pastPattern,status:result?'correct':'wrong',mistakeTag:result?undefined:mistake,at:new Date().toISOString()})
+    saveAttempt({id:createRecordId(lesson.id),questionId:`year-${lesson.id}`,mode:'multi',topic:lesson.pastPattern,status:result?'correct':'wrong',mistakeTag:result?undefined:'原因未確定',answer,at:new Date().toISOString()})
     completed.add(lesson.id)
     if(!canWriteLearningData()){notifyWriteBlocked();return}
     localStorage.setItem('waseshibu.math.yearTraining.completed',JSON.stringify([...completed]))
@@ -80,7 +78,7 @@ export default function YearTraining() {
           <div className={`result ${result?'ok':'ng'}`}>
             <h3>{result?'正解':'不正解'}</h3>
             <p><b>正答：</b>{lesson.answer}</p><p>{lesson.explanation}</p>
-            {!result&&<label className="mistake-row">失点原因<select value={mistake} onChange={e=>setMistake(e.target.value)}>{mistakeTags.map(x=><option key={x}>{x}</option>)}</select></label>}
+            {!result&&<p className="muted">原因の入力は不要です。解説の手順を確認し、次の問題で使えるか確かめましょう。</p>}
             <div className="actions"><button className="button primary" onClick={recordAndNext}>記録して次へ</button><button className="button" onClick={()=>{setAnswer('');setResult(null)}}>解き直す</button></div>
           </div>}
       </div>

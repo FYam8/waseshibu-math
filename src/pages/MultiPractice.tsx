@@ -4,7 +4,6 @@ import { createRecordId, saveAttempt } from '../storage'
 import { isAcceptedAnswer } from '../answer'
 import MathAnswerInput from '../components/MathAnswerInput'
 
-const tags=['知識不足','解法未習得','読み落とし','計算ミス','符号ミス','場合分け不足','時間不足','答え方の不備']
 
 export default function MultiPractice(){
   const [setIndex,setSetIndex]=useState(0)
@@ -12,7 +11,6 @@ export default function MultiPractice(){
   const [answer,setAnswer]=useState('')
   const [result,setResult]=useState<boolean|null>(null)
   const [hint,setHint]=useState(0)
-  const [tag,setTag]=useState('解法未習得')
   const [elapsed,setElapsed]=useState(0)
   const set=multiSets[setIndex]
   const part=set.parts[partIndex]
@@ -22,7 +20,7 @@ export default function MultiPractice(){
     return ()=>clearInterval(id)
   },[setIndex,partIndex])
 
-  const resetUi=()=>{setAnswer('');setResult(null);setHint(0);setTag('解法未習得');setElapsed(0)}
+  const resetUi=()=>{setAnswer('');setResult(null);setHint(0);setElapsed(0)}
 
   const submit=()=>{
     if(result!==null || !answer.trim()) return
@@ -37,7 +35,8 @@ export default function MultiPractice(){
       mode:'multi',
       topic:set.domain,
       status:result?'correct':'wrong',
-      mistakeTag:result?undefined:tag,
+      mistakeTag:result?undefined:'原因未確定',
+      answer,
       seconds:elapsed,
       at:new Date().toISOString()
     })
@@ -114,12 +113,7 @@ export default function MultiPractice(){
         <strong>{result?'○ 正解':'× 不正解'}</strong>
         {!result&&<>
           <p>正答：{part.answer}</p>
-          <label className="mistake-row">
-            ミス分類
-            <select value={tag} onChange={e=>setTag(e.target.value)}>
-              {tags.map(t=><option key={t}>{t}</option>)}
-            </select>
-          </label>
+          <p className="muted">原因の入力は不要です。解説の手順を確認し、次の問題で使えるか確かめましょう。</p>
         </>}
         <p>{part.explanation}</p>
         <div className="connection">

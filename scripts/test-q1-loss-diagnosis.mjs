@@ -21,14 +21,8 @@ assert.ok(q1_2019,'S5-Q1-002: 2019年度の大問1がない')
 assert.equal(q1_2019.subquestions.length,9,'S5-Q1-002: 構成が異なる2019年度を8問に丸めている')
 assert.match(papersSource,/q\.major===1\?\(year===2019\?45:40\)/,'S5-Q1-002: 2019年度大問1の45点境界がない')
 
-const requiredCauses=['知識不足','解法未習得','条件読み落とし','計算ミス','符号ミス','場合分け不足','時間不足','答え方の不備']
-for(const cause of requiredCauses)assert.match(reviewSource,new RegExp(`['"]${cause}['"]`),`S5-Q1-003: 失点分類 ${cause} がない`)
-
-assert.match(reviewSource,/最初に起きた失点原因（任意・自己申告）/,'S5-Q1-004: 原因を最初の誤りとして自己申告する表示がない')
-assert.match(reviewSource,/単元名ではなく、最初に崩れた行動を選びます/,'S5-Q1-004: 単元名だけの粗い診断を防いでいない')
-assert.match(reviewSource,/相似には気づいたが対応辺を取り違えた/,'S5-Q1-004: 具体的な行動診断の例がない')
-assert.match(reviewSource,/二次方程式は解けたが片方の解を書き忘れた/,'S5-Q1-004: 解の書き漏れを具体化していない')
-assert.match(reviewSource,/自己申告であり、自動診断ではありません/,'S5-Q1-005: 原因分類を自動診断と誤認させる')
+assert.doesNotMatch(reviewSource,/<select|setCauseMap/,'原因を自己申告する操作を復活させない')
+assert.match(reviewSource,/誤答だけで原因を決めつけません/,'推定の限界を示す')
 
 assert.match(papersSource,/mistakeTag:cause\|\|undefined/,'S5-Q1-006: 小問別の失点原因を保存していない')
 assert.match(papersSource,/seconds:questionSeconds\[x\.key\]/,'S5-Q1-006: 小問別時間を保存していない')
@@ -39,4 +33,4 @@ assert.match(strategySource,/easyCauses\.has\(item\.cause\|\|''\)\?-1:0/,'S5-Q1-
 assert.match(strategySource,/得点だけの記録では回収問題を特定できません/,'S5-Q1-009: 得点内訳なしに回収可能な問題を断定している')
 assert.match(papersSource,/表示点は優先問題の配点合計から出した条件付き上限/,'S5-Q1-010: 回収点を公式配点・保証値のように表示している')
 
-console.log('PASS: S5-Q1-001..010 大問1の8問構成、2019境界、具体的な自己申告分類、小問時間、回収候補の根拠を検証')
+console.log('PASS: S5-Q1-001..010 大問1の8問構成、2019境界、自己申告操作の廃止、小問時間、回収候補の根拠を検証')
