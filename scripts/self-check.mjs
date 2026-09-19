@@ -35,7 +35,7 @@ const answerData=read('src/data/examAnswers.ts'),answerIds=[...answerData.matchA
 if(answerIds.length===160&&questionIds.every(id=>answerIds.includes(id))&&new Set(answerIds).size===160)ok('全160小問の正答データ');else fail(`正答データ ${answerIds.length}/160`)
 
 const backup=read('src/dataBackup.ts'),migration=read('src/dataMigration.ts'),version=read('src/version.ts'),publicVersion=read('public/version.json')
-if(migration.includes('CURRENT_DATA_VERSION=8')&&backup.includes('LEVEL2_HISTORY_STORAGE_KEY')&&backup.includes('completedCoreByTarget')&&migration.includes('MIGRATION_BACKUP_STORAGE_KEY')&&migration.includes('更新前バックアップ')&&version.includes("APP_VERSION='0.18.1'")&&publicVersion.includes('"appVersion": "0.18.1"')&&publicVersion.includes('"dataVersion": 8'))ok('v0.18.1・data v8・本線完了ロック・migration前バックアップ');else fail('版・データ形式整合')
+if(migration.includes('CURRENT_DATA_VERSION=8')&&backup.includes('LEVEL2_HISTORY_STORAGE_KEY')&&backup.includes('completedCoreByTarget')&&migration.includes('MIGRATION_BACKUP_STORAGE_KEY')&&migration.includes('更新前バックアップ')&&version.includes("APP_VERSION='0.18.2'")&&publicVersion.includes('"appVersion": "0.18.2"')&&publicVersion.includes('"dataVersion": 8'))ok('v0.18.2・data v8・本線完了ロック・migration前バックアップ');else fail('版・データ形式整合')
 
 const guidedData=JSON.parse(read('src/data/guidedSolutions.json')),guidedIds=Object.keys(guidedData.solutions||{})
 if(guidedData.count===160&&guidedIds.length===160&&questionIds.every(id=>guidedIds.includes(id))&&guidedIds.every(id=>Array.isArray(guidedData.solutions[id].steps)&&guidedData.solutions[id].steps.length>=2))ok('160小問すべてに問題専用GuidedSolution');else fail(`GuidedSolution ${guidedIds.length}/160`)
