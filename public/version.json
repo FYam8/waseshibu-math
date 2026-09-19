@@ -1,7 +1,7 @@
 {
-  "appVersion": "0.18.1",
+  "appVersion": "0.18.2",
   "dataVersion": 8,
-  "releasedAt": "2026-09-11",
-  "release": "simple-monotonic-eta-v8",
-  "version": "0.18.1"
+  "releasedAt": "2026-09-19",
+  "release": "answer-boundaries-skill-checks",
+  "version": "0.18.2"
 }

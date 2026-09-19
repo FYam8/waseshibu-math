@@ -49,7 +49,7 @@ export default function PastPapers(){
   const [majorIndex,setMajorIndex]=useState(review?0:Math.max(0,Number.isInteger(initial.majorIndex)?initial.majorIndex!:majorParam-1))
   const [answers,setAnswers]=useState<Record<string,string>>(initial.answers||{})
   const [flags,setFlags]=useState<Record<string,boolean>>(initial.flags||{})
-  const [causeMap,setCauseMap]=useState<Record<string,string>>(initial.causes||{})
+  const [causeMap]=useState<Record<string,string>>(initial.causes||{})
   const [overrides,setOverrides]=useState<Record<string,'correct'|'wrong'>>(initial.overrides||{})
   const [seconds,setSeconds]=useState(Number(initial.seconds)||0)
   const [questionSeconds,setQuestionSeconds]=useState<Record<string,number>>(initial.questionSeconds||{})
@@ -93,15 +93,15 @@ export default function PastPapers(){
     if(!canWriteLearningData()){notifyWriteBlocked();return}
     const graded=allSubs.map(x=>({...x,status:statusFor(x.key)}))
     const score=Math.round(graded.reduce((sum,x)=>sum+(x.status==='correct'?pointsFor(year,x.major.major,x.major.subquestions.length):0),0))
-    const target=loadPreferences().target,items:StrategyItem[]=graded.map(x=>({key:x.key,major:x.major.major,subNo:x.sub.no,topic:x.sub.topic,grade:x.sub.grade,status:x.status,points:pointsFor(year,x.major.major,x.major.subquestions.length),cause:causeMap[x.key],flagged:!!flags[x.key]}))
+    const target=loadPreferences().target,items:StrategyItem[]=graded.map(x=>({key:x.key,major:x.major.major,subNo:x.sub.no,topic:x.sub.topic,grade:x.sub.grade,status:x.status,points:pointsFor(year,x.major.major,x.major.subquestions.length),flagged:!!flags[x.key]}))
     const weak=rankWeakFields(target,items),strategy=buildTargetStrategy(target,score,items)
     const wrongItems=items.filter(x=>x.status!=='correct')
     const result:SavedResult={score,correct:graded.filter(x=>x.status==='correct').length,wrong:graded.filter(x=>x.status==='wrong').length,unanswered:graded.filter(x=>x.status==='unanswered').length,weak,strategy,wrongItems}
     const now=new Date().toISOString(),prior=loadExamScores().some(x=>x.year===year&&x.completed!==false)
     saveExamScore({id:createRecordId(`exam-${year}`),year,score:result.score,correctCount:result.correct,wrongCount:result.wrong,unansweredCount:result.unanswered,completed:true,attemptKind:prior?'retake':'first',scoreValidity:!prior&&firstLookEligible?'first-look':'reference',weakFields:weak,at:now})
     graded.forEach(x=>{
-      const cause=causeMap[x.key]||''
-      const diagnosis=x.status==='correct'?'correct':cause==='時間不足'?'time':cause==='現時点では難しい'?'difficult':cause?'recoverable':undefined
+      const cause=x.status==='correct'?'':'原因未確定'
+      const diagnosis=x.status==='correct'?'correct':undefined
       saveAttempt({id:createRecordId(`exam-${x.key}`),questionId:`exam-${x.key}`,mode:'multi',topic:x.sub.topic,status:x.status==='correct'?'correct':x.status==='unanswered'?'deferred':'wrong',mistakeTag:cause||undefined,diagnosis,answer:answers[x.key]||'',flagged:!!flags[x.key],seconds:questionSeconds[x.key],at:now})
     })
     const targetWrong=items.some(item=>item.status!=='correct'&&gradeInTarget(target,item.grade))
@@ -114,7 +114,7 @@ export default function PastPapers(){
   if(!integrity.ok)return <section className="card integrity-failed"><span className="eyebrow">SAFETY CHECK FAILED</span><h1>採点データを確認できないため開始を停止しました</h1><p>誤採点を防ぐための安全機能です。</p><ul>{integrity.issues.slice(0,8).map(x=><li key={x}>{x}</li>)}</ul><Link className="button" to="/">ホームへ戻る</Link></section>
   if(needsWarning&&!warningAccepted&&phase==='solve')return <section className="card warning-card"><span className="eyebrow">推奨ルート外の年度</span><h1>{year}年度を先に開きますか？</h1><p>標準ルートでは、先に{activeRequiredYear}年度の{activeRequiredYear?requiredYearPurpose(activeRequiredYear):'現在の学習'}と弱点補強を終えてから、{year}年度の{requiredYearPurpose(year)}へ進みます。先に開くと、その年度は初見比較ではなく参考確認になる場合があります。</p><div className="actions"><Link className="button primary" to="/">推奨ルートへ戻る</Link><button className="button" onClick={()=>setWarningAccepted(true)}>理解して開始する</button></div></section>
 
-  if(phase==='mark')return <ExamMarkReview year={year} majors={majors} answers={answers} flags={flags} causeMap={causeMap} overrides={overrides} statusFor={statusFor} setCauseMap={setCauseMap} setOverrides={setOverrides} onFinish={finish}/>
+  if(phase==='mark')return <ExamMarkReview year={year} majors={majors} answers={answers} flags={flags} overrides={overrides} statusFor={statusFor} setOverrides={setOverrides} onFinish={finish}/>
 
   if(phase==='result'&&savedResult){const strategy=savedResult.strategy,priorityWrong=savedResult.wrongItems.filter(item=>gradeInTarget(strategy.target,item.grade)),deferredWrong=savedResult.wrongItems.filter(item=>!gradeInTarget(strategy.target,item.grade));return <>
     <div className="page-head"><div><span className="eyebrow">AUTO SCORING COMPLETE</span><h1>{year}年度の自動採点結果</h1></div></div>

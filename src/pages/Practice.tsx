@@ -6,7 +6,6 @@ import { isAcceptedAnswer } from '../answer'
 import MathAnswerInput from '../components/MathAnswerInput'
 import { modelingHintForField } from '../modelingHint'
 
-const mistakeTags = ['知識不足','解法未習得','読み落とし','計算ミス','符号ミス','場合分け不足','時間不足','答え方の不備']
 
 const practiceQuestions:PracticeQuestion[]=remediationFields.flatMap(field=>field.questions.map((q,index)=>({
   id:`field-${field.id}-${index+1}`,
@@ -87,7 +86,6 @@ export default function Practice() {
   const [answer, setAnswer] = useState('')
   const [result, setResult] = useState<null | boolean>(null)
   const [hint, setHint] = useState(0)
-  const [mistake, setMistake] = useState('解法未習得')
   const [questionElapsed, setQuestionElapsed] = useState(0)
   const [sessionElapsed, setSessionElapsed] = useState(resumable ? (priorDaily?.sessionElapsed || 0) : 0)
   const [correctCount, setCorrectCount] = useState(resumable ? (priorDaily?.correctCount || 0) : 0)
@@ -143,7 +141,6 @@ export default function Practice() {
     setAnswer('')
     setResult(null)
     setHint(0)
-    setMistake('解法未習得')
     setQuestionElapsed(0)
   }
 
@@ -178,7 +175,8 @@ export default function Practice() {
       mode:'q1',
       topic:q.topic,
       status:result ? 'correct' : 'wrong',
-      mistakeTag:result ? undefined : mistake,
+      mistakeTag:result ? undefined : '原因未確定',
+      answer,
       seconds:questionElapsed,
       at:new Date().toISOString()
     })
@@ -299,12 +297,7 @@ export default function Practice() {
             {!result && (
               <>
                 <p>正答：{q.answer}</p>
-                <label className="mistake-row">
-                  ミス分類
-                  <select value={mistake} onChange={e=>setMistake(e.target.value)}>
-                    {mistakeTags.map(t=><option key={t}>{t}</option>)}
-                  </select>
-                </label>
+                <p className="muted">原因の入力は不要です。解説の手順を確認し、次の問題で使えるか確かめましょう。</p>
               </>
             )}
             <p>{q.explanation}</p>

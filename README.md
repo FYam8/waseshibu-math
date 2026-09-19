@@ -1,10 +1,10 @@
-# WaseShibu Math 70 — v0.18.0
+# WaseShibu Math 70 — v0.18.2
 
 早稲田渋谷シンガポール校の数学対策用に作成した非公式の学習用Webアプリです。
 
 ## 現在の保存方式
 
-学習データは通常利用時、ブラウザの `localStorage` に保存されます。GitHubアカウント、Private Repository、PAT、GitHub REST APIへの接続は学習機能に必要ありません。
+学習データは通常利用時、ブラウザの `localStorage` に保存されます。GitHubアカウント、Private Repository、PAT、GitHub REST APIへの接続は学習機能に必要ありません。Cloud同期が有効な公開環境では、学習件数・最終学習時刻・年度進捗・過去問得点などの進捗要約を自動バックアップします。答案や今回の確認問題の個別記録はCloudへ送りません。
 
 ```text
 数学Webアプリ
@@ -20,8 +20,8 @@ JSON Export / Import
 
 ## データ保護
 
-- アプリバージョン：`0.18.0`
-- 学習データ形式：`6`（v0.17.11から変更なし）
+- アプリバージョン：`0.18.2`
+- 学習データ形式：`8`（今回の公開では変更なし）
 - 既存の学習用localStorageキーを維持
 - `deviceId` / `resetVersion` は既存データ互換のため維持
 - 学習データ形式を変えていないため、この変更専用のmigrationは追加しない

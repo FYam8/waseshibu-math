@@ -137,8 +137,8 @@ export default function Report() {
       </section>
 
       <section className="card">
-        <h2>練習の失点原因</h2>
-        {ranking.length===0?<p className="muted">まだ失点分類データがありません。</p>:(
+        <h2>練習の記録（旧分類を含む）</h2><p className="muted">過去の分類は保存当時の記録です。新しい誤答の原因は未確定として扱い、自動で断定しません。</p>
+        {ranking.length===0?<p className="muted">まだ記録がありません。</p>:(
           <div className="bars">
             {ranking.map(([tag,count])=>(
               <div className="barrow" key={tag}>

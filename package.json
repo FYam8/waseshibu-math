@@ -1,11 +1,11 @@
 {
   "name": "waseshibu-math",
   "private": true,
-  "version": "0.18.0",
+  "version": "0.18.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "npm run test:shared-engine-learning-flow && npm run test:shared-engine-math-input && npm run test:shared-engine-scheduled-plan",
+    "prebuild": "npm run test:shared-engine-learning-flow && npm run test:shared-engine-math-input && npm run test:shared-engine-scheduled-plan && npm run test:answer-boundaries && npm run test:skill-check",
     "build": "npm run test:shared-engine-contract-v1 && npm run test:shared-engine-today-planner && npm run test:shared-engine-compat && npm run test:shared-engine-shadow && npm run test:shared-engine-activity && npm run test:shared-engine-daily && npm run test:shared-engine-planner-shadow && npm run test:shared-engine-planner-parity && npm run test:shared-engine-prep && npm run test:shared-engine-guided && npm run test:shared-engine-remediation && npm run test:shared-engine-level2 && npm run test:shared-engine-backup && npm run test:shared-engine-local-restore && npm run test:shared-engine-sync-boundary && npm run test:shared-engine-dual-read && npm run test:shared-engine-migration-rehearsal && npm run test:prep-answer-format && npm run test:final-answer-format && npm run test:guided-validation && npm run test:single-error-state && npm run test:guided-hint-progression && npm run test:modeling-hints && npm run test:probability-hints && npm run test:q1-diagnosis && npm run test:selection-strategy && npm run test:eta && npm run test:eta:runtime && npm run test:required-five-year-flow && npm run test:migration && npm run test:transfer-evidence && npm run test:score-plan && npm run test:score-stability && npm run test:year-scope && npm run test:past-paper-figures && npm run test:level2 && npm run test:sync-separation-runtime && npm run test:user-perspective && npm run test:user-perspective:v0176 && tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs",
     "test:shared-engine-contract-v1": "node scripts/test-shared-engine-contract-v1.mjs",
     "test:shared-engine-today-planner": "node scripts/test-shared-engine-today-planner.mjs",
@@ -69,7 +69,9 @@
     "test:level2": "node scripts/test-level2-v018.mjs",
     "test:past-paper-figures": "node scripts/test-past-paper-figure-focus-v018.mjs",
     "test:shared-engine-math-input": "node scripts/test-shared-engine-math-input.mjs",
-    "test:shared-engine-scheduled-plan": "node scripts/test-shared-engine-scheduled-plan.mjs"
+    "test:shared-engine-scheduled-plan": "node scripts/test-shared-engine-scheduled-plan.mjs",
+    "test:answer-boundaries": "node scripts/test-answer-boundaries-2027.mjs",
+    "test:skill-check": "node scripts/test-skill-check.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",

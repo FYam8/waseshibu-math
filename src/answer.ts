@@ -1,5 +1,7 @@
 export function normalizeAnswer(value:string) {
   return value
+    // Preserve the exponent before NFKC turns the superscript into a plain digit.
+    .replace(/²/g,'^2')
     .normalize('NFKC')
     .toLowerCase()
     .trim()
@@ -85,24 +87,24 @@ function evalExpression(value:string,env:Record<string,number>):number|null{
       const v=unary()
       return v===null?null:(sign==='-'?-v:v)
     }
-    return primary()
+    return power()
   }
   const power=():number|null=>{
-    let left=unary()
+    let left=primary()
     if(left===null)return null
     if(tokens[i]?.kind==='op'&&tokens[i].value==='^'){
       i++
-      const right=power()
+      const right=unary()
       if(right===null)return null
       left=Math.pow(left,right)
     }
     return Number.isFinite(left)?left:null
   }
   const mul=():number|null=>{
-    let left=power()
+    let left=unary()
     if(left===null)return null
     while(tokens[i]?.kind==='op'&&(tokens[i].value==='*'||tokens[i].value==='/')){
-      const op=tokens[i++].value,right=power()
+      const op=tokens[i++].value,right=unary()
       if(right===null||(op==='/'&&Math.abs(right)<1e-12))return null
       left=op==='*'?left*right:left/right
       if(!Number.isFinite(left))return null
@@ -176,6 +178,8 @@ function ratioEquivalent(a:string,b:string){
   if(aa.length!==2||bb.length!==2)return false
   const av=aa.map(x=>evalExpression(x,{})),bv=bb.map(x=>evalExpression(x,{}))
   if(av.some(x=>x===null)||bv.some(x=>x===null))return false
+  // 0:0 has no defined ratio; cross multiplication alone accepts every ratio.
+  if((av[0]===0&&av[1]===0)||(bv[0]===0&&bv[1]===0))return false
   return close((av[0] as number)*(bv[1] as number),(av[1] as number)*(bv[0] as number))
 }
 
@@ -224,6 +228,12 @@ export function isAcceptedAnswer(input:string, answer:string, acceptedAnswers:st
   return [answer, ...acceptedAnswers].some(candidate => {
     const expected=normalizeAnswer(candidate)
     if(expected===normalized)return true
+    // A bare accepted alias must not turn an ordered coordinate into a solution set.
+    const canonical=normalizeAnswer(answer)
+    if(/^\(.*,.+\)$/.test(canonical)){
+      const tuple=(value:string)=>value.startsWith('(')&&value.endsWith(')')?value:`(${value})`
+      return expressionEquivalent(tuple(normalized),tuple(expected))
+    }
     return expressionEquivalent(normalized,expected)
   })
 }

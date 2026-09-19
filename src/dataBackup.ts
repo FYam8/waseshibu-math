@@ -1,6 +1,7 @@
+import { SKILL_CHECK_KEY } from './skillCheck'
 import { CURRENT_DATA_VERSION, DATA_VERSION_KEY, GUIDED_REVIEW_STORAGE_KEY, GUIDED_PROGRESS_STORAGE_KEY, LEGACY_DRAFT_KEY, LEVEL2_HISTORY_STORAGE_KEY, REMEDIATION_PROGRESS_STORAGE_KEY, migrateDataRecord } from './dataMigration'
 
-export const BACKUP_KEYS=[
+export const BACKUP_KEYS=[SKILL_CHECK_KEY,
   'waseshibu-math-attempts','waseshibu-math-preferences','waseshibu-math-daily',
   'waseshibu-math-exam-scores','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1','waseshibu-math-daily-required-plan-v2','waseshibu-math-study-ahead-plan-v1',GUIDED_REVIEW_STORAGE_KEY,GUIDED_PROGRESS_STORAGE_KEY,REMEDIATION_PROGRESS_STORAGE_KEY,LEVEL2_HISTORY_STORAGE_KEY,'waseshibu-math-data-version'
 ] as const
@@ -32,7 +33,7 @@ export function validateBackup(value:unknown):BackupPackage{
   for(const key of Object.keys(data))if(!BACKUP_KEYS.includes(key as BackupKey)&&key!==LEGACY_DRAFT_KEY)throw new Error(`未対応のデータ項目が含まれています：${key}`)
   const arrays:BackupKey[]=['waseshibu-math-attempts','waseshibu-math-exam-scores']
   for(const key of arrays)if(key in data&&!Array.isArray(data[key]))throw new Error(`${key} の形式が壊れています`)
-  const objects:BackupKey[]=['waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1','waseshibu-math-daily-required-plan-v2','waseshibu-math-study-ahead-plan-v1',GUIDED_REVIEW_STORAGE_KEY,GUIDED_PROGRESS_STORAGE_KEY,REMEDIATION_PROGRESS_STORAGE_KEY,LEVEL2_HISTORY_STORAGE_KEY]
+  const objects:BackupKey[]=[SKILL_CHECK_KEY,'waseshibu-math-preferences','waseshibu-math-daily','waseshibu-math-exam-drafts-v2','waseshibu-math-learning-route-v1','waseshibu-math-prep-check-v1','waseshibu-math-daily-required-plan-v2','waseshibu-math-study-ahead-plan-v1',GUIDED_REVIEW_STORAGE_KEY,GUIDED_PROGRESS_STORAGE_KEY,REMEDIATION_PROGRESS_STORAGE_KEY,LEVEL2_HISTORY_STORAGE_KEY]
   for(const key of objects)if(key in data&&data[key]!==null&&!isObject(data[key]))throw new Error(`${key} の形式が壊れています`)
   const filtered:Partial<Record<BackupKey,unknown>>={}
   BACKUP_KEYS.forEach(key=>{if(key in data)filtered[key]=data[key]})
@@ -60,6 +61,7 @@ function mergeCompletedCore(local:unknown,incoming:unknown){
 }
 
 export function mergeBackupValue(key:BackupKey,local:unknown,incoming:unknown){
+  if(key===SKILL_CHECK_KEY)return {...(isObject(incoming)?incoming:{}),...(isObject(local)?local:{})}
   if(key.endsWith('attempts')||key.endsWith('exam-scores'))return uniqueById(local,incoming)
   if(key===LEVEL2_HISTORY_STORAGE_KEY){
     const a:any=isObject(local)?local:{},b:any=isObject(incoming)?incoming:{}

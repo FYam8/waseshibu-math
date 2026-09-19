@@ -1,0 +1,664 @@
+build1
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 prebuild
+> npm run test:shared-engine-learning-flow && npm run test:shared-engine-math-input && npm run test:shared-engine-scheduled-plan && npm run test:answer-boundaries
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-learning-flow
+> node scripts/test-shared-engine-learning-flow.mjs
+
+PASS shared learning flow: guided reproduction and fixed-set state machine
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-math-input
+> node scripts/test-shared-engine-math-input.mjs
+
+
+  ../../../../tmp/math-input-lMLyQA/mathInput.runtime.js  2.2kb
+
+⚡ Done in 5ms
+PASS shared math input: keys, insertion, deletion, selection and legacy cursor parity
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-scheduled-plan
+> node scripts/test-shared-engine-scheduled-plan.mjs
+
+PASS candidate scheduled plan: explicit completion, no refill, opaque IDs, unresolved preservation, ahead promotion; zero production wiring
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:answer-boundaries
+> node scripts/test-answer-boundaries-2027.mjs
+
+Answer boundary regression: 21 PASS
+
+> waseshibu-math@0.18.0 build
+> npm run test:shared-engine-contract-v1 && npm run test:shared-engine-today-planner && npm run test:shared-engine-compat && npm run test:shared-engine-shadow && npm run test:shared-engine-activity && npm run test:shared-engine-daily && npm run test:shared-engine-planner-shadow && npm run test:shared-engine-planner-parity && npm run test:shared-engine-prep && npm run test:shared-engine-guided && npm run test:shared-engine-remediation && npm run test:shared-engine-level2 && npm run test:shared-engine-backup && npm run test:shared-engine-local-restore && npm run test:shared-engine-sync-boundary && npm run test:shared-engine-dual-read && npm run test:shared-engine-migration-rehearsal && npm run test:prep-answer-format && npm run test:final-answer-format && npm run test:guided-validation && npm run test:single-error-state && npm run test:guided-hint-progression && npm run test:modeling-hints && npm run test:probability-hints && npm run test:q1-diagnosis && npm run test:selection-strategy && npm run test:eta && npm run test:eta:runtime && npm run test:required-five-year-flow && npm run test:migration && npm run test:transfer-evidence && npm run test:score-plan && npm run test:score-stability && npm run test:year-scope && npm run test:past-paper-figures && npm run test:level2 && npm run test:sync-separation-runtime && npm run test:user-perspective && npm run test:user-perspective:v0176 && tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-contract-v1
+> node scripts/test-shared-engine-contract-v1.mjs
+
+SHARED ENGINE CONTRACT V1 TEST PASSED
+leaf content, no-loss merge policy, provenance materialization and verified candidate rollback: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-today-planner
+> node scripts/test-shared-engine-today-planner.mjs
+
+PASS shared Today planner: school-neutral lanes, opaque route IDs, WaseShibu consumer, deterministic browser runtime
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-compat
+> node scripts/test-shared-engine-compat.mjs
+
+SHARED ENGINE COMPATIBILITY TEST PASSED
+profile identity, app-shell events, examId/year bridge, targetId/legacy bridge, score authority, and WaseShibu identity preservation: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-shadow
+> node scripts/test-shared-engine-shadow.mjs
+
+SHARED ENGINE SHADOW STATE TEST PASSED
+legacy WaseShibu preferences/results/drafts/route -> canonical read-only view, zero writes, preserved evidence and route semantics: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-activity
+> node scripts/test-shared-engine-activity.mjs
+
+SHARED ENGINE ACTIVITY SHADOW TEST PASSED
+actual loadAttempts == canonical activity shadow; problem attempts, exam exposure and mastery markers stay distinct; zero writes: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-daily
+> node scripts/test-shared-engine-daily.mjs
+
+SHARED ENGINE DAILY PRACTICE SHADOW TEST PASSED
+actual loadDaily == canonical daily-practice shadow; corrupt/malformed/unknown state fails closed; zero writes: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-planner-shadow
+> node scripts/test-shared-engine-planner-shadow.mjs
+
+SHARED ENGINE PLANNER SHADOW TEST PASSED
+today-required and study-ahead persisted plans map read-only; task IDs stay opaque; WaseShibu routes remain school evidence; malformed state fails closed: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-planner-parity
+> node scripts/test-shared-engine-planner-parity.mjs
+
+SHARED ENGINE PLANNER READER PARITY TEST PASSED
+legacy read-only scheduler semantics == canonical persisted shadow for valid plans; stale/absent behavior preserved; malformed state fails closed; zero writes: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-prep
+> node scripts/test-shared-engine-prep.mjs
+
+SHARED ENGINE PREP CHECK AUDIT PASSED
+actual loadPrepState == strict canonical shadow for valid persisted prep data; absence stays absent; future/filtered/fractional state fails closed; zero writes: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-guided
+> node scripts/test-shared-engine-guided.mjs
+
+SHARED ENGINE GUIDED STATE AUDIT TEST PASSED
+guided-progress-v2 stays authoritative, guided-review-v1 remains compatibility evidence, zero writes and fail-closed malformed-state detection: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-remediation
+> node scripts/test-shared-engine-remediation.mjs
+
+SHARED ENGINE REMEDIATION STATE TEST PASSED
+runtime normalization parity, lossless school evidence, collision/data-loss blockers, zero writes: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-level2
+> node scripts/test-shared-engine-level2.mjs
+
+SHARED ENGINE LEVEL2 STATE TEST PASSED
+history reader parity, independent summary-reader parity, lossless school evidence, strict migration blockers, zero writes: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-backup
+> node scripts/test-shared-engine-backup.mjs
+
+SHARED ENGINE BACKUP TRANSPORT AUDIT TEST PASSED
+portable identity isolation, self-contained record gate, replace roundtrip, merge-conflict detection: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-local-restore
+> node scripts/test-shared-engine-local-restore.mjs
+
+SHARED ENGINE LOCAL RESTORE POINT TEST PASSED
+exact raw snapshot, device/sync-meta recovery, verified rollback, portable export isolation: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-sync-boundary
+> node scripts/test-shared-engine-sync-boundary.mjs
+
+SHARED ENGINE SYNC BOUNDARY TEST PASSED
+WaseShibu sync identity profile-routed, school-owned projection isolated, raw answers/content excluded: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-dual-read
+> node scripts/test-shared-engine-dual-read.mjs
+
+SHARED ENGINE DUAL-READ PARITY TEST PASSED
+active legacy readers == canonical shadow for preferences/results/drafts/route, zero writes, fail-closed mismatch detection: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-migration-rehearsal
+> node scripts/test-shared-engine-migration-rehearsal.mjs
+
+SHARED ENGINE MIGRATION REHEARSAL TEST PASSED
+aggregate candidate includes guided, remediation and practice-history state; exact rollback now covers Level2 while school-local device identity remains isolated: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:prep-answer-format
+> node scripts/test-prep-answer-format.mjs
+
+PASS: 24 preparation input/form cases + UI wiring + immutable questions + unchanged storage identity
+Synthetic-input feature checks only: not AI learner transfer or human learning outcomes.
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:final-answer-format
+> node scripts/test-final-answer-format.mjs
+
+最終答案形式 18ケース + 全公式正答・登録別解回帰: PASS
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:guided-validation
+> node scripts/test-guided-step-validation-v0178.mjs
+
+PASS: Guided STEP relevance gate rejects filler/unrelated equations, keeps relevant work recordable, and discloses no intermediate grading (653 steps across 160 questions)
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:single-error-state
+> node scripts/test-single-error-state.mjs
+
+PASS: S2-STATE-001..008 関連する単一誤りの記録、自己評価、最終採点、習得判定、診断非生成を分離
+HOLD: 最初の誤り・原因・正しい考え方・次回注意の自動添削は、別途学習仕様と精度評価が必要
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:guided-hint-progression
+> node scripts/test-guided-hint-progression.mjs
+
+PASS: 653 STEPを検査し、確認文の先出し138件を含む152件をレベル2で保護。固定7件の最終答案漏洩なし。
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:modeling-hints
+> node scripts/test-word-problem-modeling-hints.mjs
+
+PASS: S3-MODEL-001..013 文章題は6項目を整理してから立式し、実データへの未適用と非文章題への過剰適用を防ぐ
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:probability-hints
+> node scripts/test-probability-counting-hints.mjs
+
+PASS: S4-COUNT-001..009 確率・場合の数は実データIDでも5項目を確認してから数え始め、個別問題の答え・計算を先に示さない
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:q1-diagnosis
+> node scripts/test-q1-loss-diagnosis.mjs
+
+PASS: S5-Q1-001..010 大問1の8問構成、2019境界、自己申告操作の廃止、小問時間、回収候補の根拠を検証
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:selection-strategy
+> node scripts/test-problem-selection-strategy.mjs
+
+PASS: S6-SELECT-001..010 目標別4区分、A/B/C範囲、時間配分100%、表示上の区別を検証
+HOLD: C問題の総時間・未着手A問題の比較は、問題閲覧時間を正確に取得する計測仕様が必要
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:eta
+> node scripts/test-goal-eta.mjs
+
+PASS: simple monotonic ETA is render-pure, locks before retake/repractice/restore/target-change boundaries, and excludes optional old-year extras
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:eta:runtime
+> node scripts/test-goal-eta-runtime.mjs
+
+PASS: monotonic goal ETA reserves full-paper + repair + fixed practice, excludes optional old-year extras, and respects target-specific completion locks
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:required-five-year-flow
+> node scripts/test-required-five-year-flow-v0179.mjs
+
+PASS: required five-year route uses source repair + fixed practice; 2019-2021 separate full-paper work is optional; completion locks are persistent
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:migration
+> node scripts/test-migration-preservation.mjs
+
+PASS: v3→v8を非破壊移行し、旧履歴を保持。本線完了ロック容器だけを追加し、旧Level2 identityは推測移行しない
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:transfer-evidence
+> node scripts/test-transfer-evidence.mjs
+
+PASS: S7-TRANSFER-001..007 — fixed-set completion is separated from unseen transfer evidence
+Synthetic feature checks only: not an isolated AI learner comparison or human learning outcome.
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:score-plan
+> node scripts/test-score-learning-plan.mjs
+
+PASS: S8-PLAN-001..009 大問1優先、C問題後回し、次の3問、条件付き上限、1〜2週間後の無支援再測定を検証
+HOLD: 原因別の回収可能性判定と4区分（実力点・本来取れた点・難しい点・追加点）の自動算出は学習設計変更が必要
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:score-stability
+> node scripts/test-score-stability-guidance.mjs
+
+PASS: S11-GOAL-001..016 直近4回、安定性、大問1、時間、本番再現、国英配分、90点要求の境界を検証
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:year-scope
+> node scripts/test-year-scope.mjs
+
+PASS: S9-SCOPE-001..008 2019/2020の明示条件、年度分離、解説・固定類題の問題表示画面で範囲表示を検証
+NOTE: 固定合成入力の機能検査であり、AI模擬学習者の転移結果ではありません
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:past-paper-figures
+> node scripts/test-past-paper-figure-focus-v018.mjs
+
+PASS: 60 reinforcement past-paper crops use question pages; required common/current figures are present and Q1(5) no longer leaks Q1(6)
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:level2
+> node scripts/test-level2-v018.mjs
+
+PASS: S10 10 final-answer boundary cases (not learner outcomes)
+PASS: fixed 2-4 question sets, unresolved-only retry, non-destructive history, assistance, final-answer grading
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:sync-separation-runtime
+> node scripts/test-github-sync-separation-runtime-v01712.mjs
+
+SYNC SEPARATION RUNTIME PASSED: local learning saves work, dirty/config/token state is untouched, resetVersion compatibility is preserved
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:user-perspective
+> node scripts/test-user-perspective-v0174.mjs
+
+PASS: opening a full-year paper marks it exposed
+PASS: untouched checkpoint is preferred after view-only exposure
+PASS: full-year old-paper viewing exposes all its subquestions
+PASS: view-only exposure does not erase reinforcement eligibility
+PASS: wrong/unanswered/correct/latest-wrong old-year states select correctly
+PASS: optional old-year mistakes stay outside required queue
+PASS: core draft priority and optional draft preservation
+PASS: UI exposure event and first-look attempt context stay distinct
+PASS: warning-only visits do not consume first-look eligibility
+PASS: optional old-year scores do not redefine current stage and score validity is visible
+PASS: score-only manual records do not bypass question-level diagnosis
+PASS: score-only records do not masquerade as zero Q1 mistakes
+PASS: v0.17.5 user-perspective scenarios
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:user-perspective:v0176
+> node scripts/test-user-perspective-v0176.mjs
+
+PASS: source repair -> fixed practice is the required flow; separate 2019-2021 work is optional
+PASS: wrong fixed-practice answers stay unresolved without resetting completed questions
+PASS: reveal/hint use requires a later independent retry
+PASS: post-completion re-practice is optional and separated from core countdown
+PASS: v0.18.1 reinforcement user-flow scenarios
+vite v6.4.3 building for production...
+transforming...
+✓ 101 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                     0.69 kB │ gzip:   0.45 kB
+dist/assets/index-DUXE-BID.css     50.07 kB │ gzip:   9.90 kB
+dist/assets/index-CIMoBTfc.js   1,274.85 kB │ gzip: 232.94 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.88s
+GITHUB SYNC SEPARATION VERIFIED: localStorage-only learning flow, data v8 preserved, production bundle clean
+
+
+browser1
+PASS 390px: real exam input, two incorrect grades, draft reload, persisted answers/score; no cause self-report, unknown cause persisted, practice answer saved; external requests blocked
+PASS 1280px: real exam input, two incorrect grades, draft reload, persisted answers/score; no cause self-report, unknown cause persisted, practice answer saved; external requests blocked
+
+
+build2
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 prebuild
+> npm run test:shared-engine-learning-flow && npm run test:shared-engine-math-input && npm run test:shared-engine-scheduled-plan && npm run test:answer-boundaries
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-learning-flow
+> node scripts/test-shared-engine-learning-flow.mjs
+
+PASS shared learning flow: guided reproduction and fixed-set state machine
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-math-input
+> node scripts/test-shared-engine-math-input.mjs
+
+
+  ../../../../tmp/math-input-vtLBar/mathInput.runtime.js  2.2kb
+
+⚡ Done in 4ms
+PASS shared math input: keys, insertion, deletion, selection and legacy cursor parity
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-scheduled-plan
+> node scripts/test-shared-engine-scheduled-plan.mjs
+
+PASS candidate scheduled plan: explicit completion, no refill, opaque IDs, unresolved preservation, ahead promotion; zero production wiring
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:answer-boundaries
+> node scripts/test-answer-boundaries-2027.mjs
+
+Answer boundary regression: 21 PASS
+
+> waseshibu-math@0.18.0 build
+> npm run test:shared-engine-contract-v1 && npm run test:shared-engine-today-planner && npm run test:shared-engine-compat && npm run test:shared-engine-shadow && npm run test:shared-engine-activity && npm run test:shared-engine-daily && npm run test:shared-engine-planner-shadow && npm run test:shared-engine-planner-parity && npm run test:shared-engine-prep && npm run test:shared-engine-guided && npm run test:shared-engine-remediation && npm run test:shared-engine-level2 && npm run test:shared-engine-backup && npm run test:shared-engine-local-restore && npm run test:shared-engine-sync-boundary && npm run test:shared-engine-dual-read && npm run test:shared-engine-migration-rehearsal && npm run test:prep-answer-format && npm run test:final-answer-format && npm run test:guided-validation && npm run test:single-error-state && npm run test:guided-hint-progression && npm run test:modeling-hints && npm run test:probability-hints && npm run test:q1-diagnosis && npm run test:selection-strategy && npm run test:eta && npm run test:eta:runtime && npm run test:required-five-year-flow && npm run test:migration && npm run test:transfer-evidence && npm run test:score-plan && npm run test:score-stability && npm run test:year-scope && npm run test:past-paper-figures && npm run test:level2 && npm run test:sync-separation-runtime && npm run test:user-perspective && npm run test:user-perspective:v0176 && tsc -b && vite build && node scripts/verify-github-sync-separation-v01712.mjs
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-contract-v1
+> node scripts/test-shared-engine-contract-v1.mjs
+
+SHARED ENGINE CONTRACT V1 TEST PASSED
+leaf content, no-loss merge policy, provenance materialization and verified candidate rollback: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-today-planner
+> node scripts/test-shared-engine-today-planner.mjs
+
+PASS shared Today planner: school-neutral lanes, opaque route IDs, WaseShibu consumer, deterministic browser runtime
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-compat
+> node scripts/test-shared-engine-compat.mjs
+
+SHARED ENGINE COMPATIBILITY TEST PASSED
+profile identity, app-shell events, examId/year bridge, targetId/legacy bridge, score authority, and WaseShibu identity preservation: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-shadow
+> node scripts/test-shared-engine-shadow.mjs
+
+SHARED ENGINE SHADOW STATE TEST PASSED
+legacy WaseShibu preferences/results/drafts/route -> canonical read-only view, zero writes, preserved evidence and route semantics: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-activity
+> node scripts/test-shared-engine-activity.mjs
+
+SHARED ENGINE ACTIVITY SHADOW TEST PASSED
+actual loadAttempts == canonical activity shadow; problem attempts, exam exposure and mastery markers stay distinct; zero writes: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-daily
+> node scripts/test-shared-engine-daily.mjs
+
+SHARED ENGINE DAILY PRACTICE SHADOW TEST PASSED
+actual loadDaily == canonical daily-practice shadow; corrupt/malformed/unknown state fails closed; zero writes: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-planner-shadow
+> node scripts/test-shared-engine-planner-shadow.mjs
+
+SHARED ENGINE PLANNER SHADOW TEST PASSED
+today-required and study-ahead persisted plans map read-only; task IDs stay opaque; WaseShibu routes remain school evidence; malformed state fails closed: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-planner-parity
+> node scripts/test-shared-engine-planner-parity.mjs
+
+SHARED ENGINE PLANNER READER PARITY TEST PASSED
+legacy read-only scheduler semantics == canonical persisted shadow for valid plans; stale/absent behavior preserved; malformed state fails closed; zero writes: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-prep
+> node scripts/test-shared-engine-prep.mjs
+
+SHARED ENGINE PREP CHECK AUDIT PASSED
+actual loadPrepState == strict canonical shadow for valid persisted prep data; absence stays absent; future/filtered/fractional state fails closed; zero writes: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-guided
+> node scripts/test-shared-engine-guided.mjs
+
+SHARED ENGINE GUIDED STATE AUDIT TEST PASSED
+guided-progress-v2 stays authoritative, guided-review-v1 remains compatibility evidence, zero writes and fail-closed malformed-state detection: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-remediation
+> node scripts/test-shared-engine-remediation.mjs
+
+SHARED ENGINE REMEDIATION STATE TEST PASSED
+runtime normalization parity, lossless school evidence, collision/data-loss blockers, zero writes: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-level2
+> node scripts/test-shared-engine-level2.mjs
+
+SHARED ENGINE LEVEL2 STATE TEST PASSED
+history reader parity, independent summary-reader parity, lossless school evidence, strict migration blockers, zero writes: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-backup
+> node scripts/test-shared-engine-backup.mjs
+
+SHARED ENGINE BACKUP TRANSPORT AUDIT TEST PASSED
+portable identity isolation, self-contained record gate, replace roundtrip, merge-conflict detection: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-local-restore
+> node scripts/test-shared-engine-local-restore.mjs
+
+SHARED ENGINE LOCAL RESTORE POINT TEST PASSED
+exact raw snapshot, device/sync-meta recovery, verified rollback, portable export isolation: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-sync-boundary
+> node scripts/test-shared-engine-sync-boundary.mjs
+
+SHARED ENGINE SYNC BOUNDARY TEST PASSED
+WaseShibu sync identity profile-routed, school-owned projection isolated, raw answers/content excluded: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-dual-read
+> node scripts/test-shared-engine-dual-read.mjs
+
+SHARED ENGINE DUAL-READ PARITY TEST PASSED
+active legacy readers == canonical shadow for preferences/results/drafts/route, zero writes, fail-closed mismatch detection: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:shared-engine-migration-rehearsal
+> node scripts/test-shared-engine-migration-rehearsal.mjs
+
+SHARED ENGINE MIGRATION REHEARSAL TEST PASSED
+aggregate candidate includes guided, remediation and practice-history state; exact rollback now covers Level2 while school-local device identity remains isolated: OK
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:prep-answer-format
+> node scripts/test-prep-answer-format.mjs
+
+PASS: 24 preparation input/form cases + UI wiring + immutable questions + unchanged storage identity
+Synthetic-input feature checks only: not AI learner transfer or human learning outcomes.
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:final-answer-format
+> node scripts/test-final-answer-format.mjs
+
+最終答案形式 18ケース + 全公式正答・登録別解回帰: PASS
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:guided-validation
+> node scripts/test-guided-step-validation-v0178.mjs
+
+PASS: Guided STEP relevance gate rejects filler/unrelated equations, keeps relevant work recordable, and discloses no intermediate grading (653 steps across 160 questions)
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:single-error-state
+> node scripts/test-single-error-state.mjs
+
+PASS: S2-STATE-001..008 関連する単一誤りの記録、自己評価、最終採点、習得判定、診断非生成を分離
+HOLD: 最初の誤り・原因・正しい考え方・次回注意の自動添削は、別途学習仕様と精度評価が必要
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:guided-hint-progression
+> node scripts/test-guided-hint-progression.mjs
+
+PASS: 653 STEPを検査し、確認文の先出し138件を含む152件をレベル2で保護。固定7件の最終答案漏洩なし。
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:modeling-hints
+> node scripts/test-word-problem-modeling-hints.mjs
+
+PASS: S3-MODEL-001..013 文章題は6項目を整理してから立式し、実データへの未適用と非文章題への過剰適用を防ぐ
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:probability-hints
+> node scripts/test-probability-counting-hints.mjs
+
+PASS: S4-COUNT-001..009 確率・場合の数は実データIDでも5項目を確認してから数え始め、個別問題の答え・計算を先に示さない
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:q1-diagnosis
+> node scripts/test-q1-loss-diagnosis.mjs
+
+PASS: S5-Q1-001..010 大問1の8問構成、2019境界、自己申告操作の廃止、小問時間、回収候補の根拠を検証
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:selection-strategy
+> node scripts/test-problem-selection-strategy.mjs
+
+PASS: S6-SELECT-001..010 目標別4区分、A/B/C範囲、時間配分100%、表示上の区別を検証
+HOLD: C問題の総時間・未着手A問題の比較は、問題閲覧時間を正確に取得する計測仕様が必要
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:eta
+> node scripts/test-goal-eta.mjs
+
+PASS: simple monotonic ETA is render-pure, locks before retake/repractice/restore/target-change boundaries, and excludes optional old-year extras
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:eta:runtime
+> node scripts/test-goal-eta-runtime.mjs
+
+PASS: monotonic goal ETA reserves full-paper + repair + fixed practice, excludes optional old-year extras, and respects target-specific completion locks
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:required-five-year-flow
+> node scripts/test-required-five-year-flow-v0179.mjs
+
+PASS: required five-year route uses source repair + fixed practice; 2019-2021 separate full-paper work is optional; completion locks are persistent
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:migration
+> node scripts/test-migration-preservation.mjs
+
+PASS: v3→v8を非破壊移行し、旧履歴を保持。本線完了ロック容器だけを追加し、旧Level2 identityは推測移行しない
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:transfer-evidence
+> node scripts/test-transfer-evidence.mjs
+
+PASS: S7-TRANSFER-001..007 — fixed-set completion is separated from unseen transfer evidence
+Synthetic feature checks only: not an isolated AI learner comparison or human learning outcome.
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:score-plan
+> node scripts/test-score-learning-plan.mjs
+
+PASS: S8-PLAN-001..009 大問1優先、C問題後回し、次の3問、条件付き上限、1〜2週間後の無支援再測定を検証
+HOLD: 原因別の回収可能性判定と4区分（実力点・本来取れた点・難しい点・追加点）の自動算出は学習設計変更が必要
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:score-stability
+> node scripts/test-score-stability-guidance.mjs
+
+PASS: S11-GOAL-001..016 直近4回、安定性、大問1、時間、本番再現、国英配分、90点要求の境界を検証
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:year-scope
+> node scripts/test-year-scope.mjs
+
+PASS: S9-SCOPE-001..008 2019/2020の明示条件、年度分離、解説・固定類題の問題表示画面で範囲表示を検証
+NOTE: 固定合成入力の機能検査であり、AI模擬学習者の転移結果ではありません
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:past-paper-figures
+> node scripts/test-past-paper-figure-focus-v018.mjs
+
+PASS: 60 reinforcement past-paper crops use question pages; required common/current figures are present and Q1(5) no longer leaks Q1(6)
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:level2
+> node scripts/test-level2-v018.mjs
+
+PASS: S10 10 final-answer boundary cases (not learner outcomes)
+PASS: fixed 2-4 question sets, unresolved-only retry, non-destructive history, assistance, final-answer grading
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:sync-separation-runtime
+> node scripts/test-github-sync-separation-runtime-v01712.mjs
+
+SYNC SEPARATION RUNTIME PASSED: local learning saves work, dirty/config/token state is untouched, resetVersion compatibility is preserved
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:user-perspective
+> node scripts/test-user-perspective-v0174.mjs
+
+PASS: opening a full-year paper marks it exposed
+PASS: untouched checkpoint is preferred after view-only exposure
+PASS: full-year old-paper viewing exposes all its subquestions
+PASS: view-only exposure does not erase reinforcement eligibility
+PASS: wrong/unanswered/correct/latest-wrong old-year states select correctly
+PASS: optional old-year mistakes stay outside required queue
+PASS: core draft priority and optional draft preservation
+PASS: UI exposure event and first-look attempt context stay distinct
+PASS: warning-only visits do not consume first-look eligibility
+PASS: optional old-year scores do not redefine current stage and score validity is visible
+PASS: score-only manual records do not bypass question-level diagnosis
+PASS: score-only records do not masquerade as zero Q1 mistakes
+PASS: v0.17.5 user-perspective scenarios
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.0 test:user-perspective:v0176
+> node scripts/test-user-perspective-v0176.mjs
+
+PASS: source repair -> fixed practice is the required flow; separate 2019-2021 work is optional
+PASS: wrong fixed-practice answers stay unresolved without resetting completed questions
+PASS: reveal/hint use requires a later independent retry
+PASS: post-completion re-practice is optional and separated from core countdown
+PASS: v0.18.1 reinforcement user-flow scenarios
+vite v6.4.3 building for production...
+transforming...
+✓ 101 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                     0.69 kB │ gzip:   0.45 kB
+dist/assets/index-DUXE-BID.css     50.07 kB │ gzip:   9.90 kB
+dist/assets/index-CIMoBTfc.js   1,274.85 kB │ gzip: 232.94 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.97s
+GITHUB SYNC SEPARATION VERIFIED: localStorage-only learning flow, data v8 preserved, production bundle clean
+
+
+browser2
+PASS 390px: real exam input, two incorrect grades, draft reload, persisted answers/score; no cause self-report, unknown cause persisted, practice answer saved; external requests blocked
+PASS 1280px: real exam input, two incorrect grades, draft reload, persisted answers/score; no cause self-report, unknown cause persisted, practice answer saved; external requests blocked
