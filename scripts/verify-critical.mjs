@@ -173,6 +173,8 @@ const strategyItems=[
   {key:'c',major:5,subNo:'3',topic:'相似・面積比',grade:'C',status:'wrong',points:5}
 ]
 assert.deepEqual(['A','B','C'].filter(g=>targetStrategy.gradeInTarget(60,g)),['A'])
+for(const id of ['2023-Q1-5','2023-Q1-6','2026-Q3-2'])assert.equal(targetStrategy.gradeInTarget(60,'B',id),true)
+assert.equal(targetStrategy.gradeInTarget(60,'B','2026-Q2-2'),false)
 assert.deepEqual(['A','B','C'].filter(g=>targetStrategy.gradeInTarget(70,g)),['A','B'])
 assert.deepEqual(['A','B','C'].filter(g=>targetStrategy.gradeInTarget(75,g)),['A','B','C'])
 assert.deepEqual([60,70,75].map(x=>targetStrategy.targetGoalLabel(x)),['A 60点','B 70点','C 75点'])
@@ -180,4 +182,4 @@ assert.deepEqual([targetStrategy.gradeInTarget(60,'A'),targetStrategy.gradeInTar
 for(const target of [60,70,75])assert.equal(targetStrategy.targetProfile(target).timePlan.reduce((sum,x)=>sum+x.percent,0),100)
 
 console.log('CRITICAL VERIFICATION PASSED')
-console.log(`v0.18.2, data v8, 60 official past + 100 active Level2 + 60 backlog + support 2, target bands 60=A / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK`)
+console.log(`v0.18.2, data v8, 60 official past + 100 active Level2 + 60 backlog + support 2, target bands 60=A+specified B / 70=A+B / 75=A+B+C, verified fixed focus: ${questionIds.length}/160, backup/no-loss migration: OK`)

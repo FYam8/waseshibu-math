@@ -32,10 +32,11 @@ const require=createRequire(import.meta.url),eta=require(path.join(temp,'targetE
 
 const data=JSON.parse(fs.readFileSync('src/data/questions.json','utf8')).questions
 const sequence=[2024,2023,2022,2025,2026]
-const inTarget=(target,grade)=>grade==='A'||(grade==='B'&&target>=70)||(grade==='C'&&target>=75)
+const added60=new Set(['2023-Q1-5','2023-Q1-6','2026-Q3-2'])
+const inTarget=(target,grade,id)=>grade==='A'||(grade==='B'&&(target>=70||added60.has(id)))||(grade==='C'&&target>=75)
 const practiceCount=major=>major===1?4:(major===2||major===3?3:2)
 function expected(target,yearFilter=sequence){
-  return data.filter(major=>yearFilter.includes(major.year)).reduce((sum,major)=>sum+major.subquestions.reduce((subSum,sub)=>subSum+1+(inTarget(target,sub.grade)?1+practiceCount(major.major):0),0),0)
+  return data.filter(major=>yearFilter.includes(major.year)).reduce((sum,major)=>sum+major.subquestions.reduce((subSum,sub)=>subSum+1+(inTarget(target,sub.grade,`${major.id}-${sub.no}`)?1+practiceCount(major.major):0),0),0)
 }
 
 const initial=eta.buildGoalDayEstimates(new Date('2026-08-31T09:00:00Z'))

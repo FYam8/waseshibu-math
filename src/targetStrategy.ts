@@ -11,7 +11,7 @@ export type ExamTargetStrategy={target:TargetScore;score:number;gap:number;reach
 
 const easyCauses=new Set(['計算ミス','符号ミス','条件読み落とし','読み落とし','答え方の不備'])
 const profiles:Record<TargetScore,{summary:string;timePlan:{label:string;percent:number}[]}>= {
-  60:{summary:'大問1と大問2〜5の（1）を優先し、難しい（3）は後回しにします。',timePlan:[{label:'大問1',percent:50},{label:'大問2〜5（1）',percent:35},{label:'見直し',percent:15}]},
+  60:{summary:'A問題を優先し、2023年度は大問1（5）（6）、2026年度は大問3（2）のB問題も確認します。',timePlan:[{label:'大問1',percent:50},{label:'大問2〜5（1）・指定B',percent:35},{label:'見直し',percent:15}]},
   70:{summary:'大問1を安定させ、大問2〜5の（2）までのA・B問題を増やします。',timePlan:[{label:'大問1',percent:40},{label:'大問2〜5 A・B',percent:45},{label:'見直し',percent:15}]},
   75:{summary:'A・B問題を確実にした後、取れそうなC問題だけを選びます。',timePlan:[{label:'大問1',percent:35},{label:'大問2〜5 A・B',percent:50},{label:'選ぶC問題',percent:10},{label:'見直し',percent:5}]}
 }
@@ -21,8 +21,8 @@ export const targetGoalLabel=(target:TargetScore)=>target===60?'A 60点':target=
 export const targetGoalLetter=(target:TargetScore)=>target===60?'A':target===70?'B':'C'
 export function selectionPlan(target:TargetScore):SelectionPlan{
   if(target===60)return {
-    firstRound:'問題ランクA。大問1と、大問2〜5の短い標準問題から解く。',
-    defer:'問題ランクB。A問題を一巡した後、時間が残れば取り組む。',
+    firstRound:'問題ランクA。大問1と、大問2〜5の短い標準問題から解く。続いて年度別に指定したB問題を確認する。',
+    defer:'指定外のB問題。A問題と指定B問題の確認後、時間が残れば取り組む。',
     returnLast:'「迷い」を付けたA問題と、途中まで進めたA問題に戻る。',
     discard:'問題ランクC。60点を安定させる段階では着手しなくてよい。'
   }
@@ -39,9 +39,13 @@ export function selectionPlan(target:TargetScore):SelectionPlan{
     discard:'方針が立たないC問題。見直し時間を残すため深追いしない。'
   }
 }
-export const gradeInTarget=(target:TargetScore,grade:Grade)=>grade==='A'||(grade==='B'&&target>=70)||(grade==='C'&&target>=75)
-export function gradeAdvice(target:TargetScore,grade:Grade){
+// School-specific additions: retain original difficulty grades and question IDs.
+export const TARGET60_SUPPLEMENT_IDS=['2023-Q1-5','2023-Q1-6','2026-Q3-2'] as const
+export const isTarget60Supplement=(questionId?:string)=>TARGET60_SUPPLEMENT_IDS.some(id=>id===questionId)
+export const gradeInTarget=(target:TargetScore,grade:Grade,questionId?:string)=>grade==='A'||(grade==='B'&&(target>=70||isTarget60Supplement(questionId)))||(grade==='C'&&target>=75)
+export function gradeAdvice(target:TargetScore,grade:Grade,questionId?:string){
   if(grade==='A')return '目標点にかかわらず最優先'
+  if(target===60&&grade==='B'&&isTarget60Supplement(questionId))return '60点方針の追加必須問題（A問題の後）'
   if(grade==='B')return target>=70?'今回の目標で優先':'60点を固めた後に追加'
   return target>=75?'A・Bが安定したら選んで挑戦':'現時点では後回し候補'
 }
@@ -55,18 +59,19 @@ function candidateReason(target:TargetScore,item:StrategyItem){
   if(easyCauses.has(item.cause||''))return `${item.cause}を直して回収`
   if(item.status==='unanswered')return '未回答：方針を立てる練習から'
   if(item.grade==='A')return '基礎・標準として最優先'
+  if(target===60&&isTarget60Supplement(item.key))return '60点方針の不足分を補う指定B問題'
   if(item.grade==='B')return target>=70?'目標到達に必要な標準問題':'60点安定後の追加候補'
   return target>=75?'取れそうなら選ぶ発展問題':'今回は後回し候補'
 }
 
 export function rankWeakFields(target:TargetScore,items:StrategyItem[]){
   const weights:Record<string,number>={},gradeWeight:Record<TargetScore,Record<Grade,number>>={60:{A:6,B:1.5,C:.25},70:{A:6,B:4,C:.5},75:{A:6,B:5,C:2}}
-  for(const item of items){if(item.status==='correct'||!gradeInTarget(target,item.grade))continue;const field=classifyRemediationField(item.topic).title,status=item.status==='wrong'?1:.7,cause=easyCauses.has(item.cause||'')?1.25:1;weights[field]=(weights[field]||0)+gradeWeight[target][item.grade]*status*cause}
+  for(const item of items){if(item.status==='correct'||!gradeInTarget(target,item.grade,item.key))continue;const field=classifyRemediationField(item.topic).title,status=item.status==='wrong'?1:.7,cause=easyCauses.has(item.cause||'')?1.25:1;weights[field]=(weights[field]||0)+gradeWeight[target][item.grade]*status*cause}
   return Object.entries(weights).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'ja')).slice(0,3).map(([field])=>field)
 }
 
 export function buildTargetStrategy(target:TargetScore,score:number,items:StrategyItem[]):ExamTargetStrategy{
-  const candidates=items.filter(item=>item.status!=='correct'&&gradeInTarget(target,item.grade)).sort((a,b)=>itemRank(target,a)-itemRank(target,b)||a.key.localeCompare(b.key)).slice(0,3).map(item=>({key:item.key,label:`大問${item.major}（${item.subNo}） ${item.topic}`,grade:item.grade,points:Math.round(item.points),reason:candidateReason(target,item)}))
+  const candidates=items.filter(item=>item.status!=='correct'&&gradeInTarget(target,item.grade,item.key)).sort((a,b)=>itemRank(target,a)-itemRank(target,b)||a.key.localeCompare(b.key)).slice(0,3).map(item=>({key:item.key,label:`大問${item.major}（${item.subNo}） ${item.topic}`,grade:item.grade,points:Math.round(item.points),reason:candidateReason(target,item)}))
   const recoverablePoints=candidates.reduce((sum,item)=>sum+item.points,0),gap=Math.max(0,target-score),projectedScore=Math.min(100,score+recoverablePoints),reached=gap===0
   const summary=reached?`目標${target}点に到達しています。次は同じ得点を再現できるよう、優先問題の取りこぼしを直します。`:!candidates.length?(items.length?`目標方針内の優先問題は取れています。次の段階の問題を増やすか、時間配分を見直します。`:`得点だけの記録では回収問題を特定できません。次の年度をアプリで自動採点すると、具体的な候補を表示します。`):projectedScore>=target?`次の3問をすべて正解した場合は目標${target}点に届きます。まず1問ずつ解き直して、回収できるか確認します。`:`まず次の3問を解き直して回収できるか確認し、残りは弱点3分野の補強で埋めます。`
   return {target,score,gap,reached,projectedScore,recoverablePoints,candidates,summary,timePlan:profiles[target].timePlan}

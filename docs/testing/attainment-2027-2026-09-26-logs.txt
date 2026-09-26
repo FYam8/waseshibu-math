@@ -1,0 +1,93 @@
+Browser exposure pass 1
+PASS 390px new: first-look; answer and result survive reload
+PASS 390px legacy draft: reference; answer and result survive reload
+PASS 390px resumed first look: first-look; answer and result survive reload
+PASS 390px related L2 shown: reference; answer and result survive reload
+PASS 390px assistance during resumed exam: reference; answer and result survive reload
+PASS 390px reserved only: first-look; answer and result survive reload
+PASS 1280px new: first-look; answer and result survive reload
+PASS 1280px legacy draft: reference; answer and result survive reload
+PASS 1280px resumed first look: first-look; answer and result survive reload
+PASS 1280px related L2 shown: reference; answer and result survive reload
+PASS 1280px assistance during resumed exam: reference; answer and result survive reload
+PASS 1280px reserved only: first-look; answer and result survive reload
+
+
+Browser exposure pass 2
+PASS 390px new: first-look; answer and result survive reload
+PASS 390px legacy draft: reference; answer and result survive reload
+PASS 390px resumed first look: first-look; answer and result survive reload
+PASS 390px related L2 shown: reference; answer and result survive reload
+PASS 390px assistance during resumed exam: reference; answer and result survive reload
+PASS 390px reserved only: first-look; answer and result survive reload
+PASS 1280px new: first-look; answer and result survive reload
+PASS 1280px legacy draft: reference; answer and result survive reload
+PASS 1280px resumed first look: first-look; answer and result survive reload
+PASS 1280px related L2 shown: reference; answer and result survive reload
+PASS 1280px assistance during resumed exam: reference; answer and result survive reload
+PASS 1280px reserved only: first-look; answer and result survive reload
+
+
+Existing answer/skill-check browser
+PASS 390px: real exam input, two incorrect grades, draft reload, persisted answers/score; no cause self-report, unknown cause persisted, practice answer saved, adaptive checks/support/transfer/resume/score isolation; external requests blocked
+PASS 1280px: real exam input, two incorrect grades, draft reload, persisted answers/score; no cause self-report, unknown cause persisted, practice answer saved, adaptive checks/support/transfer/resume/score isolation; external requests blocked
+
+
+Year-role regression
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.2 test:year-role
+> node scripts/test-year-role-flow.mjs
+
+PASS: 2019 different structure
+PASS: 2020-21 reinforcement pool
+PASS: 2022-26 main-check
+PASS: required five-year order
+PASS: old draft optional
+PASS: core draft required years
+PASS: cycle wording
+PASS: selective old-year note
+PASS: 2019 UI label
+PASS: reinforcement purpose
+PASS: score validity type
+PASS: score validity save
+PASS: reference score UI
+PASS: later-year warning
+PASS: optional old attempts stay out of required queue
+PASS: reservation separated from completion
+PASS: home current score uses 2022-26 main years
+PASS: eta covers required five
+PASS: year role / required five-year / exposure / optional old-year flow
+
+
+Production build pass 1
+✓ 105 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                     0.69 kB │ gzip:   0.45 kB
+dist/assets/index-DUXE-BID.css     50.07 kB │ gzip:   9.90 kB
+dist/assets/index-Kpti8xOZ.js   1,282.34 kB │ gzip: 236.28 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.49s
+GITHUB SYNC SEPARATION VERIFIED: localStorage-only learning flow, data v8 preserved, production bundle clean
+
+Production build pass 2
+✓ 105 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                     0.69 kB │ gzip:   0.45 kB
+dist/assets/index-DUXE-BID.css     50.07 kB │ gzip:   9.90 kB
+dist/assets/index-CxmnKIOF.js   1,282.35 kB │ gzip: 236.28 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.42s
+GITHUB SYNC SEPARATION VERIFIED: localStorage-only learning flow, data v8 preserved, production bundle clean
+
+Strict attainment audit: exit 1 (expected HOLD); full structured results are in attainment-2027-2026-09-26-results.json.
