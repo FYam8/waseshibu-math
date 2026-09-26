@@ -1,0 +1,76 @@
+## build2
+rendering chunks...
+computing gzip size...
+dist/index.html                     0.69 kB │ gzip:   0.45 kB
+dist/assets/index-DUXE-BID.css     50.07 kB │ gzip:   9.90 kB
+dist/assets/index-BOr7QgqO.js   1,283.92 kB │ gzip: 236.77 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.40s
+GITHUB SYNC SEPARATION VERIFIED: localStorage-only learning flow, data v8 preserved, production bundle clean
+
+## build3
+rendering chunks...
+computing gzip size...
+dist/index.html                     0.69 kB │ gzip:   0.45 kB
+dist/assets/index-DUXE-BID.css     50.07 kB │ gzip:   9.90 kB
+dist/assets/index-BOr7QgqO.js   1,283.92 kB │ gzip: 236.77 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.31s
+GITHUB SYNC SEPARATION VERIFIED: localStorage-only learning flow, data v8 preserved, production bundle clean
+
+## selfcheck
+OK: 全160小問の正答データ
+OK: v0.18.2・data v8・本線完了ロック・migration前バックアップ
+OK: 160小問すべてに問題専用GuidedSolution
+OK: 3段階ヒント・自力再現UX
+OK: Level2固定セットを元問題の習得状態へ接続
+OK: A60/B70/C75の単純残日数UX
+OK: 今日やることは最大10件・目標帯・定着進捗を反映
+OK: 学習目標A60/B70/C75と問題帯A+指定B/A+B/A+B+Cを維持
+OK: 検索エンジン非掲載設定
+OK: 更新前退避・新UI・ロールバック
+SELF-CHECK PASSED
+OK: 1日最大10課題＋完了後の任意継続UX
+
+## critical
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> waseshibu-math@0.18.2 verify-critical
+> node scripts/verify-critical.mjs
+
+CRITICAL VERIFICATION PASSED
+v0.18.2, data v8, 60 official past + 100 active Level2 + 60 backlog + support 2, target bands 60=A+specified B / 70=A+B / 75=A+B+C, verified fixed focus: 160/160, backup/no-loss migration: OK
+
+## browser1
+PASS 390px 2023: real score 50, specified B priority, mistake list, source retry, fixed practice link
+PASS 390px 2026: real score 55, specified B priority, mistake list, source retry, fixed practice link
+PASS 1280px 2023: real score 50, specified B priority, mistake list, source retry, fixed practice link
+PASS 1280px 2026: real score 55, specified B priority, mistake list, source retry, fixed practice link
+
+## browser2
+PASS 390px 2023: real score 50, specified B priority, mistake list, source retry, fixed practice link
+PASS 390px 2026: real score 55, specified B priority, mistake list, source retry, fixed practice link
+PASS 1280px 2023: real score 50, specified B priority, mistake list, source retry, fixed practice link
+PASS 1280px 2026: real score 55, specified B priority, mistake list, source retry, fixed practice link
+
+## audit-final
+      "kind": "related-practice-exposure",
+      "target": 75,
+      "initialScore": 25,
+      "ids": [
+        "L2-2026-Q5-1"
+      ]
+    }
+  ],
+  "findings": []
+}
+PASS: 12 diagnostic → source repair → fixed practice → next-year flows, priority, daily cap, termination, backup restoration
+PASS: audited target coverage and state transitions; not evidence of learning outcomes

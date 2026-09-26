@@ -13,6 +13,11 @@ const require=createRequire(import.meta.url),strategy=require(path.join(temp,'ta
 const yearsSource=fs.readFileSync('src/pages/Years.tsx','utf8')
 const papersSource=fs.readFileSync('src/pages/PastPapers.tsx','utf8')
 
+assert.ok(strategy.gradeInTarget(60,'B','2023-Q1-5'))
+assert.ok(strategy.gradeInTarget(60,'B','2023-Q1-6'))
+assert.ok(strategy.gradeInTarget(60,'B','2026-Q3-2'))
+assert.equal(strategy.gradeInTarget(60,'B','2026-Q2-2'),false)
+
 const labels=['firstRound','defer','returnLast','discard']
 for(const target of [60,70,75]){
   const plan=strategy.selectionPlan(target)
@@ -29,7 +34,7 @@ assert.match(strategy.selectionPlan(75).firstRound,/問題ランクA・B/,'S6-SE
 assert.match(strategy.selectionPlan(75).defer,/問題ランクC/,'S6-SELECT-005: 75点のC問題を後回しにしていない')
 assert.match(strategy.selectionPlan(75).discard,/方針が立たないC問題/,'S6-SELECT-005: 75点でC問題を無条件に深追いさせる')
 
-assert.deepEqual(['A','B','C'].filter(grade=>strategy.gradeInTarget(60,grade)),['A'],'S6-SELECT-006: 60点範囲がAのみではない')
+assert.deepEqual(['A','B','C'].filter(grade=>strategy.gradeInTarget(60,grade)),['A'],'S6-SELECT-006: ID未指定の60点基本範囲がAのみではない')
 assert.deepEqual(['A','B','C'].filter(grade=>strategy.gradeInTarget(70,grade)),['A','B'],'S6-SELECT-006: 70点範囲がA・Bではない')
 assert.deepEqual(['A','B','C'].filter(grade=>strategy.gradeInTarget(75,grade)),['A','B','C'],'S6-SELECT-006: 75点範囲がA・B・Cではない')
 

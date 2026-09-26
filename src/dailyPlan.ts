@@ -4,7 +4,7 @@ import { classifyRemediationField } from './data/remediation'
 import { loadAttempts, loadExamScores, loadPreferences } from './storage'
 import { loadGuidedProgressState } from './guidedReview'
 import { gradeInTarget, type TargetScore } from './targetStrategy'
-import { isMainCheckYear } from './learningRoute'
+import { isCompletedTarget60BaseQuestion, isMainCheckYear } from './learningRoute'
 import { loadLevel2SessionSummaries } from './level2ProgressView'
 import { requiredPracticeCount } from './practiceLoad'
 import { orderCanonicalTodayCandidates, type CanonicalTodayCandidate } from './engine/todayPlanner'
@@ -54,7 +54,8 @@ export function buildTodayTaskCandidates(target:TargetScore, now=new Date()):Tod
     const meta=questionMap.get(qid)
     // 2019〜2021年度の任意通し演習は履歴には残すが、必須10課題へ自動昇格させない。
     // 旧年度を正式な補強に使う場合は Reinforcement の学習ルートから扱う。
-    if(!meta||!isMainCheckYear(meta.year)||attempt.status==='correct'||!gradeInTarget(target,meta.grade))continue
+    if(!meta||!isMainCheckYear(meta.year)||attempt.status==='correct'||!gradeInTarget(target,meta.grade,meta.id))continue
+    if(isCompletedTarget60BaseQuestion(meta.year,target,qid))continue
     const p=progress[qid]
     // 過去の「克服済み」より新しい過去問誤答があれば、弱点を再開する。
     const progressIsCurrent=!!p&&p.updatedAt>=attempt.at
@@ -92,7 +93,7 @@ export function buildTodayTaskCandidates(target:TargetScore, now=new Date()):Tod
   const stale=Object.values(progress).filter(p=>{
     if(!['independent','consolidated'].includes(p.mastery))return false
     const meta=questionMap.get(p.questionId)
-    if(!meta||!isMainCheckYear(meta.year)||!gradeInTarget(target,meta.grade))return false
+    if(!meta||!isMainCheckYear(meta.year)||!gradeInTarget(target,meta.grade,meta.id))return false
     const age=now.getTime()-Date.parse(p.updatedAt||'')
     return Number.isFinite(age)&&age>=7*24*60*60*1000
   }).sort((a,b)=>a.updatedAt.localeCompare(b.updatedAt))[0]

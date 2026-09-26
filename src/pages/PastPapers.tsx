@@ -105,7 +105,7 @@ export default function PastPapers(){
       const diagnosis=x.status==='correct'?'correct':undefined
       saveAttempt({id:createRecordId(`exam-${x.key}`),questionId:`exam-${x.key}`,mode:'multi',topic:x.sub.topic,status:x.status==='correct'?'correct':x.status==='unanswered'?'deferred':'wrong',mistakeTag:cause||undefined,diagnosis,answer:answers[x.key]||'',flagged:!!flags[x.key],seconds:questionSeconds[x.key],at:now})
     })
-    const targetWrong=items.some(item=>item.status!=='correct'&&gradeInTarget(target,item.grade))
+    const targetWrong=items.some(item=>item.status!=='correct'&&gradeInTarget(target,item.grade,item.key))
     if(REQUIRED_MAIN_YEAR_SEQUENCE.includes(year as (typeof REQUIRED_MAIN_YEAR_SEQUENCE)[number])&&!targetWrong)markRequiredYearComplete(year,target)
     try{const all=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');delete all[String(year)];localStorage.setItem(DRAFT_KEY,JSON.stringify(all))}catch{/* no-op */}
     void createRestorePoint('exam_complete').catch(()=>{/* saved result remains */})
@@ -117,7 +117,7 @@ export default function PastPapers(){
 
   if(phase==='mark')return <ExamMarkReview year={year} majors={majors} answers={answers} flags={flags} overrides={overrides} statusFor={statusFor} setOverrides={setOverrides} onFinish={finish}/>
 
-  if(phase==='result'&&savedResult){const strategy=savedResult.strategy,priorityWrong=savedResult.wrongItems.filter(item=>gradeInTarget(strategy.target,item.grade)),deferredWrong=savedResult.wrongItems.filter(item=>!gradeInTarget(strategy.target,item.grade));return <>
+  if(phase==='result'&&savedResult){const strategy=savedResult.strategy,priorityWrong=savedResult.wrongItems.filter(item=>gradeInTarget(strategy.target,item.grade,item.key)),deferredWrong=savedResult.wrongItems.filter(item=>!gradeInTarget(strategy.target,item.grade,item.key));return <>
     <div className="page-head"><div><span className="eyebrow">AUTO SCORING COMPLETE</span><h1>{year}年度の自動採点結果</h1></div></div>
     <section className="grid four result-scores"><article className="card stat"><b>{savedResult.score}</b><span>自動採点</span><small>{loadExamScores().find(x=>x.year===year)?.scoreValidity==='reference'?'参考スコア':'初見スコア'}</small></article><article className="card stat"><b>{savedResult.correct}</b><span>正解</span></article><article className="card stat"><b>{savedResult.wrong}</b><span>不正解</span></article><article className="card stat"><b>{savedResult.unanswered}</b><span>未回答</span></article></section>
     {priorityWrong.length>0&&<section className="card result-wrong-first"><div className="section-head"><div><span className="eyebrow">FIX THESE FIRST · TARGET {strategy.target}</span><h2>今直す問題</h2></div><b>{priorityWrong.length}問</b></div><p className="muted">{strategy.target}点目標に含まれる問題だけを先に表示します。解説画面では、その小問とその小問の正答だけを表示します。</p><div className="guided-question-list">{priorityWrong.map(item=><article key={item.key}><div><b>大問{item.major}（{item.subNo}）</b><span>{item.topic}</span><small>{item.status==='unanswered'?'未回答':'不正解'}・問題ランク{item.grade}{item.cause?` ／ ${item.cause}`:''}</small></div><Link className="button primary" to={`/guided-review?q=${encodeURIComponent(item.key)}`}>この1問を直す</Link></article>)}</div></section>}

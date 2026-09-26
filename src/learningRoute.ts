@@ -5,7 +5,7 @@ import { loadAttempts, loadExamScores, loadPreferences } from './storage'
 import { canWriteLearningData, notifyWriteBlocked } from './version'
 import { loadGuidedProgressState, loadGuidedReviews } from './guidedReview'
 import { loadLevel2SessionSummaries } from './level2ProgressView'
-import { gradeInTarget, storedExamItems, weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
+import { gradeInTarget, isTarget60Supplement, storedExamItems, weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
 import practicePool from './data/level2/practice_pool_index.json'
 import { hasLevel2YearExposure } from './examExposure'
 
@@ -94,8 +94,30 @@ export function saveLearningRoute(state:LearningRouteState){
   window.dispatchEvent(new CustomEvent('waseshibu-route-change'))
 }
 
+function hasTarget60SupplementLock(year:number,target:TargetScore){
+  const locks=loadLearningRoute().completedCoreByTarget
+  return target===60&&(year===2023||year===2026)&&!!locks['60']?.includes(year)&&!locks['70']?.includes(year)
+}
+
+export function isCompletedTarget60BaseQuestion(year:number,target:TargetScore,questionId:string){
+  return hasTarget60SupplementLock(year,target)&&!isTarget60Supplement(questionId)
+}
+
 export function isRequiredYearLocked(year:number,target:TargetScore=loadPreferences().target){
-  return !!loadLearningRoute().completedCoreByTarget[targetCompletionKey(target)]?.includes(year)
+  if(!loadLearningRoute().completedCoreByTarget[targetCompletionKey(target)]?.includes(year))return false
+  if(!hasTarget60SupplementLock(year,target))return true
+  const exam=latestExam(year)
+  // Lock-only legacy imports cannot reconstruct question-level performance.
+  // Preserve that historical completion; do not invent new wrong answers.
+  if(!exam)return true
+  const progress=loadGuidedProgressState(),reviews=loadGuidedReviews(),sessions=loadLevel2SessionSummaries()
+  return storedExamItems(exam,loadAttempts()).filter(item=>isTarget60Supplement(item.key)&&item.status!=='correct').every(item=>{
+    const p=progress[item.key],review=reviews[item.key]
+    const repaired=(p&&p.updatedAt>=exam.at&&['reproduced','independent','consolidated'].includes(p.mastery))||(review&&review.updatedAt>=exam.at&&['independent','reproduced'].includes(review.outcome||''))
+    const session=sessions.filter(s=>s.triggerSourceQuestionId===item.key&&(!s.sourceAttemptAt||s.sourceAttemptAt>=exam.at)).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))[0]
+    const practiced=(p&&p.updatedAt>=exam.at&&p.mastery==='consolidated')||(session?.status==='completed'&&session.completedQuestionIds.length>=session.requiredCount)
+    return !!repaired&&!!practiced
+  })
 }
 
 export function markRequiredYearComplete(year:number,target:TargetScore=loadPreferences().target){
@@ -182,7 +204,7 @@ export function sourceMistakeProgress(year:number,target:TargetScore=loadPrefere
   const exam=latestExam(year)
   if(!exam)return {requiredIds:[],completedIds:[],remainingIds:[],complete:false}
   const attempts=loadAttempts(),reviews=loadGuidedReviews(),progress=loadGuidedProgressState()
-  const requiredIds=storedExamItems(exam,attempts).filter(item=>item.status!=='correct'&&gradeInTarget(target,item.grade)).map(item=>item.key)
+  const requiredIds=storedExamItems(exam,attempts).filter(item=>item.status!=='correct'&&gradeInTarget(target,item.grade,item.key)&&(!hasTarget60SupplementLock(year,target)||isTarget60Supplement(item.key))).map(item=>item.key)
   const completedIds=requiredIds.filter(id=>{
     const current=progress[id]
     if(current&&current.updatedAt>=exam.at&&['reproduced','independent','consolidated'].includes(current.mastery))return true
@@ -314,6 +336,7 @@ export function requiredYearComplete(year:number,target:TargetScore=loadPreferen
   const exam=latestExam(year)
   if(!exam)return false
   const sourceComplete=sourceMistakeProgress(year,target).complete
+  if(hasTarget60SupplementLock(year,target))return sourceComplete&&sourcePracticeProgress(year,target).complete
   return sourceComplete&&(sourcePracticeProgress(year,target).complete||legacyReinforcementComplete(year,target))
 }
 

@@ -70,7 +70,7 @@ export default function Home(){
   const taskList=todayTasks
   const primaryQueueTask=taskList[0]||optionalNext||progressionTask
   const latestItems=latest?storedExamItems(latest,attempts):[]
-  const q1Miss=latest&&latestItems.length?latestItems.filter(x=>x.major===1&&x.status!=='correct'&&gradeInTarget(prefs.target,x.grade)).length:'--'
+  const q1Miss=latest&&latestItems.length?latestItems.filter(x=>x.major===1&&x.status!=='correct'&&gradeInTarget(prefs.target,x.grade,x.key)).length:'--'
 
   return <>
     <section className={`card today-hero ${integrity.ok?'':'integrity-failed'}`}>

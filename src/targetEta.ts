@@ -4,7 +4,7 @@ import { loadAttempts } from './storage'
 import { loadGuidedProgressState } from './guidedReview'
 import { loadLevel2SessionSummaries } from './level2ProgressView'
 import { requiredPracticeCount } from './practiceLoad'
-import { REQUIRED_MAIN_YEAR_SEQUENCE, latestExam, requiredYearComplete, sourceMistakeProgress } from './learningRoute'
+import { REQUIRED_MAIN_YEAR_SEQUENCE, latestExam, requiredYearComplete, sourceMistakeProgress, sourcePracticeProgress } from './learningRoute'
 import { gradeInTarget, storedExamItems, targetGoalLabel, type TargetScore } from './targetStrategy'
 
 export type GoalDayEstimate={
@@ -34,7 +34,7 @@ function reservedPracticeCount(questionId:string){
 }
 
 export function reservedQuestionCount(questionId:string,grade:'A'|'B'|'C',target:TargetScore){
-  return 1+(gradeInTarget(target,grade)?1+reservedPracticeCount(questionId):0)
+  return 1+(gradeInTarget(target,grade,questionId)?1+reservedPracticeCount(questionId):0)
 }
 
 function latestPracticeSession(questionId:string,examAt:string){
@@ -76,6 +76,7 @@ export function buildGoalDayEstimates(
 
       const itemById=new Map(storedExamItems(exam,attempts).map(item=>[item.key,item]))
       const repairRemaining=new Set(sourceMistakeProgress(year,target).remainingIds)
+      const practiceRemaining=new Set(sourcePracticeProgress(year,target).remainingIds)
 
       for(const q of yearQuestions){
         const item=itemById.get(q.id)
@@ -84,10 +85,10 @@ export function buildGoalDayEstimates(
           continue
         }
         if(item.status==='correct')continue
-        if(!gradeInTarget(target,q.grade))continue
+        if(!gradeInTarget(target,q.grade,q.id))continue
 
         if(repairRemaining.has(q.id))remainingQuestions+=1
-        remainingQuestions+=remainingPracticeQuestions(q.id,exam.at)
+        if(practiceRemaining.has(q.id))remainingQuestions+=remainingPracticeQuestions(q.id,exam.at)
       }
     }
 

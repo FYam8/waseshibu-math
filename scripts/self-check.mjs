@@ -18,8 +18,8 @@ if(reinforcement.includes('固定類題を続ける')&&reinforcement.includes('2
 if(home.includes('今日やること')&&home.includes('MAX 10 TASKS')&&home.includes('buildTodayTasks')&&home.includes('この1問を直す')&&home.includes('A＝60点、B＝70点、C＝75点'))ok('今日やること・弱点直結・A60/B70/C75ホームUX');else fail('ホーム共通UX')
 if(route.includes('currentLearningPhase')&&route.includes('routePhaseDone')&&route.includes('sourceMistakeProgress')&&route.includes('sourcePracticeProgress')&&route.includes('completedCoreByTarget'))ok('6フェーズ進捗・元誤答先行・固定類題・本線完了ロック');else fail('新学習フェーズ進捗')
 if(reinforcement.includes('元問題をヒントなしで再現')&&reinforcement.includes('未解決問題を直す')&&reinforcement.includes('sourceMistakeProgress')&&reinforcement.includes('SOURCE QUESTION FIRST'))ok('固定類題前に元の誤答を再現');else fail('元誤答→固定類題の順序')
-if(mistake.includes('gradeInTarget(prefs.target,meta.grade)')&&mistake.includes('weakFieldsForStoredExam(prefs.target,latestExam,attempts)')&&mistake.includes('QUESTION BY QUESTION · TARGET ONLY')&&mistake.includes('今は後回しの問題'))ok('間違い直しを60=A / 70=A+B / 75=A+B+Cに限定');else fail('間違い直しの目標点フィルタ')
-if(paper.includes('今直す問題')&&paper.includes('gradeInTarget(strategy.target,item.grade)')&&paper.includes('今は後回しの問題')&&paper.includes('nextLearningAction(strategy.target)'))ok('採点直後も共通次アクションで目標範囲を先に直す');else fail('採点直後の目標点フィルタ')
+if(mistake.includes('gradeInTarget(prefs.target,meta.grade,meta.id)')&&mistake.includes('weakFieldsForStoredExam(prefs.target,latestExam,attempts)')&&mistake.includes('QUESTION BY QUESTION · TARGET ONLY')&&mistake.includes('今は後回しの問題'))ok('間違い直しを60=A+指定B / 70=A+B / 75=A+B+Cに限定');else fail('間違い直しの目標点フィルタ')
+if(paper.includes('今直す問題')&&paper.includes('gradeInTarget(strategy.target,item.grade,item.key)')&&paper.includes('今は後回しの問題')&&paper.includes('nextLearningAction(strategy.target)'))ok('採点直後も共通次アクションで目標範囲を先に直す');else fail('採点直後の目標点フィルタ')
 
 const manifestIds=[...manifest.matchAll(/'(\d{4}-Q[^']+)':/g)].map(x=>x[1])
 if(manifestIds.length===160&&new Set(manifestIds).size===160&&questionIds.every(id=>manifestIds.includes(id)))ok('全160小問に固定表示マップ');else fail(`固定表示マップ ${manifestIds.length}/160`)
@@ -47,7 +47,7 @@ if(home.includes('goalDayEstimates')&&home.includes('`あと${estimate.days}日`
 
 const dailyPlan=read('src/dailyPlan.ts')
 if(dailyPlan.includes('slice(0,10)')&&dailyPlan.includes("grade==='A'")&&dailyPlan.includes("target>=70")&&dailyPlan.includes("target>=75")&&dailyPlan.includes('practiceStreak')&&dailyPlan.includes('completedIds')&&dailyPlan.includes('buildOptionalNextTask'))ok('今日やることは最大10件・目標帯・定着進捗を反映');else fail('今日やることロジック')
-if(read('src/targetStrategy.ts').includes("target===60?'A 60点':target===70?'B 70点':'C 75点'")&&read('src/targetStrategy.ts').includes("grade==='A'||(grade==='B'&&target>=70)||(grade==='C'&&target>=75)"))ok('学習目標A60/B70/C75と問題帯A/A+B/A+B+Cを維持');else fail('学習目標ロジック')
+if(read('src/targetStrategy.ts').includes("target===60?'A 60点':target===70?'B 70点':'C 75点'")&&read('src/targetStrategy.ts').includes("TARGET60_SUPPLEMENT_IDS=['2023-Q1-5','2023-Q1-6','2026-Q3-2']"))ok('学習目標A60/B70/C75と問題帯A+指定B/A+B/A+B+Cを維持');else fail('学習目標ロジック')
 
 const html=read('index.html'),robots=read('public/robots.txt')
 if(html.includes('noindex, nofollow, noarchive, nosnippet')&&robots.includes('Disallow: /'))ok('検索エンジン非掲載設定');else fail('noindex/robots')

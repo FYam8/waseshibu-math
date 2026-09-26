@@ -79,12 +79,12 @@ export default function Years() {
 
             <div className="subqs">
               {q.subquestions.map(s=>(
-                <div className={`subq ${gradeInTarget(target,s.grade)?'recommended':'deferred-plan'}`} key={s.no}>
+                <div className={`subq ${gradeInTarget(target,s.grade,`${q.id}-${s.no}`)?'recommended':'deferred-plan'}`} key={s.no}>
                   <b>({s.no})</b>
                   <span>
                     {s.topic}
                     <small className="strategy-note">
-                      {gradeAdvice(target,s.grade)}
+                      {gradeAdvice(target,s.grade,`${q.id}-${s.no}`)}
                     </small>
                   </span>
                   <em className={`mini grade-${s.grade}`}>{s.grade}</em>
