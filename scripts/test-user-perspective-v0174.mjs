@@ -98,7 +98,7 @@ const pp=fs.readFileSync('src/pages/PastPapers.tsx','utf8')
 if(!pp.includes('questionId:id')||!pp.includes('const id=`exposure-${year}`'))throw new Error('PastPapers no longer persists exposure event')
 if(!pp.includes('const [firstLookEligible]=useState(inferredFirstLook)'))throw new Error('first-look eligibility is not captured before exposure event')
 if(!pp.includes('firstLookEligible})'))throw new Error('first-look eligibility is not persisted in draft')
-if(!pp.includes("scoreValidity:!prior&&firstLookEligible?'first-look':'reference'"))throw new Error('score validity does not preserve the current first-look attempt')
+if(!pp.includes("scoreValidity:!prior&&firstLookEligible&&!hasRelatedStudyExposure(year)?'first-look':'reference'"))throw new Error('score validity does not preserve the current first-look attempt')
 console.log('PASS: UI exposure event and first-look attempt context stay distinct')
 
 

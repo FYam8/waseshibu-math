@@ -1,0 +1,290 @@
+{
+  "evidence": "Synthetic transitions using registered answers; ceilings use app estimated weights, not official subquestion marks.",
+  "scenarios": [
+    {
+      "target": 60,
+      "initialScore": 25,
+      "sourceRepairs": 8,
+      "practiceSubmissions": 32,
+      "uniqueFixedIds": 24,
+      "nextYear": 2023,
+      "holdout2026": "untouched",
+      "leaks": []
+    },
+    {
+      "target": 60,
+      "initialScore": 40,
+      "sourceRepairs": 6,
+      "practiceSubmissions": 22,
+      "uniqueFixedIds": 16,
+      "nextYear": 2023,
+      "holdout2026": "untouched",
+      "leaks": []
+    },
+    {
+      "target": 60,
+      "initialScore": 55,
+      "sourceRepairs": 4,
+      "practiceSubmissions": 14,
+      "uniqueFixedIds": 10,
+      "nextYear": 2023,
+      "holdout2026": "untouched",
+      "leaks": []
+    },
+    {
+      "target": 60,
+      "initialScore": 65,
+      "sourceRepairs": 2,
+      "practiceSubmissions": 6,
+      "uniqueFixedIds": 4,
+      "nextYear": 2023,
+      "holdout2026": "untouched",
+      "leaks": []
+    },
+    {
+      "target": 70,
+      "initialScore": 25,
+      "sourceRepairs": 13,
+      "practiceSubmissions": 51,
+      "uniqueFixedIds": 38,
+      "nextYear": 2023,
+      "holdout2026": "partially_exposed",
+      "leaks": [
+        "L2-2026-Q5-1"
+      ]
+    },
+    {
+      "target": 70,
+      "initialScore": 40,
+      "sourceRepairs": 10,
+      "practiceSubmissions": 36,
+      "uniqueFixedIds": 26,
+      "nextYear": 2023,
+      "holdout2026": "untouched",
+      "leaks": []
+    },
+    {
+      "target": 70,
+      "initialScore": 55,
+      "sourceRepairs": 7,
+      "practiceSubmissions": 24,
+      "uniqueFixedIds": 17,
+      "nextYear": 2023,
+      "holdout2026": "untouched",
+      "leaks": []
+    },
+    {
+      "target": 70,
+      "initialScore": 65,
+      "sourceRepairs": 5,
+      "practiceSubmissions": 16,
+      "uniqueFixedIds": 11,
+      "nextYear": 2023,
+      "holdout2026": "untouched",
+      "leaks": []
+    },
+    {
+      "target": 75,
+      "initialScore": 25,
+      "sourceRepairs": 15,
+      "practiceSubmissions": 57,
+      "uniqueFixedIds": 41,
+      "nextYear": 2023,
+      "holdout2026": "partially_exposed",
+      "leaks": [
+        "L2-2026-Q5-1"
+      ]
+    },
+    {
+      "target": 75,
+      "initialScore": 40,
+      "sourceRepairs": 12,
+      "practiceSubmissions": 42,
+      "uniqueFixedIds": 29,
+      "nextYear": 2023,
+      "holdout2026": "untouched",
+      "leaks": []
+    },
+    {
+      "target": 75,
+      "initialScore": 55,
+      "sourceRepairs": 9,
+      "practiceSubmissions": 30,
+      "uniqueFixedIds": 21,
+      "nextYear": 2023,
+      "holdout2026": "untouched",
+      "leaks": []
+    },
+    {
+      "target": 75,
+      "initialScore": 65,
+      "sourceRepairs": 7,
+      "practiceSubmissions": 22,
+      "uniqueFixedIds": 15,
+      "nextYear": 2023,
+      "holdout2026": "untouched",
+      "leaks": []
+    }
+  ],
+  "fullRoute": [
+    {
+      "year": 2024,
+      "inputScore": 25,
+      "exposureBefore": "untouched",
+      "practiceSubmissions": 38,
+      "stageCompleted": true
+    },
+    {
+      "year": 2023,
+      "inputScore": 25,
+      "exposureBefore": "partially_exposed",
+      "practiceSubmissions": 39,
+      "stageCompleted": true
+    },
+    {
+      "year": 2022,
+      "inputScore": 25,
+      "exposureBefore": "partially_exposed",
+      "practiceSubmissions": 40,
+      "stageCompleted": true
+    },
+    {
+      "year": 2025,
+      "inputScore": 25,
+      "exposureBefore": "partially_exposed",
+      "practiceSubmissions": 35,
+      "stageCompleted": true
+    },
+    {
+      "year": 2026,
+      "inputScore": 25,
+      "exposureBefore": "partially_exposed",
+      "practiceSubmissions": 37,
+      "stageCompleted": true
+    }
+  ],
+  "ceilings": [
+    {
+      "year": 2024,
+      "target": 60,
+      "eligibleQuestions": 12,
+      "ceiling": 60
+    },
+    {
+      "year": 2024,
+      "target": 70,
+      "eligibleQuestions": 18,
+      "ceiling": 90
+    },
+    {
+      "year": 2024,
+      "target": 75,
+      "eligibleQuestions": 20,
+      "ceiling": 100
+    },
+    {
+      "year": 2023,
+      "target": 60,
+      "eligibleQuestions": 10,
+      "ceiling": 50
+    },
+    {
+      "year": 2023,
+      "target": 70,
+      "eligibleQuestions": 19,
+      "ceiling": 95
+    },
+    {
+      "year": 2023,
+      "target": 75,
+      "eligibleQuestions": 20,
+      "ceiling": 100
+    },
+    {
+      "year": 2022,
+      "target": 60,
+      "eligibleQuestions": 12,
+      "ceiling": 60
+    },
+    {
+      "year": 2022,
+      "target": 70,
+      "eligibleQuestions": 19,
+      "ceiling": 95
+    },
+    {
+      "year": 2022,
+      "target": 75,
+      "eligibleQuestions": 20,
+      "ceiling": 100
+    },
+    {
+      "year": 2025,
+      "target": 60,
+      "eligibleQuestions": 13,
+      "ceiling": 65
+    },
+    {
+      "year": 2025,
+      "target": 70,
+      "eligibleQuestions": 17,
+      "ceiling": 85
+    },
+    {
+      "year": 2025,
+      "target": 75,
+      "eligibleQuestions": 20,
+      "ceiling": 100
+    },
+    {
+      "year": 2026,
+      "target": 60,
+      "eligibleQuestions": 11,
+      "ceiling": 55
+    },
+    {
+      "year": 2026,
+      "target": 70,
+      "eligibleQuestions": 18,
+      "ceiling": 90
+    },
+    {
+      "year": 2026,
+      "target": 75,
+      "eligibleQuestions": 20,
+      "ceiling": 100
+    }
+  ],
+  "findings": [
+    {
+      "kind": "holdout-exposure",
+      "target": 70,
+      "initialScore": 25,
+      "ids": [
+        "L2-2026-Q5-1"
+      ]
+    },
+    {
+      "kind": "holdout-exposure",
+      "target": 75,
+      "initialScore": 25,
+      "ids": [
+        "L2-2026-Q5-1"
+      ]
+    },
+    {
+      "kind": "target-ceiling-shortfall",
+      "year": 2023,
+      "target": 60,
+      "ceiling": 50,
+      "gap": 10
+    },
+    {
+      "kind": "target-ceiling-shortfall",
+      "year": 2026,
+      "target": 60,
+      "ceiling": 55,
+      "gap": 5
+    }
+  ]
+}

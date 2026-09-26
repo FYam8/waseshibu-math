@@ -7,6 +7,7 @@ import { loadGuidedProgressState, loadGuidedReviews } from './guidedReview'
 import { loadLevel2SessionSummaries } from './level2ProgressView'
 import { gradeInTarget, storedExamItems, weakFieldsForStoredExam, type TargetScore } from './targetStrategy'
 import practicePool from './data/level2/practice_pool_index.json'
+import { hasLevel2YearExposure } from './examExposure'
 
 const ROUTE_KEY='waseshibu-math-learning-route-v1'
 const LEVEL2_HISTORY_KEY='waseshibu-math-level2-history-v1'
@@ -381,7 +382,13 @@ export function yearExposureState(year:number):YearExposureState{
     return []
   }))
   const guided=loadGuidedProgressState(),guidedExposure=Object.keys(guided).some(id=>id.startsWith(`${year}-Q`)&&guided[id]?.mastery!=='unseen')
-  return opened||attemptedIds.size||guidedExposure?'partially_exposed':'untouched'
+  let hasDraft=false
+  try{hasDraft=!!JSON.parse(localStorage.getItem('waseshibu-math-exam-drafts-v2')||'{}')[String(year)]}catch{/* no readable draft */}
+  return opened||attemptedIds.size||guidedExposure||hasDraft||hasLevel2YearExposure(year)?'partially_exposed':'untouched'
+}
+
+export function hasRelatedStudyExposure(year:number){
+  return hasLevel2YearExposure(year)||Object.entries(loadGuidedProgressState()).some(([id,state])=>id.startsWith(`${year}-Q`)&&state?.mastery!=='unseen')||loadAttempts().some(a=>a.questionId.startsWith(`target-${year}-Q`))
 }
 
 export function scoreInterpretation(year:number){return yearExposureState(year)==='untouched'?'初見スコア候補':'参考スコア'}

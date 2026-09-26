@@ -4,7 +4,8 @@ import questions from '../data/questions.json'
 import { examPages, examRole, examScopeNote, pointsFor } from '../data/examConfig'
 import ExamMarkReview from '../components/ExamMarkReview'
 import { createRecordId, loadExamScores, loadPreferences, saveAttempt, saveExamScore } from '../storage'
-import { REQUIRED_MAIN_YEAR_SEQUENCE, markRequiredYearComplete, markYearSolved, nextLearningAction, nextRequiredStageYear, requiredYearPurpose, yearExposureState } from '../learningRoute'
+import { REQUIRED_MAIN_YEAR_SEQUENCE, hasRelatedStudyExposure, markRequiredYearComplete, markYearSolved, nextLearningAction, nextRequiredStageYear, requiredYearPurpose, yearExposureState } from '../learningRoute'
+import { inferFirstLookEligible } from '../examExposure'
 import { isExamAnswerCorrect } from '../data/examAnswers'
 import { cleanAnswerInput } from '../answer'
 import { runExamIntegrityCheck } from '../preflight'
@@ -43,7 +44,7 @@ export default function PastPapers(){
   const majors=useMemo(()=>(questions.questions as MajorQuestion[]).filter(q=>q.year===year).sort((a,b)=>a.major-b.major),[year])
   const initial=readDraft(year),review=params.get('review')==='1'
   const hasPriorCompleted=loadExamScores().some(x=>x.year===year&&x.completed!==false)
-  const inferredFirstLook=!hasPriorCompleted&&(initial.firstLookEligible??(Object.keys(initial).length>0||yearExposureState(year)==='untouched'))
+  const inferredFirstLook=inferFirstLookEligible(hasPriorCompleted,initial,yearExposureState(year)==='untouched',hasRelatedStudyExposure(year))
   const majorParam=Math.max(1,Math.min(5,Number(params.get('major')||1)))
   const [phase,setPhase]=useState<'solve'|'mark'|'result'>(review?'mark':initial.phase||'solve')
   const [majorIndex,setMajorIndex]=useState(review?0:Math.max(0,Number.isInteger(initial.majorIndex)?initial.majorIndex!:majorParam-1))
@@ -98,7 +99,7 @@ export default function PastPapers(){
     const wrongItems=items.filter(x=>x.status!=='correct')
     const result:SavedResult={score,correct:graded.filter(x=>x.status==='correct').length,wrong:graded.filter(x=>x.status==='wrong').length,unanswered:graded.filter(x=>x.status==='unanswered').length,weak,strategy,wrongItems}
     const now=new Date().toISOString(),prior=loadExamScores().some(x=>x.year===year&&x.completed!==false)
-    saveExamScore({id:createRecordId(`exam-${year}`),year,score:result.score,correctCount:result.correct,wrongCount:result.wrong,unansweredCount:result.unanswered,completed:true,attemptKind:prior?'retake':'first',scoreValidity:!prior&&firstLookEligible?'first-look':'reference',weakFields:weak,at:now})
+    saveExamScore({id:createRecordId(`exam-${year}`),year,score:result.score,correctCount:result.correct,wrongCount:result.wrong,unansweredCount:result.unanswered,completed:true,attemptKind:prior?'retake':'first',scoreValidity:!prior&&firstLookEligible&&!hasRelatedStudyExposure(year)?'first-look':'reference',weakFields:weak,at:now})
     graded.forEach(x=>{
       const cause=x.status==='correct'?'':'原因未確定'
       const diagnosis=x.status==='correct'?'correct':undefined
