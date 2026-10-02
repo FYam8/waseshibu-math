@@ -34,6 +34,7 @@ assert.deepEqual(WASESHIBU_SYNC_PROJECTION.targetIds,['60','70','75'])
 assert.equal(WASESHIBU_SYNC_PROJECTION.sendsRawAnswers,false)
 assert.equal(WASESHIBU_SYNC_PROJECTION.sendsProblemContent,false)
 
+const shared=fs.readFileSync(path.join(root,'src/shared-progress-transport.js'),'utf8')
 const sync=fs.readFileSync(path.join(root,'src/progressSync.ts'),'utf8')
 const deploy=fs.readFileSync(path.join(root,'.github/workflows/deploy.yml'),'utf8')
 assert.ok(sync.includes("import { WASESHIBU_SYNC_PROFILE } from './schools/waseshibu/syncProfile'"),'active sync adapter must use the school profile')
@@ -70,9 +71,9 @@ for(const forbidden of [
 for(const forbiddenWriter of ['saveAttempt','replaceAttempts','saveExamScore','replaceExamScores','savePreferences','restoreBackup']){
   assert.equal(sync.includes(forbiddenWriter),false,`progress sync unexpectedly references learner writer ${forbiddenWriter}`)
 }
-assert.ok(sync.includes("indexedDB.open(SYNC_DB,SYNC_DB_VERSION)"))
-assert.ok(sync.includes("body:JSON.stringify({appId:APP_ID,generation:1,payload})"))
-assert.ok(sync.includes("body:JSON.stringify({events:batch.map(({queuedAt,...e})=>e)})"))
+assert.ok(shared.includes("indexedDB.open(SYNC_DB,SYNC_DB_VERSION)"))
+assert.ok(shared.includes("body:JSON.stringify({appId:APP_ID,generation:1,payload})"))
+assert.ok(shared.includes("body:JSON.stringify({events:batch.map(({queuedAt,...e})=>e)})"))
 assert.equal(sync.includes('rikkyo'),false,'WaseShibu sync adapter must not contain Rikkyo identity')
 
 // Shared contract must remain identity-shaped; school-specific year/target

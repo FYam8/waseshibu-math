@@ -18,6 +18,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - run: node scripts/verify-shared-progress.mjs --upstream
       - run: npm ci
       - run: npm run self-check
       - run: npm run verify-critical
