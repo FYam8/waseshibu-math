@@ -10,6 +10,17 @@ try {
   await build({stdin:{contents:"export * from './src/answer'; export * from './src/data/examAnswers'",resolveDir:process.cwd(),loader:'ts'},bundle:true,platform:'node',format:'esm',outfile})
   const {isAcceptedAnswer:a,isExamAnswerCorrect:e}=await import(pathToFileURL(outfile).href)
   const cases=[
+    ['fixed-sample collision is not an identity',()=>a('x+(x-2)*(x-3)*(x-5)*(x-7)*(x-11)','x'),false],
+    ['zero polynomial at old sample points',()=>a('(x-2)*(x-3)*(x-5)*(x-7)*(x-11)','0'),false],
+    ['exact expansion',()=>a('(x+2)*(x-3)','x^2-x-6'),true],
+    ['multivariate expansion',()=>a('(a+b)^2','a^2+2ab+b^2'),true],
+    ['rational coefficients',()=>a('x/3+x/6','x/2'),true],
+    ['decimal coefficients',()=>a('0.1x+0.2x','0.3x'),true],
+    ['tiny nonzero difference',()=>a('x+0.0000000001','x'),false],
+    ['undefined point cannot be cancelled',()=>a('x/x','1'),false],
+    ['variable denominator retains domain',()=>a('(x^2-1)/(x-1)','x+1'),false],
+    ['square root is not signed identity',()=>a('√(x^2)','x'),false],
+    ['bounded symbolic work',()=>a('(a+b+c)^100000','0'),false],
     ['superscript is an exponent',()=>a('x²','2x'),false],
     ['superscript equivalent',()=>a('x²','x^2'),true],
     ['signed superscript',()=>a('-3²','-9'),true],
