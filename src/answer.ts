@@ -197,29 +197,82 @@ function listEquivalent(a:string,b:string){
   return as.every((x,i)=>close(x,bs[i]))
 }
 
-function sampledEquivalent(a:string,b:string){
-  // 安全に扱える中学数学の代数式だけ。判定不能は false とし、誤った自動正解を避ける。
-  if(/[<>=:±,①-⑨アイウエオ]/.test(a+b))return false
-  const vars=[...new Set((a+b).match(/[a-z]/g)||[])]
-  if(vars.length===0)return numericEquivalent(a,b)
-  const samples=[2,3,5,7,11]
-  let valid=0
-  for(let k=0;k<samples.length;k++){
-    const env:Record<string,number>={}
-    vars.forEach((v,j)=>env[v]=samples[(k+j)%samples.length]+j)
-    const av=evalExpression(a,env),bv=evalExpression(b,env)
-    if(av===null||bv===null)continue
-    valid++
-    if(!close(av,bv))return false
+// Compare coefficients exactly. A finite collection of substitutions cannot
+// establish an identity. Unsupported forms must use an explicit accepted alias.
+type Fraction={n:bigint;d:bigint}
+type Polynomial=Map<string,Fraction>
+function exactPolynomial(value:string):Polynomial|null{
+  if(value.length>240)return null
+  const tokens=tokenizeExpression(value)
+  if(!tokens||tokens.length>160)return null
+  const abs=(n:bigint)=>n<0n?-n:n
+  const gcdBig=(a:bigint,b:bigint):bigint=>b?gcdBig(b,a%b):abs(a)
+  const fraction=(n:bigint,d=1n):Fraction=>{
+    if(!d)throw Error('zero denominator')
+    if(d<0n){n=-n;d=-d}
+    const g=gcdBig(n,d);return {n:n/g,d:d/g}
   }
-  return valid>=3
+  const scalar=(v:Fraction):Polynomial=>new Map(v.n?[['',v]]:[])
+  const one=()=>scalar(fraction(1n))
+  const add=(a:Polynomial,b:Polynomial,sign=1n):Polynomial=>{
+    const out=new Map(a)
+    for(const[k,v]of b){const u=out.get(k)||fraction(0n),w=fraction(u.n*v.d+sign*v.n*u.d,u.d*v.d);if(w.n)out.set(k,w);else out.delete(k)}
+    if(out.size>128)throw Error('too many terms')
+    return out
+  }
+  const multiply=(a:Polynomial,b:Polynomial):Polynomial=>{
+    let out:Polynomial=new Map()
+    for(const[ka,u]of a)for(const[kb,v]of b){const k=(ka+kb).split('').sort().join('');if(k.length>12)throw Error('degree limit');out=add(out,new Map([[k,fraction(u.n*v.n,u.d*v.d)]]))}
+    return out
+  }
+  const constant=(p:Polynomial):Fraction=>{
+    if([...p.keys()].some(k=>k!==''))throw Error('nonconstant divisor or exponent')
+    return p.get('')||fraction(0n)
+  }
+  let i=0
+  const primary=():Polynomial=>{
+    const t=tokens[i++]
+    if(!t)throw Error('missing operand')
+    if(t.kind==='num'){const [whole,decimal='']=t.value.split('.');return scalar(fraction(BigInt((whole||'0')+decimal),10n**BigInt(decimal.length)))}
+    if(t.kind==='var')return new Map([[t.value,fraction(1n)]])
+    if(t.kind==='l'){const p=sum();if(tokens[i++]?.kind!=='r')throw Error('unclosed group');return p}
+    throw Error('unsupported operand')
+  }
+  const unary=():Polynomial=>{
+    if(tokens[i]?.kind==='op'&&['+','-'].includes(tokens[i].value)){const s=tokens[i++].value;const p=unary();return s==='-'?multiply(scalar(fraction(-1n)),p):p}
+    return power()
+  }
+  const power=():Polynomial=>{
+    let p=primary()
+    if(tokens[i]?.value==='^'){i++;const e=constant(unary());if(e.d!==1n||e.n<0n||e.n>12n)throw Error('unsupported exponent');const base=p;p=one();for(let n=0n;n<e.n;n++)p=multiply(p,base)}
+    return p
+  }
+  const product=():Polynomial=>{
+    let p=unary()
+    while(tokens[i]?.kind==='op'&&['*','/'].includes(tokens[i].value)){const op=tokens[i++].value,q=unary();if(op==='*')p=multiply(p,q);else{const d=constant(q);p=multiply(p,scalar(fraction(d.d,d.n)))}}
+    return p
+  }
+  const sum=():Polynomial=>{
+    let p=product()
+    while(tokens[i]?.kind==='op'&&['+','-'].includes(tokens[i].value)){const sign=tokens[i++].value==='+'?1n:-1n;p=add(p,product(),sign)}
+    return p
+  }
+  try{const p=sum();return i===tokens.length?p:null}catch{return null}
 }
+
+function algebraicallyEquivalent(a:string,b:string){
+  if(/[<>=:±,①-⑨アイウエオ]/.test(a+b))return false
+  if(!/[a-z]/.test(a+b))return numericEquivalent(a,b)
+  const left=exactPolynomial(a),right=exactPolynomial(b)
+  return left!==null&&right!==null&&left.size===right.size&&[...left].every(([k,v])=>{const w=right.get(k);return w!==undefined&&v.n===w.n&&v.d===w.d})
+}
+
 
 function expressionEquivalent(a:string,b:string):boolean{
   if(a===b)return true
   if(a.includes(':')||b.includes(':'))return ratioEquivalent(a,b)
   if(a.includes(',')||b.includes(','))return listEquivalent(a,b)
-  return sampledEquivalent(a,b)
+  return algebraicallyEquivalent(a,b)
 }
 
 export function isAcceptedAnswer(input:string, answer:string, acceptedAnswers:string[] = []) {
